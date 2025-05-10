@@ -1,17 +1,20 @@
 <template>
-    <StatsIndividuelle
-        :bacterie-selected="bacterieSelected"
-        :open="dialog"
-        @close="dialog = $event"
-    />
-    <StatsGenerale
-        :list-bacterie="listBacterie"
-        :open="statsGenerale"
-        @close="statsGenerale = $event"
-        v-if="listBacterie.length > 1"
-    />
-    <!-- Contrôles en position fixe pour être toujours visibles sur le canvas -->
-    <div class="controls-panel">
+    <PopUp
+        v-model="dialogStatIndividuelles"
+        title="Détails de la bactérie"
+        width="500"
+    >
+        <StatsIndividuelle v-model="bacterieSelected" />
+    </PopUp>
+    <PopUp v-model="statsGenerale" title="Détails de la bactérie" width="500">
+        <StatsGenerale v-model="listBacterie" />
+    </PopUp>
+    <PopUp
+        v-model="dialogParametre"
+        title="Paramètres"
+        width="300"
+        :initial-position="{ x: 15, y: 15 }"
+    >
         <h2 class="title">Simulation de bactéries</h2>
         <div class="controls-group">
             <div class="control-item">
@@ -84,7 +87,7 @@
                 Statistiques
             </button>
         </div>
-    </div>
+    </PopUp>
 
     <!-- Canvas en plein écran -->
     <canvas ref="canvasRef" class="bacterie-canvas"></canvas>
@@ -96,6 +99,7 @@ import { Color } from "../model/enum/color.ts";
 import Bacterie from "../model/bacterie.ts";
 import StatsIndividuelle from "../composant/StatsIndividuelle.vue";
 import StatsGenerale from "../composant/StatsGenerale.vue";
+import PopUp from "@/composant/PopUp.vue";
 
 const listBacterie = ref<Bacterie[]>([]);
 const intervalDeplacement = ref<number>();
@@ -106,11 +110,12 @@ const intervalBaisserVie = ref<number>();
 const statsGenerale = ref<boolean>(false);
 const bacterieStart = ref<number>(10);
 const bacterieSelected = ref<Bacterie>();
-const dialog = ref<boolean>(false);
+const dialogStatIndividuelles = ref<boolean>(false);
 const nombreMax = ref<number>(1000); // On peut augmenter le maximum maintenant
 const gridSize = ref<number>(20); // Grid plus petite pour plus de précision
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const animationFrameId = ref<number | null>(null);
+const dialogParametre = ref<boolean>(true);
 let ctx: CanvasRenderingContext2D | null = null;
 let canvasWidth = 0;
 let canvasHeight = 0;
@@ -204,7 +209,7 @@ function handleCanvasClick(event: MouseEvent) {
 
     if (closestBacterie) {
         bacterieSelected.value = closestBacterie;
-        dialog.value = true;
+        dialogStatIndividuelles.value = true;
     }
 }
 

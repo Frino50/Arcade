@@ -1,544 +1,480 @@
 <template>
-    <div
-        class="stats-dialog"
-        v-if="props.open"
-        ref="dialogRef"
-        @mousedown="startDragging"
-        @mouseup="stopDragging"
-    >
-        <h2 class="title">Statistiques Globales</h2>
-        <div class="stats-tabs">
-            <button
-                v-for="tab in tabs"
-                :key="tab.id"
-                @click="activeTab = tab.id"
-                :class="['tab-button', { active: activeTab === tab.id }]"
-            >
-                {{ tab.name }}
-            </button>
-        </div>
+    <div class="stats-tabs">
+        <button
+            v-for="tab in tabs"
+            :key="tab.id"
+            @click="activeTab = tab.id"
+            :class="['tab-button', { active: activeTab === tab.id }]"
+        >
+            {{ tab.name }}
+        </button>
+    </div>
 
-        <!-- Population Overview Tab -->
-        <div v-if="activeTab === 'population'" class="tab-content">
-            <div class="stat-cards">
-                <div class="stat-card">
-                    <div class="stat-title">Population Totale</div>
-                    <div class="stat-value">
-                        {{ props.listBacterie.length }}
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-title">Génération Max</div>
-                    <div class="stat-value">{{ maxGeneration }}</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-title">Enfants Total</div>
-                    <div class="stat-value">{{ totalChildren }}</div>
+    <!-- Population Overview Tab -->
+    <div v-if="activeTab === 'population'" class="tab-content">
+        <div class="stat-cards">
+            <div class="stat-card">
+                <div class="stat-title">Population Totale</div>
+                <div class="stat-value">
+                    {{ listBacterie.length }}
                 </div>
             </div>
+            <div class="stat-card">
+                <div class="stat-title">Génération Max</div>
+                <div class="stat-value">{{ maxGeneration }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Enfants Total</div>
+                <div class="stat-value">{{ totalChildren }}</div>
+            </div>
+        </div>
 
-            <div class="chart-section">
-                <h3>Évolution de la Population</h3>
-                <div class="chart-container">
-                    <svg width="500" height="250" viewBox="0 0 500 250">
-                        <!-- Population history line chart -->
-                        <rect
-                            x="40"
-                            y="20"
-                            width="440"
-                            height="200"
-                            fill="rgba(30, 30, 30, 0.5)"
+        <div class="chart-section">
+            <h3>Évolution de la Population</h3>
+            <div class="chart-container">
+                <svg width="500" height="250" viewBox="0 0 500 250">
+                    <!-- Population history line chart -->
+                    <rect
+                        x="40"
+                        y="20"
+                        width="440"
+                        height="200"
+                        fill="rgba(30, 30, 30, 0.5)"
+                    />
+
+                    <!-- Axes -->
+                    <line x1="40" y1="220" x2="480" y2="220" stroke="white" />
+                    <line x1="40" y1="20" x2="40" y2="220" stroke="white" />
+
+                    <!-- Population line -->
+                    <polyline
+                        :points="getPopulationHistoryPoints()"
+                        fill="none"
+                        stroke="#4CAF50"
+                        stroke-width="2"
+                    />
+
+                    <!-- Y-axis labels -->
+                    <text
+                        x="35"
+                        y="25"
+                        text-anchor="end"
+                        fill="white"
+                        font-size="12"
+                    >
+                        {{ maxPopulation }}
+                    </text>
+                    <text
+                        x="35"
+                        y="220"
+                        text-anchor="end"
+                        fill="white"
+                        font-size="12"
+                    >
+                        0
+                    </text>
+
+                    <!-- X-axis labels -->
+                    <text
+                        x="40"
+                        y="235"
+                        text-anchor="middle"
+                        fill="white"
+                        font-size="12"
+                    >
+                        0s
+                    </text>
+                    <text
+                        x="480"
+                        y="235"
+                        text-anchor="middle"
+                        fill="white"
+                        font-size="12"
+                        v-if="trackingInterval"
+                    >
+                        {{
+                            Math.floor(
+                                ((historyData.length - 1) * trackingInterval) /
+                                    1000
+                            )
+                        }}s
+                    </text>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Color Distribution Tab -->
+    <div v-if="activeTab === 'colors'" class="tab-content">
+        <h3>Distribution des Couleurs</h3>
+        <div class="color-chart-container">
+            <svg width="300" height="300" viewBox="0 0 300 300">
+                <!-- Color pie chart -->
+                <g transform="translate(150, 150)">
+                    <g v-for="(slice, index) in colorPieChartData" :key="index">
+                        <path
+                            :d="
+                                describeArc(
+                                    0,
+                                    0,
+                                    100,
+                                    slice.startAngle,
+                                    slice.endAngle
+                                )
+                            "
+                            :fill="slice.color"
+                            stroke="#333"
+                            stroke-width="1"
                         />
+                        <!-- Label for large enough slices -->
+                        <text
+                            v-if="slice.percentage >= 5"
+                            :x="getLabelX(slice.startAngle, slice.endAngle)"
+                            :y="getLabelY(slice.startAngle, slice.endAngle)"
+                            text-anchor="middle"
+                            fill="white"
+                            font-size="12"
+                        >
+                            {{ Math.round(slice.percentage) }}%
+                        </text>
+                    </g>
+                </g>
+            </svg>
+        </div>
 
+        <div class="color-legend">
+            <div
+                v-for="group in colorGroups"
+                :key="group.color"
+                class="color-legend-item"
+            >
+                <div
+                    class="color-sample"
+                    :style="{ backgroundColor: group.color }"
+                ></div>
+                <div class="color-info">
+                    <span>{{ group.family }}</span>
+                    <span
+                        >{{ group.count }} ({{
+                            ((group.count / listBacterie.length) * 100).toFixed(
+                                1
+                            )
+                        }}%)</span
+                    >
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attributes Tab -->
+    <div v-if="activeTab === 'attributes'" class="tab-content">
+        <div class="comparison-table">
+            <div class="table-header">
+                <div>Stats</div>
+                <div>+ Grand</div>
+                <div>+ Petit</div>
+                <div>Moyenne</div>
+            </div>
+            <div class="table-row">
+                <div>Taille</div>
+                <div>
+                    {{ plusGrandPlusPetit("tailleInitial", true).toFixed(2) }}
+                </div>
+                <div>
+                    {{ plusGrandPlusPetit("tailleInitial", false).toFixed(2) }}
+                </div>
+                <div>
+                    {{ calculateAverage("tailleInitial").toFixed(2) }}
+                </div>
+            </div>
+            <div class="table-row">
+                <div>Reproduction</div>
+                <div>
+                    {{ plusGrandPlusPetit("reproduction", true).toFixed(2) }}
+                </div>
+                <div>
+                    {{ plusGrandPlusPetit("reproduction", false).toFixed(2) }}
+                </div>
+                <div>{{ calculateAverage("reproduction").toFixed(2) }}</div>
+            </div>
+            <div class="table-row">
+                <div>Vie</div>
+                <div>
+                    {{ plusGrandPlusPetit("vieInitial", true).toFixed(2) }}
+                </div>
+                <div>
+                    {{ plusGrandPlusPetit("vieInitial", false).toFixed(2) }}
+                </div>
+                <div>{{ calculateAverage("vieInitial").toFixed(2) }}</div>
+            </div>
+            <div class="table-row">
+                <div>Génération</div>
+                <div>
+                    {{ plusGrandPlusPetit("generation", true).toFixed(0) }}
+                </div>
+                <div>
+                    {{ plusGrandPlusPetit("generation", false).toFixed(0) }}
+                </div>
+                <div>{{ calculateAverage("generation").toFixed(1) }}</div>
+            </div>
+            <div class="table-row">
+                <div>Enfants</div>
+                <div>
+                    {{ plusGrandPlusPetit("nbrEnfant", true).toFixed(0) }}
+                </div>
+                <div>
+                    {{ plusGrandPlusPetit("nbrEnfant", false).toFixed(0) }}
+                </div>
+                <div>{{ calculateAverage("nbrEnfant").toFixed(1) }}</div>
+            </div>
+        </div>
+
+        <div class="attributes-grid">
+            <!-- Size Distribution Chart -->
+            <div class="attribute-chart">
+                <h3>Distribution des Tailles</h3>
+                <div class="bar-chart-container">
+                    <svg width="220" height="200" viewBox="0 0 220 200">
                         <!-- Axes -->
                         <line
                             x1="40"
-                            y1="220"
-                            x2="480"
-                            y2="220"
+                            y1="170"
+                            x2="200"
+                            y2="170"
                             stroke="white"
                         />
-                        <line x1="40" y1="20" x2="40" y2="220" stroke="white" />
+                        <line x1="40" y1="30" x2="40" y2="170" stroke="white" />
 
-                        <!-- Population line -->
-                        <polyline
-                            :points="getPopulationHistoryPoints()"
-                            fill="none"
-                            stroke="#4CAF50"
-                            stroke-width="2"
-                        />
-
-                        <!-- Y-axis labels -->
-                        <text
-                            x="35"
-                            y="25"
-                            text-anchor="end"
-                            fill="white"
-                            font-size="12"
+                        <!-- Bars -->
+                        <g
+                            v-for="(bar, index) in sizeBarChartData"
+                            :key="index"
                         >
-                            {{ maxPopulation }}
-                        </text>
-                        <text
-                            x="35"
-                            y="220"
-                            text-anchor="end"
-                            fill="white"
-                            font-size="12"
-                        >
-                            0
-                        </text>
+                            <rect
+                                :x="
+                                    40 + index * (160 / sizeBarChartData.length)
+                                "
+                                :y="170 - bar.height"
+                                :width="160 / sizeBarChartData.length - 2"
+                                :height="bar.height"
+                                fill="#64B5F6"
+                            />
+                        </g>
 
                         <!-- X-axis labels -->
                         <text
                             x="40"
-                            y="235"
+                            y="185"
                             text-anchor="middle"
                             fill="white"
-                            font-size="12"
+                            font-size="10"
                         >
-                            0s
+                            {{ sizeRange.min.toFixed(1) }}
                         </text>
                         <text
-                            x="480"
-                            y="235"
+                            x="200"
+                            y="185"
                             text-anchor="middle"
                             fill="white"
-                            font-size="12"
-                            v-if="trackingInterval"
+                            font-size="10"
                         >
-                            {{
-                                Math.floor(
-                                    ((historyData.length - 1) *
-                                        trackingInterval) /
-                                        1000
-                                )
-                            }}s
+                            {{ sizeRange.max.toFixed(1) }}
+                        </text>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Reproduction Distribution Chart -->
+            <div class="attribute-chart">
+                <h3>Distribution des Taux de Reproduction</h3>
+                <div class="bar-chart-container">
+                    <svg width="220" height="200" viewBox="0 0 220 200">
+                        <!-- Axes -->
+                        <line
+                            x1="40"
+                            y1="170"
+                            x2="200"
+                            y2="170"
+                            stroke="white"
+                        />
+                        <line x1="40" y1="30" x2="40" y2="170" stroke="white" />
+
+                        <!-- Bars -->
+                        <g
+                            v-for="(bar, index) in reproBarChartData"
+                            :key="index"
+                        >
+                            <rect
+                                :x="
+                                    40 +
+                                    index * (160 / reproBarChartData.length)
+                                "
+                                :y="170 - bar.height"
+                                :width="160 / reproBarChartData.length - 2"
+                                :height="bar.height"
+                                fill="#FF7043"
+                            />
+                        </g>
+
+                        <!-- X-axis labels -->
+                        <text
+                            x="40"
+                            y="185"
+                            text-anchor="middle"
+                            fill="white"
+                            font-size="10"
+                        >
+                            {{ reproRange.min.toFixed(1) }}
+                        </text>
+                        <text
+                            x="200"
+                            y="185"
+                            text-anchor="middle"
+                            fill="white"
+                            font-size="10"
+                        >
+                            {{ reproRange.max.toFixed(1) }}
                         </text>
                     </svg>
                 </div>
             </div>
         </div>
 
-        <!-- Color Distribution Tab -->
-        <div v-if="activeTab === 'colors'" class="tab-content">
-            <h3>Distribution des Couleurs</h3>
-            <div class="color-chart-container">
-                <svg width="300" height="300" viewBox="0 0 300 300">
-                    <!-- Color pie chart -->
-                    <g transform="translate(150, 150)">
+        <div class="attributes-grid">
+            <!-- Life Distribution Chart -->
+            <div class="attribute-chart">
+                <h3>Distribution des Vies Initiales</h3>
+                <div class="bar-chart-container">
+                    <svg width="220" height="200" viewBox="0 0 220 200">
+                        <!-- Axes -->
+                        <line
+                            x1="40"
+                            y1="170"
+                            x2="200"
+                            y2="170"
+                            stroke="white"
+                        />
+                        <line x1="40" y1="30" x2="40" y2="170" stroke="white" />
+
+                        <!-- Bars -->
                         <g
-                            v-for="(slice, index) in colorPieChartData"
+                            v-for="(bar, index) in lifeBarChartData"
                             :key="index"
                         >
-                            <path
-                                :d="
-                                    describeArc(
-                                        0,
-                                        0,
-                                        100,
-                                        slice.startAngle,
-                                        slice.endAngle
-                                    )
+                            <rect
+                                :x="
+                                    40 + index * (160 / lifeBarChartData.length)
                                 "
-                                :fill="slice.color"
-                                stroke="#333"
-                                stroke-width="1"
+                                :y="170 - bar.height"
+                                :width="160 / lifeBarChartData.length - 2"
+                                :height="bar.height"
+                                fill="#81C784"
                             />
-                            <!-- Label for large enough slices -->
-                            <text
-                                v-if="slice.percentage >= 5"
-                                :x="getLabelX(slice.startAngle, slice.endAngle)"
-                                :y="getLabelY(slice.startAngle, slice.endAngle)"
-                                text-anchor="middle"
-                                fill="white"
-                                font-size="12"
-                            >
-                                {{ Math.round(slice.percentage) }}%
-                            </text>
                         </g>
-                    </g>
-                </svg>
-            </div>
 
-            <div class="color-legend">
-                <div
-                    v-for="group in colorGroups"
-                    :key="group.color"
-                    class="color-legend-item"
-                >
-                    <div
-                        class="color-sample"
-                        :style="{ backgroundColor: group.color }"
-                    ></div>
-                    <div class="color-info">
-                        <span>{{ group.family }}</span>
-                        <span
-                            >{{ group.count }} ({{
-                                (
-                                    (group.count / props.listBacterie.length) *
-                                    100
-                                ).toFixed(1)
-                            }}%)</span
+                        <!-- X-axis labels -->
+                        <text
+                            x="40"
+                            y="185"
+                            text-anchor="middle"
+                            fill="white"
+                            font-size="10"
                         >
-                    </div>
+                            {{ lifeRange.min.toFixed(1) }}
+                        </text>
+                        <text
+                            x="200"
+                            y="185"
+                            text-anchor="middle"
+                            fill="white"
+                            font-size="10"
+                        >
+                            {{ lifeRange.max.toFixed(1) }}
+                        </text>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Generation Distribution Chart -->
+            <div class="attribute-chart">
+                <h3>Distribution des Générations</h3>
+                <div class="bar-chart-container">
+                    <svg width="220" height="200" viewBox="0 0 220 200">
+                        <!-- Axes -->
+                        <line
+                            x1="40"
+                            y1="170"
+                            x2="200"
+                            y2="170"
+                            stroke="white"
+                        />
+                        <line x1="40" y1="30" x2="40" y2="170" stroke="white" />
+
+                        <!-- Bars -->
+                        <g v-for="(bar, index) in genBarChartData" :key="index">
+                            <rect
+                                :x="40 + index * (160 / genBarChartData.length)"
+                                :y="170 - bar.height"
+                                :width="160 / genBarChartData.length - 2"
+                                :height="bar.height"
+                                fill="#9575CD"
+                            />
+                        </g>
+
+                        <!-- X-axis labels -->
+                        <text
+                            x="40"
+                            y="185"
+                            text-anchor="middle"
+                            fill="white"
+                            font-size="10"
+                        >
+                            1
+                        </text>
+                        <text
+                            x="200"
+                            y="185"
+                            text-anchor="middle"
+                            fill="white"
+                            font-size="10"
+                        >
+                            {{ maxGeneration }}
+                        </text>
+                    </svg>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Attributes Tab -->
-        <div v-if="activeTab === 'attributes'" class="tab-content">
-            <div class="comparison-table">
-                <div class="table-header">
-                    <div>Stats</div>
-                    <div>+ Grand</div>
-                    <div>+ Petit</div>
-                    <div>Moyenne</div>
-                </div>
-                <div class="table-row">
-                    <div>Taille</div>
-                    <div>
-                        {{
-                            plusGrandPlusPetit("tailleInitial", true).toFixed(2)
-                        }}
-                    </div>
-                    <div>
-                        {{
-                            plusGrandPlusPetit("tailleInitial", false).toFixed(
-                                2
-                            )
-                        }}
-                    </div>
-                    <div>
-                        {{ calculateAverage("tailleInitial").toFixed(2) }}
-                    </div>
-                </div>
-                <div class="table-row">
-                    <div>Reproduction</div>
-                    <div>
-                        {{
-                            plusGrandPlusPetit("reproduction", true).toFixed(2)
-                        }}
-                    </div>
-                    <div>
-                        {{
-                            plusGrandPlusPetit("reproduction", false).toFixed(2)
-                        }}
-                    </div>
-                    <div>{{ calculateAverage("reproduction").toFixed(2) }}</div>
-                </div>
-                <div class="table-row">
-                    <div>Vie</div>
-                    <div>
-                        {{ plusGrandPlusPetit("vieInitial", true).toFixed(2) }}
-                    </div>
-                    <div>
-                        {{ plusGrandPlusPetit("vieInitial", false).toFixed(2) }}
-                    </div>
-                    <div>{{ calculateAverage("vieInitial").toFixed(2) }}</div>
-                </div>
-                <div class="table-row">
-                    <div>Génération</div>
-                    <div>
-                        {{ plusGrandPlusPetit("generation", true).toFixed(0) }}
-                    </div>
-                    <div>
-                        {{ plusGrandPlusPetit("generation", false).toFixed(0) }}
-                    </div>
-                    <div>{{ calculateAverage("generation").toFixed(1) }}</div>
-                </div>
-                <div class="table-row">
-                    <div>Enfants</div>
-                    <div>
-                        {{ plusGrandPlusPetit("nbrEnfant", true).toFixed(0) }}
-                    </div>
-                    <div>
-                        {{ plusGrandPlusPetit("nbrEnfant", false).toFixed(0) }}
-                    </div>
-                    <div>{{ calculateAverage("nbrEnfant").toFixed(1) }}</div>
-                </div>
-            </div>
-
-            <div class="attributes-grid">
-                <!-- Size Distribution Chart -->
-                <div class="attribute-chart">
-                    <h3>Distribution des Tailles</h3>
-                    <div class="bar-chart-container">
-                        <svg width="220" height="200" viewBox="0 0 220 200">
-                            <!-- Axes -->
-                            <line
-                                x1="40"
-                                y1="170"
-                                x2="200"
-                                y2="170"
-                                stroke="white"
-                            />
-                            <line
-                                x1="40"
-                                y1="30"
-                                x2="40"
-                                y2="170"
-                                stroke="white"
-                            />
-
-                            <!-- Bars -->
-                            <g
-                                v-for="(bar, index) in sizeBarChartData"
-                                :key="index"
-                            >
-                                <rect
-                                    :x="
-                                        40 +
-                                        index * (160 / sizeBarChartData.length)
-                                    "
-                                    :y="170 - bar.height"
-                                    :width="160 / sizeBarChartData.length - 2"
-                                    :height="bar.height"
-                                    fill="#64B5F6"
-                                />
-                            </g>
-
-                            <!-- X-axis labels -->
-                            <text
-                                x="40"
-                                y="185"
-                                text-anchor="middle"
-                                fill="white"
-                                font-size="10"
-                            >
-                                {{ sizeRange.min.toFixed(1) }}
-                            </text>
-                            <text
-                                x="200"
-                                y="185"
-                                text-anchor="middle"
-                                fill="white"
-                                font-size="10"
-                            >
-                                {{ sizeRange.max.toFixed(1) }}
-                            </text>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Reproduction Distribution Chart -->
-                <div class="attribute-chart">
-                    <h3>Distribution des Taux de Reproduction</h3>
-                    <div class="bar-chart-container">
-                        <svg width="220" height="200" viewBox="0 0 220 200">
-                            <!-- Axes -->
-                            <line
-                                x1="40"
-                                y1="170"
-                                x2="200"
-                                y2="170"
-                                stroke="white"
-                            />
-                            <line
-                                x1="40"
-                                y1="30"
-                                x2="40"
-                                y2="170"
-                                stroke="white"
-                            />
-
-                            <!-- Bars -->
-                            <g
-                                v-for="(bar, index) in reproBarChartData"
-                                :key="index"
-                            >
-                                <rect
-                                    :x="
-                                        40 +
-                                        index * (160 / reproBarChartData.length)
-                                    "
-                                    :y="170 - bar.height"
-                                    :width="160 / reproBarChartData.length - 2"
-                                    :height="bar.height"
-                                    fill="#FF7043"
-                                />
-                            </g>
-
-                            <!-- X-axis labels -->
-                            <text
-                                x="40"
-                                y="185"
-                                text-anchor="middle"
-                                fill="white"
-                                font-size="10"
-                            >
-                                {{ reproRange.min.toFixed(1) }}
-                            </text>
-                            <text
-                                x="200"
-                                y="185"
-                                text-anchor="middle"
-                                fill="white"
-                                font-size="10"
-                            >
-                                {{ reproRange.max.toFixed(1) }}
-                            </text>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="attributes-grid">
-                <!-- Life Distribution Chart -->
-                <div class="attribute-chart">
-                    <h3>Distribution des Vies Initiales</h3>
-                    <div class="bar-chart-container">
-                        <svg width="220" height="200" viewBox="0 0 220 200">
-                            <!-- Axes -->
-                            <line
-                                x1="40"
-                                y1="170"
-                                x2="200"
-                                y2="170"
-                                stroke="white"
-                            />
-                            <line
-                                x1="40"
-                                y1="30"
-                                x2="40"
-                                y2="170"
-                                stroke="white"
-                            />
-
-                            <!-- Bars -->
-                            <g
-                                v-for="(bar, index) in lifeBarChartData"
-                                :key="index"
-                            >
-                                <rect
-                                    :x="
-                                        40 +
-                                        index * (160 / lifeBarChartData.length)
-                                    "
-                                    :y="170 - bar.height"
-                                    :width="160 / lifeBarChartData.length - 2"
-                                    :height="bar.height"
-                                    fill="#81C784"
-                                />
-                            </g>
-
-                            <!-- X-axis labels -->
-                            <text
-                                x="40"
-                                y="185"
-                                text-anchor="middle"
-                                fill="white"
-                                font-size="10"
-                            >
-                                {{ lifeRange.min.toFixed(1) }}
-                            </text>
-                            <text
-                                x="200"
-                                y="185"
-                                text-anchor="middle"
-                                fill="white"
-                                font-size="10"
-                            >
-                                {{ lifeRange.max.toFixed(1) }}
-                            </text>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Generation Distribution Chart -->
-                <div class="attribute-chart">
-                    <h3>Distribution des Générations</h3>
-                    <div class="bar-chart-container">
-                        <svg width="220" height="200" viewBox="0 0 220 200">
-                            <!-- Axes -->
-                            <line
-                                x1="40"
-                                y1="170"
-                                x2="200"
-                                y2="170"
-                                stroke="white"
-                            />
-                            <line
-                                x1="40"
-                                y1="30"
-                                x2="40"
-                                y2="170"
-                                stroke="white"
-                            />
-
-                            <!-- Bars -->
-                            <g
-                                v-for="(bar, index) in genBarChartData"
-                                :key="index"
-                            >
-                                <rect
-                                    :x="
-                                        40 +
-                                        index * (160 / genBarChartData.length)
-                                    "
-                                    :y="170 - bar.height"
-                                    :width="160 / genBarChartData.length - 2"
-                                    :height="bar.height"
-                                    fill="#9575CD"
-                                />
-                            </g>
-
-                            <!-- X-axis labels -->
-                            <text
-                                x="40"
-                                y="185"
-                                text-anchor="middle"
-                                fill="white"
-                                font-size="10"
-                            >
-                                1
-                            </text>
-                            <text
-                                x="200"
-                                y="185"
-                                text-anchor="middle"
-                                fill="white"
-                                font-size="10"
-                            >
-                                {{ maxGeneration }}
-                            </text>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="button-container">
-            <button @click="startTracking" v-if="!isTracking">
-                Commencer le suivi
-            </button>
-            <button @click="stopTracking" v-if="isTracking">
-                Arrêter le suivi
-            </button>
-            <button @click="clearHistory">Effacer l'historique</button>
-            <button @click="emit('close', false)" class="close-button">
-                Fermer
-            </button>
-        </div>
+    <div class="button-container">
+        <button @click="startTracking" v-if="!isTracking">
+            Commencer le suivi
+        </button>
+        <button @click="stopTracking" v-if="isTracking">
+            Arrêter le suivi
+        </button>
+        <button @click="clearHistory">Effacer l'historique</button>
+        <button @click="emit('close', false)" class="close-button">
+            Fermer
+        </button>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onUnmounted, watch } from "vue";
+import { ref, computed, onUnmounted } from "vue";
 import Bacterie from "../model/bacterie";
 import ColorFamily from "@/model/colorFamily.ts";
 
-const props = defineProps<{
-    listBacterie: Bacterie[];
-    open: boolean;
-}>();
+const listBacterie = defineModel<Bacterie[]>({
+    default: () => [],
+});
+
 const emit = defineEmits<(e: "close", type: boolean) => boolean>();
 const activeTab = ref<string>("population");
 const historyData = ref<Array<{ time: number; count: number }>>([]);
 const isTracking = ref<boolean>(false);
 const trackingInterval = ref<number>();
 const intervalTime = 1000;
-const mouseStartPosition = ref<{ x: number; y: number }>({ x: 0, y: 0 });
-const dialogRef = ref<HTMLElement>();
 const tabs = [
     { id: "population", name: "Population" },
     { id: "colors", name: "Couleurs" },
@@ -546,20 +482,20 @@ const tabs = [
 ];
 
 const maxGeneration = computed(() => {
-    if (props.listBacterie.length === 0) return 1;
-    return Math.max(...props.listBacterie.map((b) => b.generation));
+    if (listBacterie.value.length === 0) return 1;
+    return Math.max(...listBacterie.value.map((b) => b.generation));
 });
 
 const totalChildren = computed(() => {
-    if (props.listBacterie.length === 0) return 0;
-    return props.listBacterie.reduce((sum, b) => sum + b.nbrEnfant, 0);
+    if (listBacterie.value.length === 0) return 0;
+    return listBacterie.value.reduce((sum, b) => sum + b.nbrEnfant, 0);
 });
 
 const maxPopulation = computed(() => {
-    if (historyData.value.length === 0) return props.listBacterie.length;
+    if (historyData.value.length === 0) return listBacterie.value.length;
     return Math.max(
         ...historyData.value.map((d) => d.count),
-        props.listBacterie.length
+        listBacterie.value.length
     );
 });
 
@@ -681,11 +617,11 @@ function getFamilyRepresentativeColor(familyName: string) {
 }
 
 const colorGroups = computed(() => {
-    if (props.listBacterie.length === 0) return [];
+    if (listBacterie.value.length === 0) return [];
 
     const exactColorCounts: Record<string, number> = {};
 
-    props.listBacterie.forEach((bacterie: Bacterie) => {
+    listBacterie.value.forEach((bacterie: Bacterie) => {
         if (exactColorCounts[bacterie.color]) {
             exactColorCounts[bacterie.color]++;
         } else {
@@ -724,9 +660,9 @@ const colorGroups = computed(() => {
 });
 
 const colorPieChartData = computed(() => {
-    if (props.listBacterie.length === 0) return [];
+    if (listBacterie.value.length === 0) return [];
 
-    const total = props.listBacterie.length;
+    const total = listBacterie.value.length;
     let startAngle = 0;
 
     return colorGroups.value.map((group) => {
@@ -777,9 +713,9 @@ function getLabelY(startAngle: number, endAngle: number) {
 }
 
 const sizeRange = computed(() => {
-    if (props.listBacterie.length === 0) return { min: 0, max: 10 };
+    if (listBacterie.value.length === 0) return { min: 0, max: 10 };
 
-    const sizes = props.listBacterie.map((b) => b.tailleInitial);
+    const sizes = listBacterie.value.map((b) => b.tailleInitial);
     return {
         min: Math.min(...sizes),
         max: Math.max(...sizes),
@@ -787,7 +723,7 @@ const sizeRange = computed(() => {
 });
 
 const sizeBarChartData = computed(() => {
-    if (props.listBacterie.length === 0) return [];
+    if (listBacterie.value.length === 0) return [];
 
     const numBins = 10;
     const range = sizeRange.value.max - sizeRange.value.min;
@@ -795,7 +731,7 @@ const sizeBarChartData = computed(() => {
 
     const bins = Array(numBins).fill(0);
 
-    props.listBacterie.forEach((bacterie) => {
+    listBacterie.value.forEach((bacterie) => {
         const binIndex = Math.min(
             Math.floor(
                 (bacterie.tailleInitial - sizeRange.value.min) / binSize
@@ -814,9 +750,9 @@ const sizeBarChartData = computed(() => {
 });
 
 const reproRange = computed(() => {
-    if (props.listBacterie.length === 0) return { min: 0, max: 10 };
+    if (listBacterie.value.length === 0) return { min: 0, max: 10 };
 
-    const values = props.listBacterie.map((b) => b.reproduction);
+    const values = listBacterie.value.map((b) => b.reproduction);
     return {
         min: Math.min(...values),
         max: Math.max(...values),
@@ -824,7 +760,7 @@ const reproRange = computed(() => {
 });
 
 const reproBarChartData = computed(() => {
-    if (props.listBacterie.length === 0) return [];
+    if (listBacterie.value.length === 0) return [];
 
     const numBins = 10;
     const range = reproRange.value.max - reproRange.value.min;
@@ -832,7 +768,7 @@ const reproBarChartData = computed(() => {
 
     const bins = Array(numBins).fill(0);
 
-    props.listBacterie.forEach((bacterie) => {
+    listBacterie.value.forEach((bacterie) => {
         const binIndex = Math.min(
             Math.floor(
                 (bacterie.reproduction - reproRange.value.min) / binSize
@@ -851,9 +787,9 @@ const reproBarChartData = computed(() => {
 });
 
 const lifeRange = computed(() => {
-    if (props.listBacterie.length === 0) return { min: 0, max: 20 };
+    if (listBacterie.value.length === 0) return { min: 0, max: 20 };
 
-    const values = props.listBacterie.map((b) => b.vieInitial);
+    const values = listBacterie.value.map((b) => b.vieInitial);
     return {
         min: Math.min(...values),
         max: Math.max(...values),
@@ -861,7 +797,7 @@ const lifeRange = computed(() => {
 });
 
 const lifeBarChartData = computed(() => {
-    if (props.listBacterie.length === 0) return [];
+    if (listBacterie.value.length === 0) return [];
 
     const numBins = 10;
     const range = lifeRange.value.max - lifeRange.value.min;
@@ -869,7 +805,7 @@ const lifeBarChartData = computed(() => {
 
     const bins = Array(numBins).fill(0);
 
-    props.listBacterie.forEach((bacterie) => {
+    listBacterie.value.forEach((bacterie) => {
         const binIndex = Math.min(
             Math.floor((bacterie.vieInitial - lifeRange.value.min) / binSize),
             numBins - 1
@@ -886,14 +822,14 @@ const lifeBarChartData = computed(() => {
 });
 
 const genBarChartData = computed(() => {
-    if (props.listBacterie.length === 0) return [];
+    if (listBacterie.value.length === 0) return [];
 
     const numBins = Math.min(10, maxGeneration.value);
     const binSize = maxGeneration.value / numBins;
 
     const bins = Array(numBins).fill(0);
 
-    props.listBacterie.forEach((bacterie) => {
+    listBacterie.value.forEach((bacterie) => {
         const binIndex = Math.min(
             Math.floor((bacterie.generation - 1) / binSize),
             numBins - 1
@@ -918,17 +854,17 @@ function plusGrandPlusPetit(
         | "nbrEnfant",
     grand: boolean
 ): number {
-    if (props.listBacterie.length === 0) return 0;
+    if (listBacterie.value.length === 0) return 0;
 
     let nbr: number = grand ? 0 : Number.MAX_VALUE;
     if (grand) {
-        props.listBacterie.forEach((bacterie) => {
+        listBacterie.value.forEach((bacterie) => {
             if (bacterie[attribut] > nbr) {
                 nbr = bacterie[attribut];
             }
         });
     } else {
-        props.listBacterie.forEach((bacterie) => {
+        listBacterie.value.forEach((bacterie) => {
             if (bacterie[attribut] < nbr) {
                 nbr = bacterie[attribut];
             }
@@ -945,13 +881,13 @@ function calculateAverage(
         | "generation"
         | "nbrEnfant"
 ): number {
-    if (props.listBacterie.length === 0) return 0;
+    if (listBacterie.value.length === 0) return 0;
 
-    const sum = props.listBacterie.reduce(
+    const sum = listBacterie.value.reduce(
         (acc, bacterie) => acc + bacterie[attribut],
         0
     );
-    return sum / props.listBacterie.length;
+    return sum / listBacterie.value.length;
 }
 
 function startTracking() {
@@ -982,7 +918,7 @@ function clearHistory() {
 function addHistoryDataPoint() {
     historyData.value.push({
         time: Date.now(),
-        count: props.listBacterie.length,
+        count: listBacterie.value.length,
     });
 
     if (historyData.value.length > 50) {
@@ -990,80 +926,12 @@ function addHistoryDataPoint() {
     }
 }
 
-function startDragging(event: MouseEvent) {
-    if (event.button === 0 && dialogRef.value) {
-        mouseStartPosition.value = {
-            x: event.pageX - dialogRef.value.getBoundingClientRect().left,
-            y: event.pageY - dialogRef.value.getBoundingClientRect().top,
-        };
-
-        document.addEventListener("mousemove", handleDrag);
-    }
-}
-
-function handleDrag(event: MouseEvent) {
-    if (dialogRef.value && mouseStartPosition.value) {
-        const dialogWidth = dialogRef.value.offsetWidth;
-        const dialogHeight = dialogRef.value.offsetHeight;
-        const newLeft = event.clientX - mouseStartPosition.value.x;
-        const newTop = event.clientY - mouseStartPosition.value.y;
-
-        if (newLeft >= 0 && newLeft + dialogWidth <= window.innerWidth) {
-            dialogRef.value.style.left = `${newLeft}px`;
-        }
-
-        if (newTop >= 0 && newTop + dialogHeight <= window.innerHeight) {
-            dialogRef.value.style.top = `${newTop}px`;
-        }
-    }
-}
-
-function stopDragging() {
-    document.removeEventListener("mousemove", handleDrag);
-}
-
 onUnmounted(() => {
     stopTracking();
 });
-
-watch(
-    () => props.open,
-    (newValue) => {
-        if (newValue) {
-            startTracking();
-        } else {
-            stopTracking();
-        }
-    }
-);
 </script>
 
 <style scoped>
-.stats-dialog {
-    position: absolute;
-    top: 20px;
-    left: 1200px;
-    padding: 15px;
-    background-color: rgba(40, 40, 40, 0.95);
-    color: white;
-    display: flex;
-    flex-direction: column;
-    border: 2px solid #555;
-    border-radius: 8px;
-    cursor: move;
-    z-index: 10;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-    width: 550px;
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-.title {
-    margin-top: 0;
-    border-bottom: 1px solid #555;
-    padding-bottom: 8px;
-}
-
 .stats-tabs {
     display: flex;
     gap: 5px;
@@ -1124,33 +992,6 @@ watch(
 .chart-section {
     background-color: rgba(60, 60, 60, 0.5);
     padding: 10px;
-}
-
-.stats-dialog {
-    position: absolute;
-    top: 20px;
-    left: 1200px;
-    padding: 15px;
-    background-color: rgba(40, 40, 40, 0.95);
-    color: white;
-    display: flex;
-    flex-direction: column;
-    border: 2px solid #555;
-    border-radius: 8px;
-    cursor: move;
-    z-index: 10;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-    width: 550px;
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-.title {
-    margin-top: 0;
-    text-align: center;
-    border-bottom: 1px solid #555;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
 }
 
 .stats-tabs {
@@ -1358,12 +1199,6 @@ button {
 }
 
 @media (max-width: 600px) {
-    .stats-dialog {
-        width: 90%;
-        left: 5%;
-        right: 5%;
-    }
-
     .attributes-grid {
         grid-template-columns: 1fr;
     }

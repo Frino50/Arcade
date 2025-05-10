@@ -119,14 +119,8 @@ const position = ref<{ x: number | null; y: number | null }>({
     y: null,
 });
 const size = ref<{ width: number | string; height: number | string }>({
-    width:
-        typeof props.width === "number"
-            ? props.width
-            : parseFloat(props.width as string) || 300,
-    height:
-        typeof props.height === "number"
-            ? props.height
-            : props.height || "auto",
+    width: parseFloat(props.width as string) || 300,
+    height: props.height || "auto",
 });
 
 const isDragging = ref(false);
@@ -146,16 +140,9 @@ const dialogStyle = computed(() => {
     if (position.value.x !== null) style.left = `${position.value.x}px`;
     if (position.value.y !== null) style.top = `${position.value.y}px`;
 
-    if (size.value.width)
-        style.width =
-            typeof size.value.width === "number"
-                ? `${size.value.width}px`
-                : size.value.width;
+    if (size.value.width) style.width = size.value.width;
     if (size.value.height && size.value.height !== "auto") {
-        style.height =
-            typeof size.value.height === "number"
-                ? `${size.value.height}px`
-                : size.value.height;
+        style.height = size.value.height;
     }
 
     return style;
@@ -413,9 +400,10 @@ function handleWindowResize() {
 <style scoped>
 .dialog {
     position: fixed;
-    background-color: #ffffff;
     border-radius: 0.5rem;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    background-color: rgba(40, 40, 40, 0.95);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -434,8 +422,8 @@ function handleWindowResize() {
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 1rem;
-    background-color: #f4f4f4;
-    border-bottom: 1px solid #e0e0e0;
+    background-color: rgba(40, 40, 40, 0.95);
+    border-bottom: 1px solid #555;
     cursor: move;
     user-select: none;
     flex-shrink: 0;
@@ -444,7 +432,7 @@ function handleWindowResize() {
 .dialog-title {
     font-size: 1rem;
     font-weight: 600;
-    color: #333;
+    color: white;
     margin: 0;
 }
 
@@ -487,8 +475,8 @@ function handleWindowResize() {
 
 .dialog-footer {
     padding: 0.75rem 1rem;
-    background-color: #f9f9f9;
-    border-top: 1px solid #e0e0e0;
+    background-color: rgba(40, 40, 40, 0.95);
+    border-bottom: 1px solid #555;
     display: flex;
     justify-content: flex-end;
     gap: 0.5rem;
@@ -509,19 +497,6 @@ function handleWindowResize() {
         transparent 60%
     );
     z-index: 10;
-}
-
-.dialog-fade-enter-active,
-.dialog-fade-leave-active {
-    transition:
-        opacity 0.2s ease,
-        transform 0.2s ease;
-}
-
-.dialog-fade-enter-from,
-.dialog-fade-leave-to {
-    opacity: 0;
-    transform: translateY(-10px);
 }
 
 @media (max-width: 768px) {
