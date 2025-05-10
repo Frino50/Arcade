@@ -7,8 +7,8 @@
         @mouseup="stopDragging"
     >
         <div v-if="props.bacterieSelected" class="content">
+            <h2 class="title">Détails de la bactérie</h2>
             <div class="basic-info">
-                <h3 class="title">Détails de la bactérie</h3>
                 <div
                     class="color-preview"
                     :style="{ backgroundColor: props.bacterieSelected.color }"
@@ -361,6 +361,9 @@ watch(
     margin-top: 0;
     border-bottom: 1px solid #555;
     padding-bottom: 8px;
+    display: flex;
+    justify-content: center;
+    width: 100%;
 }
 
 .basic-info {

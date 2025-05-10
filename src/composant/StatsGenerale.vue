@@ -1060,10 +1060,8 @@ watch(
 
 .title {
     margin-top: 0;
-    text-align: center;
     border-bottom: 1px solid #555;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
+    padding-bottom: 8px;
 }
 
 .stats-tabs {
