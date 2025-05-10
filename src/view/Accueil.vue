@@ -5,6 +5,7 @@
                 @click="link(hexagon.link)"
                 class="hexagon-item"
                 v-for="hexagon in hexagonItems"
+                :key="hexagon.title"
             >
                 <div class="hex-item">
                     <div></div>

@@ -216,7 +216,9 @@ watchEffect(() => {
 }
 
 .fluorescent-effect {
-    box-shadow: 0 0 40px var(--glow-color), 0 0 0px var(--glow-color),
+    box-shadow:
+        0 0 40px var(--glow-color),
+        0 0 0 var(--glow-color),
         0 0 40px var(--glow-color);
 }
 </style>

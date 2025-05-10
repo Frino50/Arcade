@@ -3,7 +3,13 @@
         "composite": true,
         "skipLibCheck": true,
         "module": "ESNext",
-        "moduleResolution": "bundler",
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "src/*"
+            ]
+        },
+        "moduleResolution": "Bundler",
         "allowSyntheticDefaultImports": true
     },
     "include": ["vite.config.ts"]

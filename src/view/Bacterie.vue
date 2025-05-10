@@ -76,7 +76,7 @@
             background: bacterie.color,
             '--glow-color': bacterie.color,
         }"
-        @click="(dialog = true), (bacterieSelected = bacterie)"
+        @click="((dialog = true), (bacterieSelected = bacterie))"
     ></div>
 </template>
 
@@ -220,14 +220,11 @@ function repousserChevauchements(bacterieA: Bacterie, bacterieB: Bacterie) {
 }
 
 function checkForReproduction(bacterie: Bacterie) {
-    if (
-        bacterie.division === false &&
-        Math.random() < bacterie.reproduction / 100
-    ) {
+    if (!bacterie.division && Math.random() < bacterie.reproduction / 100) {
         bacterie.division = true;
     }
 
-    if (bacterie.division === true) {
+    if (bacterie.division) {
         bacterie.taille++;
     }
 
@@ -350,7 +347,9 @@ function start() {
 }
 
 .fluorescent-effect {
-    box-shadow: 0 0 40px var(--glow-color), 0 0 0px var(--glow-color),
+    box-shadow:
+        0 0 40px var(--glow-color),
+        0 0 0 var(--glow-color),
         0 0 40px var(--glow-color);
 }
 </style>

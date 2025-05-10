@@ -82,14 +82,10 @@ function checkWin(rowIndex: number, colIndex: number, value: number) {
         return true;
     }
 
-    if (
+    return (
         rowIndex + colIndex === 2 &&
         listMorpion.value.every((row, index) => row[2 - index] === value)
-    ) {
-        return true;
-    }
-
-    return false;
+    );
 }
 </script>
 
