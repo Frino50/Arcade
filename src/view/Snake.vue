@@ -177,7 +177,9 @@ const gameBoardStyle = computed(() => ({
     position: absolute;
     width: 20px;
     height: 20px;
-    transition: left 0.1s linear, top 0.1s linear;
+    transition:
+        left 0.1s linear,
+        top 0.1s linear;
 }
 .cell.snake {
     background-color: green;
