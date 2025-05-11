@@ -1,103 +1,39 @@
 <template>
     <PopUp
-        v-model="dialogIndividuel"
-        title="Détails de la bactérie"
-        width="500"
-        :initial-position="{ x: 950, y: 15 }"
+        v-model="dialogParametre"
+        title="Paramètres"
+        width="300"
+        :initial-position="{ x: 15, y: 15 }"
     >
-        <StatsIndividuelle v-model="bacterieSelected" />
+        <Parametres
+            v-model="listBacterie"
+            v-model:vitesseDeplacement="vitesseDeplacement"
+            v-model:vitessePropagation="vitessePropagation"
+            v-model:bacterieStart="bacterieStart"
+            v-model:nombreMax="nombreMax"
+            v-model:dialogGenerale="dialogGenerale"
+            @start="start()"
+        ></Parametres>
     </PopUp>
 
     <PopUp
         v-model="dialogGenerale"
         title="Détails de la bactérie"
         width="500"
-        :initial-position="{ x: 350, y: 15 }"
+        :initial-position="{ x: 300, y: 15 }"
     >
         <StatsGenerale v-model="listBacterie" />
     </PopUp>
 
     <PopUp
-        v-model="dialogParametre"
-        title="Paramètres"
-        width="300"
-        :initial-position="{ x: 15, y: 15 }"
+        v-model="dialogIndividuel"
+        title="Détails de la bactérie"
+        width="500"
+        :initial-position="{ x: 890, y: 15 }"
     >
-        <h2 class="title">Simulation de bactéries</h2>
-        <div class="controls-group">
-            <div class="control-item">
-                <div class="control-label">
-                    <span>Vitesse de déplacement</span>
-                    <span>{{ vitesseDeplacement }}</span>
-                </div>
-                <div class="slider-container">
-                    <input
-                        type="range"
-                        min="1"
-                        max="100"
-                        v-model="vitesseDeplacement"
-                        @change="changeIntervalSpeed"
-                    />
-                </div>
-            </div>
-
-            <div class="control-item">
-                <div class="control-label">
-                    <span>Vitesse de propagation</span>
-                    <span>{{ vitessePropagation }}</span>
-                </div>
-                <div class="slider-container">
-                    <input
-                        type="range"
-                        min="1"
-                        max="10000"
-                        v-model="vitessePropagation"
-                        @change="changeIntervalPropagation"
-                    />
-                </div>
-            </div>
-
-            <div class="control-item">
-                <div class="control-label">
-                    <span>Nombre initial de bactéries</span>
-                    <span>{{ bacterieStart }}</span>
-                </div>
-                <div class="slider-container">
-                    <input
-                        type="range"
-                        min="1"
-                        max="20"
-                        v-model="bacterieStart"
-                    />
-                </div>
-            </div>
-        </div>
-
-        <div class="stats-info">
-            <p>Population: {{ listBacterie.length }} / {{ nombreMax }}</p>
-            <div class="progress-bar">
-                <div
-                    class="progress"
-                    :style="{
-                        width: `${(listBacterie.length / nombreMax) * 100}%`,
-                    }"
-                ></div>
-            </div>
-        </div>
-
-        <div class="button-container">
-            <button @click="start()" class="start-button">Démarrer</button>
-            <button
-                @click="dialogGenerale = true"
-                :disabled="listBacterie.length < 1"
-                class="stats-button"
-            >
-                Statistiques
-            </button>
-        </div>
+        <StatsIndividuelle v-model="bacterieSelected" />
     </PopUp>
 
-    <!-- Canvas en plein écran -->
     <canvas ref="canvasRef" class="bacterie-canvas"></canvas>
 </template>
 
@@ -108,6 +44,7 @@ import Bacterie from "../model/bacterie.ts";
 import StatsIndividuelle from "../composant/StatsIndividuelle.vue";
 import StatsGenerale from "../composant/StatsGenerale.vue";
 import PopUp from "@/composant/PopUp.vue";
+import Parametres from "@/composant/Parametres.vue";
 
 const listBacterie = ref<Bacterie[]>([]);
 const intervalDeplacement = ref<number>();
@@ -241,6 +178,7 @@ function initialisationList() {
     updateSpatialGrid();
 }
 
+// Le reste du code reste inchangé
 function updateSpatialGrid() {
     for (const key in spatialGrid) {
         delete spatialGrid[key];
@@ -533,14 +471,6 @@ function randomValue(number: number): number {
     return +modifiedNumber.toFixed(2);
 }
 
-function changeIntervalSpeed(event: any) {
-    vitesseDeplacement.value = event.target.value;
-}
-
-function changeIntervalPropagation(event: any) {
-    vitessePropagation.value = event.target.value;
-}
-
 function clearAllIntervals() {
     if (intervalDeplacement.value) clearInterval(intervalDeplacement.value);
     if (intervalPropagation.value) clearInterval(intervalPropagation.value);
@@ -579,138 +509,5 @@ function start() {
     z-index: 0;
     pointer-events: auto;
     display: block;
-}
-
-.title {
-    margin-top: 0;
-    border-bottom: 1px solid #555;
-    padding-bottom: 8px;
-}
-
-.controls-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px;
-    background-color: rgba(60, 60, 60, 0.5);
-    border-radius: 5px;
-}
-
-.control-item {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.control-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-}
-
-.slider-container {
-    position: relative;
-    width: 100%;
-    height: 20px;
-}
-
-input[type="range"] {
-    width: 100%;
-    height: 8px;
-    background: #444;
-    border-radius: 4px;
-    outline: none;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #fff;
-    cursor: pointer;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-}
-
-input[type="range"]::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #fff;
-    cursor: pointer;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-}
-
-.stats-info {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    padding: 10px;
-    background-color: rgba(60, 60, 60, 0.5);
-    border-radius: 5px;
-}
-
-.button-container {
-    display: flex;
-    gap: 12px;
-    margin-top: 5px;
-}
-
-button {
-    flex: 1;
-    padding: 8px 15px;
-    background-color: #444;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    font-size: 14px;
-}
-
-button:disabled {
-    background-color: #333;
-    color: #666;
-    cursor: not-allowed;
-}
-
-.start-button {
-    background-color: #4caf50;
-}
-
-.start-button:hover {
-    background-color: #3dc042;
-}
-
-.stats-button {
-    background-color: #4a5d7e;
-}
-
-.stats-button:hover {
-    background-color: #5a6d8e;
-}
-
-.stats-info {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    padding: 10px;
-    background-color: rgba(60, 60, 60, 0.5);
-    border-radius: 5px;
-}
-
-.progress-bar {
-    width: 100%;
-    height: 10px;
-    background-color: #444;
-    border-radius: 5px;
-    overflow: hidden;
-    margin-top: 5px;
-}
-
-.progress {
-    height: 100%;
-    transition: width 0.3s ease;
-    background-color: blue;
 }
 </style>
