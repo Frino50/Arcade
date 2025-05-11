@@ -105,16 +105,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onUnmounted, watch } from "vue";
+import { computed } from "vue";
 import Bacterie from "../model/bacterie";
 
-const historyData = ref<Array<{ time: number; vie: number; taille: number }>>(
-    []
-);
 const bacterieSelected = defineModel<Bacterie>();
-
-const isTracking = ref<boolean>(false);
-const trackingInterval = ref<number>();
 const healthPercentage = computed(() => {
     if (!bacterieSelected.value) return 0;
     return bacterieSelected.value.vie / bacterieSelected.value.vieInitial;
@@ -129,28 +123,6 @@ const divisionProgress = computed(() => {
 
     return ((currentSize - initialSize) / (maxSize - initialSize)) * 100;
 });
-
-function stopTracking() {
-    isTracking.value = false;
-    clearInterval(trackingInterval.value);
-}
-
-function clearHistory() {
-    historyData.value = [];
-    stopTracking();
-}
-
-onUnmounted(() => {
-    stopTracking();
-});
-
-watch(
-    () => bacterieSelected,
-    () => {
-        clearHistory();
-    },
-    { deep: true }
-);
 </script>
 
 <style scoped>

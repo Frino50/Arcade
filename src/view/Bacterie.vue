@@ -7,11 +7,11 @@
     >
         <Parametres
             v-model="listBacterie"
-            v-model:vitesseDeplacement="vitesseDeplacement"
-            v-model:vitessePropagation="vitessePropagation"
-            v-model:bacterieStart="bacterieStart"
-            v-model:nombreMax="nombreMax"
-            v-model:dialogGenerale="dialogGenerale"
+            @nombreMax="nombreMax = $event"
+            @bacterieStart="bacterieStart = $event"
+            @vitessePropagation="vitessePropagation = $event"
+            @vitesseDeplacement="vitesseDeplacement = $event"
+            @dialogGenerale="dialogGenerale = $event"
             @start="start()"
         ></Parametres>
     </PopUp>
@@ -47,20 +47,20 @@ import PopUp from "@/composant/PopUp.vue";
 import Parametres from "@/composant/Parametres.vue";
 
 const listBacterie = ref<Bacterie[]>([]);
-const intervalDeplacement = ref<number>();
-const vitesseDeplacement = ref<number>(100);
-const intervalPropagation = ref<number>();
-const vitessePropagation = ref<number>(200);
-const intervalBaisserVie = ref<number>();
-const dialogGenerale = ref<boolean>(false);
-const bacterieStart = ref<number>(10);
 const bacterieSelected = ref<Bacterie>();
-const dialogIndividuel = ref<boolean>(false);
-const nombreMax = ref<number>(1000);
+const vitesseDeplacement = ref<number>(0);
+const vitessePropagation = ref<number>(0);
+const bacterieStart = ref<number>(0);
+const nombreMax = ref<number>(0);
 const gridSize = ref<number>(20);
-const canvasRef = ref<HTMLCanvasElement | null>(null);
-const animationFrameId = ref<number | null>(null);
+const dialogGenerale = ref<boolean>(false);
+const dialogIndividuel = ref<boolean>(false);
 const dialogParametre = ref<boolean>(true);
+const canvasRef = ref<HTMLCanvasElement | null>(null);
+let animationFrameId: number | null = null;
+let intervalDeplacement: number | undefined;
+let intervalPropagation: number | undefined;
+let intervalBaisserVie: number | undefined;
 let ctx: CanvasRenderingContext2D | null = null;
 let canvasWidth = 0;
 let canvasHeight = 0;
@@ -81,8 +81,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    if (animationFrameId.value !== null) {
-        cancelAnimationFrame(animationFrameId.value);
+    if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
     }
     clearAllIntervals();
     if (canvasRef.value) {
@@ -234,7 +234,7 @@ function gameLoop(timestamp: number) {
 
     renderBacteries();
 
-    animationFrameId.value = requestAnimationFrame(gameLoop);
+    animationFrameId = requestAnimationFrame(gameLoop);
 }
 
 function renderBacteries() {
@@ -472,13 +472,13 @@ function randomValue(number: number): number {
 }
 
 function clearAllIntervals() {
-    if (intervalDeplacement.value) clearInterval(intervalDeplacement.value);
-    if (intervalPropagation.value) clearInterval(intervalPropagation.value);
-    if (intervalBaisserVie.value) clearInterval(intervalBaisserVie.value);
+    if (intervalDeplacement) clearInterval(intervalDeplacement);
+    if (intervalPropagation) clearInterval(intervalPropagation);
+    if (intervalBaisserVie) clearInterval(intervalBaisserVie);
 
-    if (animationFrameId.value !== null) {
-        cancelAnimationFrame(animationFrameId.value);
-        animationFrameId.value = null;
+    if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
     }
 }
 
@@ -495,7 +495,7 @@ function start() {
     lastPropagation = performance.now();
     lastBaisseVie = performance.now();
 
-    animationFrameId.value = requestAnimationFrame(gameLoop);
+    animationFrameId = requestAnimationFrame(gameLoop);
 }
 </script>
 

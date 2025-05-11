@@ -13,10 +13,7 @@
                     max="100"
                     v-model="vitesseDeplacement"
                     @change="
-                        emit(
-                            'update:vitesseDeplacement',
-                            Number(vitesseDeplacement)
-                        )
+                        emit('vitesseDeplacement', Number(vitesseDeplacement))
                     "
                 />
             </div>
@@ -34,10 +31,7 @@
                     max="10000"
                     v-model="vitessePropagation"
                     @change="
-                        emit(
-                            'update:vitessePropagation',
-                            Number(vitessePropagation)
-                        )
+                        emit('vitessePropagation', Number(vitessePropagation))
                     "
                 />
             </div>
@@ -54,9 +48,7 @@
                     min="1"
                     max="20"
                     v-model="bacterieStart"
-                    @change="
-                        emit('update:bacterieStart', Number(bacterieStart))
-                    "
+                    @change="emit('bacterieStart', Number(bacterieStart))"
                 />
             </div>
         </div>
@@ -77,7 +69,7 @@
                 Démarrer
             </button>
             <button
-                @click="emit('update:dialogGenerale', true)"
+                @click="emit('dialogGenerale', true)"
                 :disabled="listBacterie.length < 1"
                 class="stats-button"
             >
@@ -89,25 +81,32 @@
 
 <script setup lang="ts">
 import Bacterie from "@/model/bacterie.ts";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 
 const emit = defineEmits([
-    "update:dialogGenerale",
-    "update:nombreMax",
-    "update:bacterieStart",
+    "dialogGenerale",
+    "nombreMax",
+    "bacterieStart",
     "start",
-    "update:vitesseDeplacement",
-    "update:vitessePropagation",
+    "vitesseDeplacement",
+    "vitessePropagation",
 ]);
 
 const listBacterie = defineModel<Bacterie[]>({
     default: () => [],
 });
 
-const vitesseDeplacement = ref<number>(100);
-const vitessePropagation = ref<number>(200);
-const bacterieStart = ref<number>(10);
-const nombreMax = ref<number>(1000);
+const vitesseDeplacement = ref(100);
+const vitessePropagation = ref(200);
+const bacterieStart = ref(10);
+const nombreMax = ref(1000);
+
+onMounted(() => {
+    emit("vitesseDeplacement", vitesseDeplacement.value);
+    emit("vitessePropagation", vitessePropagation.value);
+    emit("bacterieStart", bacterieStart.value);
+    emit("nombreMax", nombreMax.value);
+});
 </script>
 
 <style scoped>

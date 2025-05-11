@@ -448,7 +448,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onUnmounted, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import Bacterie from "../model/bacterie";
 import ColorFamily from "@/model/colorFamily.ts";
 
@@ -458,8 +458,7 @@ const listBacterie = defineModel<Bacterie[]>({
 
 const activeTab = ref<string>("population");
 const historyData = ref<Array<{ time: number; count: number }>>([]);
-const isTracking = ref<boolean>(false);
-const trackingInterval = ref<number>();
+let trackingInterval: number | undefined;
 const intervalTime = 1000;
 const tabs = [
     { id: "population", name: "Population" },
@@ -876,15 +875,8 @@ function calculateAverage(
     return sum / listBacterie.value.length;
 }
 
-function stopTracking() {
-    isTracking.value = false;
-    clearInterval(trackingInterval.value);
-}
 onMounted(() => {
-    trackingInterval.value = window.setInterval(
-        addHistoryDataPoint,
-        intervalTime
-    );
+    trackingInterval = window.setInterval(addHistoryDataPoint, intervalTime);
 });
 
 function addHistoryDataPoint() {
@@ -897,10 +889,6 @@ function addHistoryDataPoint() {
         historyData.value.shift();
     }
 }
-
-onUnmounted(() => {
-    stopTracking();
-});
 </script>
 
 <style scoped>
