@@ -445,23 +445,10 @@
             </div>
         </div>
     </div>
-
-    <div class="button-container">
-        <button @click="startTracking" v-if="!isTracking">
-            Commencer le suivi
-        </button>
-        <button @click="stopTracking" v-if="isTracking">
-            Arrêter le suivi
-        </button>
-        <button @click="clearHistory">Effacer l'historique</button>
-        <button @click="emit('close', false)" class="close-button">
-            Fermer
-        </button>
-    </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onUnmounted } from "vue";
+import { ref, computed, onUnmounted, onMounted } from "vue";
 import Bacterie from "../model/bacterie";
 import ColorFamily from "@/model/colorFamily.ts";
 
@@ -469,7 +456,6 @@ const listBacterie = defineModel<Bacterie[]>({
     default: () => [],
 });
 
-const emit = defineEmits<(e: "close", type: boolean) => boolean>();
 const activeTab = ref<string>("population");
 const historyData = ref<Array<{ time: number; count: number }>>([]);
 const isTracking = ref<boolean>(false);
@@ -890,30 +876,16 @@ function calculateAverage(
     return sum / listBacterie.value.length;
 }
 
-function startTracking() {
-    if (!isTracking.value) {
-        isTracking.value = true;
-
-        addHistoryDataPoint();
-
-        trackingInterval.value = window.setInterval(
-            addHistoryDataPoint,
-            intervalTime
-        );
-    }
-}
-
 function stopTracking() {
     isTracking.value = false;
     clearInterval(trackingInterval.value);
 }
-
-function clearHistory() {
-    historyData.value = [];
-    if (isTracking.value) {
-        addHistoryDataPoint();
-    }
-}
+onMounted(() => {
+    trackingInterval.value = window.setInterval(
+        addHistoryDataPoint,
+        intervalTime
+    );
+});
 
 function addHistoryDataPoint() {
     historyData.value.push({
@@ -961,6 +933,8 @@ onUnmounted(() => {
 
 .tab-content {
     margin-bottom: 15px;
+    color: white;
+    width: 33rem;
 }
 
 .stat-cards {
@@ -1164,13 +1138,6 @@ onUnmounted(() => {
     justify-content: center;
 }
 
-.button-container {
-    display: flex;
-    gap: 10px;
-    justify-content: space-between;
-    margin-top: 10px;
-}
-
 .button-container button {
     flex: 1;
     padding: 8px 10px;
@@ -1184,14 +1151,6 @@ onUnmounted(() => {
 
 .button-container button:hover {
     background-color: #555;
-}
-
-.button-container .close-button {
-    background-color: #c62828;
-}
-
-.button-container .close-button:hover {
-    background-color: #d32f2f;
 }
 
 button {

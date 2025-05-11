@@ -79,52 +79,6 @@
             </div>
         </div>
 
-        <div class="evolution-chart">
-            <h4>Historique ({{ historyData.length }} entrées)</h4>
-            <button @click="startTracking" v-if="!isTracking">
-                Commencer à suivre
-            </button>
-            <button @click="stopTracking" v-if="isTracking">
-                Arrêter le suivi
-            </button>
-            <button @click="clearHistory">Effacer l'historique</button>
-
-            <div class="chart-container" v-if="historyData.length > 0">
-                <svg width="400" height="150" viewBox="0 0 400 150">
-                    <!-- Axes -->
-                    <line x1="40" y1="130" x2="380" y2="130" stroke="white" />
-                    <line x1="40" y1="130" x2="40" y2="20" stroke="white" />
-
-                    <!-- Life history line -->
-                    <polyline
-                        :points="getLifeHistoryPoints()"
-                        fill="none"
-                        stroke="red"
-                        stroke-width="2"
-                    />
-
-                    <!-- Size history line -->
-                    <polyline
-                        :points="getSizeHistoryPoints()"
-                        fill="none"
-                        stroke="blue"
-                        stroke-width="2"
-                    />
-
-                    <!-- Legend -->
-                    <circle cx="60" cy="15" r="4" fill="red" />
-                    <text x="70" y="20" fill="white" font-size="12">Vie</text>
-                    <circle cx="120" cy="15" r="4" fill="blue" />
-                    <text x="130" y="20" fill="white" font-size="12">
-                        Taille
-                    </text>
-                </svg>
-            </div>
-            <p v-else class="empty-chart-message">
-                Commencez le suivi pour enregistrer les données
-            </p>
-        </div>
-
         <div class="family-tree" v-if="bacterieSelected.nbrEnfant > 0">
             <h4>Arbre généalogique simplifié</h4>
             <div class="tree-visualization">
@@ -176,16 +130,6 @@ const divisionProgress = computed(() => {
     return ((currentSize - initialSize) / (maxSize - initialSize)) * 100;
 });
 
-function startTracking() {
-    if (!isTracking.value && bacterieSelected) {
-        isTracking.value = true;
-
-        addHistoryDataPoint();
-
-        trackingInterval.value = setInterval(addHistoryDataPoint, 1000);
-    }
-}
-
 function stopTracking() {
     isTracking.value = false;
     clearInterval(trackingInterval.value);
@@ -194,54 +138,6 @@ function stopTracking() {
 function clearHistory() {
     historyData.value = [];
     stopTracking();
-}
-
-function addHistoryDataPoint() {
-    if (bacterieSelected.value) {
-        historyData.value.push({
-            time: Date.now(),
-            vie: bacterieSelected.value.vie,
-            taille: bacterieSelected.value.taille,
-        });
-
-        if (historyData.value.length > 20) {
-            historyData.value.shift();
-        }
-    }
-}
-
-function getLifeHistoryPoints() {
-    if (historyData.value.length === 0) return "";
-
-    const maxVie = Math.max(
-        ...historyData.value.map((d) => d.vie),
-        bacterieSelected.value ? bacterieSelected.value.vieInitial : 0
-    );
-
-    return historyData.value
-        .map((d, i) => {
-            const x = 40 + (i / (historyData.value.length - 1 || 1)) * 340;
-            const y = 130 - (d.vie / maxVie) * 100;
-            return `${x},${y}`;
-        })
-        .join(" ");
-}
-
-function getSizeHistoryPoints() {
-    if (historyData.value.length === 0) return "";
-
-    const maxTaille = Math.max(
-        ...historyData.value.map((d) => d.taille),
-        (bacterieSelected.value ? bacterieSelected.value.tailleInitial : 0) * 2
-    );
-
-    return historyData.value
-        .map((d, i) => {
-            const x = 40 + (i / (historyData.value.length - 1 || 1)) * 340;
-            const y = 130 - (d.taille / maxTaille) * 100;
-            return `${x},${y}`;
-        })
-        .join(" ");
 }
 
 onUnmounted(() => {
@@ -328,30 +224,10 @@ watch(
     transition: width 0.3s ease;
 }
 
-.evolution-chart {
-    margin-top: 15px;
-    padding: 10px;
-    background-color: rgba(60, 60, 60, 0.5);
-    border-radius: 5px;
-}
-
 .evolution-chart h4 {
     margin-top: 0;
     margin-bottom: 10px;
     font-size: 14px;
-}
-
-.chart-container {
-    margin-top: 10px;
-    background-color: rgba(30, 30, 30, 0.5);
-    border-radius: 5px;
-    padding: 5px;
-}
-
-.empty-chart-message {
-    text-align: center;
-    font-style: italic;
-    color: #aaa;
 }
 
 .family-tree {
@@ -407,21 +283,5 @@ watch(
     border-radius: 5px;
     margin-top: 5px;
     font-size: 12px;
-}
-
-button {
-    background-color: #444;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-right: 5px;
-    font-size: 12px;
-    transition: background-color 0.2s;
-}
-
-button:hover {
-    background-color: #555;
 }
 </style>
