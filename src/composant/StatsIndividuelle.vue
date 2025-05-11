@@ -165,6 +165,9 @@ watch(
     display: flex;
     flex-direction: column;
     gap: 5px;
+    padding: 10px;
+    background-color: rgba(60, 60, 60, 0.5);
+    border-radius: 5px;
 }
 
 .color-preview {
