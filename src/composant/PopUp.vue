@@ -448,7 +448,6 @@ function handleWindowResize() {
     width: 24px;
     height: 24px;
     display: flex;
-    align-items: center;
     justify-content: center;
     border-radius: 50%;
     transition:
@@ -457,13 +456,8 @@ function handleWindowResize() {
 }
 
 .close-btn:hover {
-    background-color: #f0f0f0;
+    background-color: #555;
     color: #e74c3c;
-}
-
-.close-btn:focus {
-    outline: 2px solid #b3d8ff;
-    outline-offset: 2px;
 }
 
 .dialog-content {
