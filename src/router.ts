@@ -1,13 +1,13 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
-import Accueil from "../src/view/Accueil.vue";
-import Demineur from "../src/view/Demineur.vue";
-import Morpion from "../src/view/Morpion.vue";
-import DeuxMilleQuaranteHuit from "../src/view/2048.vue";
-import Boids from "../src/view/Boids.vue";
-import Bacterie from "../src/view/Bacterie.vue";
-import Ball from "../src/view/Ball.vue";
-import Snake from "../src/view/Snake.vue";
-import Tetris from "../src/view/Tetris.vue";
+import Accueil from "@/views/Accueil.vue";
+import Demineur from "@/views/Demineur.vue";
+import Morpion from "@/views/Morpion.vue";
+import DeuxMilleQuaranteHuit from "@/views/2048.vue";
+import Boids from "@/views/Boids.vue";
+import Bacterie from "@/views/Bacterie.vue";
+import Ball from "@/views/Ball.vue";
+import Snake from "@/views/Snake.vue";
+import Tetris from "@/views/Tetris.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {

@@ -1,4 +1,4 @@
-import { Color } from "./enum/color";
+import { Color } from "@/models/enum/color.ts";
 
 let nextId = 1;
 

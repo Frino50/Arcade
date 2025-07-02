@@ -449,8 +449,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import Bacterie from "../model/bacterie";
-import ColorFamily from "@/model/colorFamily.ts";
+import Bacterie from "../models/bacterie.ts";
+import ColorFamily from "@/models/colorFamily.ts";
 
 const listBacterie = defineModel<Bacterie[]>({
     default: () => [],

@@ -26,7 +26,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
-import Message from "../composant/Message.vue";
+import Message from "@/components/Message.vue";
 
 const loose = ref<boolean>(false);
 const animationId = ref<number | null>(null);

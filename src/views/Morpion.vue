@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import Message from "../composant/Message.vue";
+import Message from "@/components/Message.vue";
 
 const listMorpion = ref<number[][]>([]);
 const winner = ref<string>();

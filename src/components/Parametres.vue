@@ -80,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import Bacterie from "@/model/bacterie.ts";
+import Bacterie from "@/models/bacterie.ts";
 import { onMounted, ref } from "vue";
 
 const emit = defineEmits([

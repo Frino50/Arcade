@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
-import Message from "../composant/Message.vue";
+import Message from "@/components/Message.vue";
 
 const rows = 20;
 const cols = 10;

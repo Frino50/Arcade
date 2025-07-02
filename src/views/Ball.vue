@@ -20,9 +20,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watchEffect } from "vue";
-import { Color } from "../model/enum/color";
-import { Direction, directionState } from "../model/enum/direction";
-import bonhomme from "../model/bonhomme";
+import { Color } from "@/models/enum/color";
+import { Direction, directionState } from "@/models/enum/direction";
+import bonhomme from "../models/bonhomme.ts";
 
 const bon1 = new bonhomme(0, 0, Color.Red);
 const bon2 = new bonhomme(500, 500, Color.Blue);

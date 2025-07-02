@@ -47,8 +47,8 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import Case from "../model/case.ts";
-import Message from "../composant/Message.vue";
+import Case from "../models/case.ts";
+import Message from "@/components/Message.vue";
 
 const listCase = ref<Case[]>([]);
 const taille = ref<number>(252);

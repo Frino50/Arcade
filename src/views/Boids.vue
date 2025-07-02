@@ -43,7 +43,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
-import Boid from "../model/boid";
+import Boid from "../models/boid.ts";
 
 const SPAWN_NUMBER = 100;
 const BOID_SIZE = 17;

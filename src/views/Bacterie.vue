@@ -39,12 +39,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from "vue";
-import { Color } from "../model/enum/color.ts";
-import Bacterie from "../model/bacterie.ts";
-import StatsIndividuelle from "../composant/StatsIndividuelle.vue";
-import StatsGenerale from "../composant/StatsGenerale.vue";
-import PopUp from "@/composant/PopUp.vue";
-import Parametres from "@/composant/Parametres.vue";
+import { Color } from "@/models/enum/color.ts";
+import Bacterie from "../models/bacterie.ts";
+import StatsIndividuelle from "@/components/StatsIndividuelle.vue";
+import StatsGenerale from "@/components/StatsGenerale.vue";
+import PopUp from "@/components/PopUp.vue";
+import Parametres from "@/components/Parametres.vue";
 
 const listBacterie = ref<Bacterie[]>([]);
 const bacterieSelected = ref<Bacterie>();

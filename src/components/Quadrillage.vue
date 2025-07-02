@@ -14,7 +14,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import Rectangle from "../model/rectangle.ts";
+import Rectangle from "../models/rectangle.ts";
 
 const listRectangle = ref<Rectangle[]>([]);
 

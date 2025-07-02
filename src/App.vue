@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import Selecteur from "../src/composant/Selecteur.vue";
+import Selecteur from "@/components/Selecteur.vue";
 </script>
 
 <style scoped>
