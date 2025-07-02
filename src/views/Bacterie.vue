@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from "vue";
-import { Color } from "@/models/enum/color.ts";
+import { Color } from "@/models/enums/color.ts";
 import Bacterie from "../models/bacterie.ts";
 import StatsIndividuelle from "@/components/StatsIndividuelle.vue";
 import StatsGenerale from "@/components/StatsGenerale.vue";
