@@ -1,6 +1,6 @@
 <template>
     <div v-if="bacterieSelected" class="content">
-        <div class="left-column">
+        <div class="top-row">
             <div class="basic-info">
                 <div
                     class="color-preview"
@@ -29,62 +29,66 @@
                 </p>
             </div>
 
-            <div class="charts-container">
-                <div class="chart">
-                    <h4>État de santé</h4>
-                    <div class="pie-chart-container">
-                        <svg width="100" height="100" viewBox="0 0 100 100">
-                            <circle
-                                r="45"
-                                cx="50"
-                                cy="50"
-                                fill="transparent"
-                                stroke="#ddd"
-                                stroke-width="10"
-                            />
-                            <circle
-                                r="45"
-                                cx="50"
-                                cy="50"
-                                fill="transparent"
-                                :stroke="bacterieSelected.color"
-                                stroke-width="10"
-                                :stroke-dasharray="`${healthPercentage * 283} 283`"
-                                transform="rotate(-90, 50, 50)"
-                            />
-                            <text
-                                x="50"
-                                y="55"
-                                text-anchor="middle"
-                                font-size="15"
-                                font-weight="bold"
-                            >
-                                {{ Math.round(healthPercentage * 100) }}%
-                            </text>
-                        </svg>
-                    </div>
-                </div>
-
-                <div class="chart">
-                    <h4>Cycle de division</h4>
-                    <div class="progress-bar">
-                        <div
-                            class="progress"
-                            :style="{
-                                width: `${divisionProgress}%`,
-                                backgroundColor: bacterieSelected.color,
-                            }"
-                        ></div>
-                    </div>
-                    <p class="detail">
-                        {{ Math.round(divisionProgress) }}% complété
-                    </p>
-                </div>
+            <div class="right-column">
+                <img
+                    src="../assets/adn.gif"
+                    alt="ADN animation"
+                    class="adn-gif"
+                />
             </div>
         </div>
 
-        <div class="right-column">
-            <img src="../assets/adn.gif" alt="ADN animation" class="adn-gif" />
+        <div class="bottom-row">
+            <div class="chart division-chart">
+                <h4>Cycle de division</h4>
+                <div class="progress-bar">
+                    <div
+                        class="progress"
+                        :style="{
+                            width: `${divisionProgress}%`,
+                            backgroundColor: bacterieSelected.color,
+                        }"
+                    ></div>
+                </div>
+                <p class="detail">
+                    {{ Math.round(divisionProgress) }}% complété
+                </p>
+            </div>
+
+            <div class="chart health-chart">
+                <h4>État de santé</h4>
+                <div class="pie-chart-container">
+                    <svg width="100" height="100" viewBox="0 0 100 100">
+                        <circle
+                            r="45"
+                            cx="50"
+                            cy="50"
+                            fill="transparent"
+                            stroke="#ddd"
+                            stroke-width="10"
+                        />
+                        <circle
+                            r="45"
+                            cx="50"
+                            cy="50"
+                            fill="transparent"
+                            :stroke="bacterieSelected.color"
+                            stroke-width="10"
+                            :stroke-dasharray="`${healthPercentage * 283} 283`"
+                            transform="rotate(-90, 50, 50)"
+                        />
+                        <text
+                            x="50"
+                            y="55"
+                            text-anchor="middle"
+                            font-size="15"
+                            font-weight="bold"
+                        >
+                            {{ Math.round(healthPercentage * 100) }}%
+                        </text>
+                    </svg>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -113,68 +117,73 @@ const divisionProgress = computed(() => {
 <style scoped>
 .content {
     display: flex;
-    gap: 2rem;
+    flex-direction: column;
+    gap: 1rem;
     color: white;
-    width: 30rem;
+    width: 100%;
+    max-width: 50rem;
+}
+
+.top-row,
+.bottom-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.basic-info {
+    flex: 2.2;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3125rem;
+    padding: 0.625rem;
+    background-color: rgba(60, 60, 60, 0.5);
+    border-radius: 0.3125rem;
 }
 
 .right-column {
+    flex: 1.5;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
 .adn-gif {
-    transform-origin: center;
-    height: 95%;
     width: 100%;
+    height: auto;
+    max-width: 10rem;
 }
 
-.basic-info {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    padding: 10px;
+.division-chart {
+    flex: 1.75;
+    text-align: center;
+    padding: 0.625rem;
     background-color: rgba(60, 60, 60, 0.5);
-    border-radius: 5px;
+    border-radius: 0.3125rem;
+}
+
+.health-chart {
+    flex: 1;
+    text-align: center;
+    padding: 0.625rem;
+    background-color: rgba(60, 60, 60, 0.5);
+    border-radius: 0.3125rem;
 }
 
 .color-preview {
-    width: 20px;
-    height: 20px;
+    width: 1.25rem;
+    height: 1.25rem;
     border-radius: 50%;
     display: inline-block;
-    margin-right: 10px;
+    margin-right: 0.625rem;
     vertical-align: middle;
     box-shadow:
-        0 0 10px,
-        0 0 5px;
+        0 0 0.625rem,
+        0 0 0.3125rem;
 }
 
 .detail {
-    margin: 2px 0;
-    font-size: 14px;
-}
-
-.charts-container {
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-    margin-top: 10px;
-}
-
-.chart {
-    flex: 1;
-    text-align: center;
-    padding: 10px;
-    background-color: rgba(60, 60, 60, 0.5);
-    border-radius: 5px;
-}
-
-.chart h4 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 14px;
+    margin: 0.125rem 0;
+    font-size: 0.875rem;
 }
 
 .pie-chart-container {
@@ -184,11 +193,11 @@ const divisionProgress = computed(() => {
 
 .progress-bar {
     width: 100%;
-    height: 20px;
+    height: 1.25rem;
     background-color: #444;
-    border-radius: 10px;
+    border-radius: 0.625rem;
     overflow: hidden;
-    margin-bottom: 5px;
+    margin-bottom: 0.3125rem;
 }
 
 .progress {
