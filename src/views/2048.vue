@@ -1,6 +1,15 @@
 <template>
     <div class="game-container">
-        <div class="board">
+        <div
+            class="board"
+            :style="{
+                width: boardSize * cellSize + (boardSize - 1) * gap + 'px',
+                height: boardSize * cellSize + (boardSize - 1) * gap + 'px',
+                gridTemplateRows: `repeat(${boardSize}, ${cellSize}px)`,
+                gridTemplateColumns: `repeat(${boardSize}, ${cellSize}px)`,
+                gap: gap + 'px',
+            }"
+        >
             <div
                 v-for="index in boardCells.length"
                 :key="index"
@@ -15,6 +24,9 @@
                 :style="{
                     top: tile.row * (cellSize + gap) + 'px',
                     left: tile.col * (cellSize + gap) + 'px',
+                    width: cellSize + 'px',
+                    height: cellSize + 'px',
+                    fontSize: cellSize / 3 + 'px',
                 }"
             >
                 {{ tile.value }}
@@ -32,13 +44,12 @@ import { ref, onMounted, onBeforeUnmount } from "vue";
 import Tile from "@/models/tile.ts";
 
 const boardSize = 4;
-const cellSize = 100;
+const cellSize = 150;
 const gap = 5;
 const MOVE_DURATION = 200;
 
 const tiles = ref<Tile[]>([]);
 let idCounter = 0;
-
 const boardCells = Array.from({ length: boardSize * boardSize });
 
 function createTile(value: number, row: number, col: number): Tile {
@@ -176,15 +187,9 @@ onBeforeUnmount(() => {
 
 .board {
     position: relative;
-    width: calc(4 * 100px + 3 * 5px);
-    height: calc(4 * 100px + 3 * 5px);
     background: #bbada0;
     border-radius: 8px;
     display: grid;
-    grid-template-rows: repeat(4, 100px);
-    grid-template-columns: repeat(4, 100px);
-    gap: 5px;
-    /* padding supprimé */
 }
 
 .board-cell.empty {
@@ -196,12 +201,9 @@ onBeforeUnmount(() => {
 
 .tile {
     position: absolute;
-    width: 100px;
-    height: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
     font-weight: bold;
     color: #333;
     border-radius: 6px;
@@ -225,7 +227,6 @@ onBeforeUnmount(() => {
     }
 }
 
-/* Couleurs */
 .tile-2 {
     background: #eee4da;
 }
