@@ -22,33 +22,35 @@
 
         <div
             class="tableau-container"
-            :class="{ 'tableau-inactif': perdu }"
-            :style="{ width: `${nombreDeColonnes * 2.6375}rem` }"
+            :style="{ '--colonnes': nombreDeColonnes }"
         >
-            <template v-for="(ligne, i) in listCase" :key="i">
+            <div
+                v-for="(casee, index) in listCase.flat()"
+                :key="casee.id"
+                class="case-container"
+                :style="{
+                    backgroundImage: getImage(casee),
+                    backgroundColor: getColor(casee),
+                }"
+                @click="
+                    reveleCase(
+                        Math.floor(index / nombreDeColonnes),
+                        index % nombreDeColonnes
+                    )
+                "
+                @contextmenu.prevent="cocherBombe(casee)"
+            >
                 <div
-                    class="case-container"
-                    v-for="(casee, j) in ligne"
-                    :key="casee.id"
-                    :style="{
-                        backgroundImage: getImage(casee),
-                        backgroundColor: getColor(casee),
-                    }"
-                    @click="reveleCase(i, j)"
-                    @contextmenu.prevent="cocherBombe(casee)"
+                    v-if="
+                        casee.visible &&
+                        casee.nbrBombeAlentoure !== 0 &&
+                        !casee.bombe
+                    "
+                    :class="`nombre-${casee.nbrBombeAlentoure}`"
                 >
-                    <div
-                        v-if="
-                            casee.visible &&
-                            casee.nbrBombeAlentoure !== 0 &&
-                            !casee.bombe
-                        "
-                        :class="`nombre-${casee.nbrBombeAlentoure}`"
-                    >
-                        {{ casee.nbrBombeAlentoure }}
-                    </div>
+                    {{ casee.nbrBombeAlentoure }}
                 </div>
-            </template>
+            </div>
         </div>
 
         <div class="boutton-container">
@@ -274,12 +276,16 @@ button:hover {
     width: 1.5rem;
     height: 1.5rem;
 }
+:root {
+    --colonnes: 18;
+}
 .tableau-container {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(var(--colonnes), 2.5rem);
     border: 2px solid black;
     box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
 }
+
 .tableau-inactif {
     pointer-events: none;
 }
