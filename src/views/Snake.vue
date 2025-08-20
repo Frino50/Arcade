@@ -113,7 +113,7 @@ function startGame() {
                 drawSnake();
             });
         }
-    }, 1000 / speed.value);
+    }, 1000 / speed.value) as unknown as number;
 
     animationId.value = requestAnimationFrame(() => {
         drawSnake();

@@ -53,7 +53,7 @@ function link(link: string) {
 .hexagon-item {
     cursor: pointer;
     width: 200px;
-    height: 173.20508px;
+    height: 173px;
     float: left;
     margin-left: -29px;
     z-index: 0;
@@ -87,7 +87,7 @@ function link(link: string) {
     top: 0;
     left: 50px;
     width: 100px;
-    height: 173.20508px;
+    height: 173px;
 }
 .hex-item:first-child {
     z-index: 0;
@@ -107,7 +107,7 @@ function link(link: string) {
     position: absolute;
     top: 0;
     width: 100px;
-    height: 173.20508px;
+    height: 173px;
     -webkit-transform-origin: center center;
     -moz-transform-origin: center center;
     -ms-transform-origin: center center;

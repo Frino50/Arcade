@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <div v-for="page in pages">
+        <div v-for="(page, index) in pages" :key="index">
             <div
                 @click="switchPage(page.link)"
                 class="custom-style"
@@ -62,7 +62,9 @@ function switchPage(chemin: string) {
     margin-bottom: 1rem;
     border-top-left-radius: 1rem;
     border-bottom-left-radius: 1rem;
-    transition: width 0.3s, left 0.3s;
+    transition:
+        width 0.3s,
+        left 0.3s;
     overflow: hidden;
     display: flex;
     justify-content: center;

@@ -30,5 +30,8 @@ export default [
                 parser: tsEslint,
             },
         },
+        rules: {
+            "vue/multi-word-component-names": "off",
+        },
     },
 ];

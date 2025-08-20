@@ -2,7 +2,7 @@
     <div class="button">
         <button @click="generer()">Générer</button>
     </div>
-    <div v-for="bonhomme in bonhommes">
+    <div v-for="(bonhomme, key) in bonhommes" :key="key">
         <div
             class="ball fluorescent-effect"
             :style="{
@@ -39,7 +39,10 @@ function handleKeyDown(event: KeyboardEvent) {
     if (Object.values(Direction).includes(key)) {
         directionState[key] = true;
         if (intervalId === null) {
-            intervalId = setInterval(handleDirectionChange, 1);
+            intervalId = setInterval(
+                handleDirectionChange,
+                1
+            ) as unknown as number;
         }
     }
 }
@@ -213,6 +216,7 @@ watchEffect(() => {
 .ball {
     position: absolute;
     border-radius: 100%;
+    --glow-color: transparent;
 }
 
 .fluorescent-effect {

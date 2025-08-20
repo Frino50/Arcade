@@ -10,7 +10,6 @@
         </button>
     </div>
 
-    <!-- Population Overview Tab -->
     <div v-if="activeTab === 'population'" class="tab-content">
         <div class="stat-cards">
             <div class="stat-card">
@@ -33,7 +32,6 @@
             <h3>Évolution de la Population</h3>
             <div class="chart-container">
                 <svg width="500" height="250" viewBox="0 0 500 250">
-                    <!-- Population history line chart -->
                     <rect
                         x="40"
                         y="20"
@@ -42,11 +40,9 @@
                         fill="rgba(30, 30, 30, 0.5)"
                     />
 
-                    <!-- Axes -->
                     <line x1="40" y1="220" x2="480" y2="220" stroke="white" />
                     <line x1="40" y1="20" x2="40" y2="220" stroke="white" />
 
-                    <!-- Population line -->
                     <polyline
                         :points="getPopulationHistoryPoints()"
                         fill="none"
@@ -54,7 +50,6 @@
                         stroke-width="2"
                     />
 
-                    <!-- Y-axis labels -->
                     <text
                         x="35"
                         y="25"
@@ -74,7 +69,6 @@
                         0
                     </text>
 
-                    <!-- X-axis labels -->
                     <text
                         x="40"
                         y="235"
@@ -104,12 +98,10 @@
         </div>
     </div>
 
-    <!-- Color Distribution Tab -->
     <div v-if="activeTab === 'colors'" class="tab-content">
         <h3>Distribution des Couleurs</h3>
         <div class="color-chart-container">
             <svg width="300" height="300" viewBox="0 0 300 300">
-                <!-- Color pie chart -->
                 <g transform="translate(150, 150)">
                     <g v-for="(slice, index) in colorPieChartData" :key="index">
                         <path
@@ -126,7 +118,6 @@
                             stroke="#333"
                             stroke-width="1"
                         />
-                        <!-- Label for large enough slices -->
                         <text
                             v-if="slice.percentage >= 5"
                             :x="getLabelX(slice.startAngle, slice.endAngle)"

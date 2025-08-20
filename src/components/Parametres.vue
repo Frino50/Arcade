@@ -1,4 +1,3 @@
-<!-- Correction du fichier Parametres.vue -->
 <template>
     <div class="controls-group">
         <div class="control-item">
