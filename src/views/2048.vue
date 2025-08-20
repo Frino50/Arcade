@@ -17,7 +17,7 @@
             </div>
         </div>
         <div class="button-container">
-            <button @click="restartGame">Restart</button>
+            <button @click="restartGame">Reset</button>
         </div>
     </div>
 </template>

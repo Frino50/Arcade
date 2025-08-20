@@ -12,9 +12,7 @@
                 {{ value === 1 ? "X" : value === 2 ? "O" : "" }}
             </div>
         </div>
-        <button class="bouton-container" @click="resetBoard">
-            Réinitialiser tableau
-        </button>
+        <button class="bouton-container" @click="resetBoard">Reset</button>
         <Message
             v-if="winner"
             :message="winner + ' gagne'"
@@ -133,8 +131,6 @@ function checkWin(rowIndex: number, colIndex: number, value: number) {
 
 .bouton-container {
     margin-top: 5rem;
-    width: 15rem;
-    padding: 10px;
     cursor: pointer;
 }
 </style>

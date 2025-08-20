@@ -1,17 +1,15 @@
-let nextId = 1;
-
 export default class Case {
     id: number;
     bombe: boolean;
+    cocherBombe: boolean;
     visible: boolean;
     nbrBombeAlentoure: number;
-    cocherBombe: boolean;
 
-    constructor(bombe: boolean, visible: boolean) {
-        this.id = nextId++;
+    constructor(bombe: boolean) {
+        this.id = Math.random();
         this.bombe = bombe;
-        this.visible = visible;
-        this.nbrBombeAlentoure = 0;
         this.cocherBombe = false;
+        this.visible = false;
+        this.nbrBombeAlentoure = 0;
     }
 }

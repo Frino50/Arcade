@@ -1,15 +1,11 @@
 <template>
     <div class="body-container">
-        <Message v-if="perdu" :message="'Défaite'" :isGreen="false"></Message>
         <Message
             v-if="estGagne()"
             :message="'Victoire'"
             :isGreen="true"
         ></Message>
-        <div class="boutton-container">
-            <button @click="genererList()">Recommencer</button>
-            <button @click="tricher()">Tricher</button>
-        </div>
+
         <div class="compteur-container">
             <div class="drapeau-compteur-container">
                 <img
@@ -17,68 +13,83 @@
                     src="../assets/drapeau.png"
                     alt="drapeau.png"
                 />
-                {{ 40 - nombreCasesCocherBombe() }}
+                {{ nombreDeBombes - nombreCasesCocherBombe }}
             </div>
-            {{ formatMinutes() }}:{{ formatSecondes() }}
+            <div class="timer">
+                {{ formatMinutes() }}:{{ formatSecondes() }}
+            </div>
         </div>
+
         <div
             class="tableau-container"
             :class="{ 'tableau-inactif': perdu }"
-            :style="{ width: `${nombreDeLignes * 2.6375}rem` }"
+            :style="{ width: `${nombreDeColonnes * 2.6375}rem` }"
         >
-            <div
-                class="case-container"
-                v-for="casee in listCase"
-                :key="casee.id"
-                :style="{
-                    backgroundImage: getImage(casee),
-                    backgroundColor: getColor(casee),
-                }"
-                @click="reveleCase(casee)"
-                @contextmenu.prevent="cocherBombe(casee)"
-            >
-                <div v-if="casee.visible && casee.nbrBombeAlentoure !== 0">
-                    {{ casee.nbrBombeAlentoure }}
+            <template v-for="(ligne, i) in listCase" :key="i">
+                <div
+                    class="case-container"
+                    v-for="(casee, j) in ligne"
+                    :key="casee.id"
+                    :style="{
+                        backgroundImage: getImage(casee),
+                        backgroundColor: getColor(casee),
+                    }"
+                    @click="reveleCase(i, j)"
+                    @contextmenu.prevent="cocherBombe(casee)"
+                >
+                    <div
+                        v-if="
+                            casee.visible &&
+                            casee.nbrBombeAlentoure !== 0 &&
+                            !casee.bombe
+                        "
+                        :class="`nombre-${casee.nbrBombeAlentoure}`"
+                    >
+                        {{ casee.nbrBombeAlentoure }}
+                    </div>
                 </div>
-            </div>
+            </template>
+        </div>
+
+        <div class="boutton-container">
+            <button @click="genererList()">Reset</button>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import Case from "../models/case.ts";
 import Message from "@/components/Message.vue";
 
-const listCase = ref<Case[]>([]);
-const taille = ref<number>(252);
 const nombreDeBombes = ref<number>(40);
-const nombreDeLignes = ref<number>(18);
+const nombreDeLignes = ref<number>(14); // hauteur
+const nombreDeColonnes = ref<number>(18); // largeur
 const perdu = ref<boolean>();
 const tempsEcoule = ref<number>(0);
-const tricherConst = ref<boolean>(false);
+const firstClick = ref<boolean>(true);
+const intervalId = ref<number | null>(null);
+
+const listCase = ref<Case[][]>([]);
+
+const nombreCasesCocherBombe = computed(() => {
+    return listCase.value.flat().filter((c) => c.cocherBombe).length;
+});
 
 function formatMinutes(): string {
     const minutes = Math.floor(tempsEcoule.value / 60);
     return minutes < 10 ? `0${minutes}` : `${minutes}`;
 }
-
 function formatSecondes(): string {
     const secondes = tempsEcoule.value % 60;
     return secondes < 10 ? `0${secondes}` : `${secondes}`;
 }
 
 function getColor(casee: Case) {
-    if (casee.bombe && casee.visible) {
-        return "red";
-    }
-    if (casee.visible) {
-        return "white";
-    } else {
-        return "gray";
-    }
+    if (casee.bombe && casee.visible) return "red";
+    if (casee.visible) return "lightgray";
+    return "gray";
 }
-
 function getImage(casee: Case) {
     if (casee.visible && casee.bombe) {
         return "url(../src/assets/demineur.png)";
@@ -86,8 +97,27 @@ function getImage(casee: Case) {
     if (!casee.visible && casee.cocherBombe) {
         return "url(../src/assets/drapeau.png)";
     }
-
     return "none";
+}
+
+function getVoisins(i: number, j: number): [number, number][] {
+    const voisins: [number, number][] = [];
+    for (let di = -1; di <= 1; di++) {
+        for (let dj = -1; dj <= 1; dj++) {
+            if (di === 0 && dj === 0) continue;
+            const ni = i + di;
+            const nj = j + dj;
+            if (
+                ni >= 0 &&
+                ni < nombreDeLignes.value &&
+                nj >= 0 &&
+                nj < nombreDeColonnes.value
+            ) {
+                voisins.push([ni, nj]);
+            }
+        }
+    }
+    return voisins;
 }
 
 function cocherBombe(clickedCase: Case) {
@@ -96,133 +126,98 @@ function cocherBombe(clickedCase: Case) {
     }
 }
 
-function reveleCase(clickedCase: Case) {
+function reveleCase(i: number, j: number) {
+    const clickedCase = listCase.value[i][j];
+
+    if (firstClick.value) {
+        genererCarte(i, j);
+        firstClick.value = false;
+        intervalId.value = setInterval(
+            miseAJourTimer,
+            1000
+        ) as unknown as number;
+    }
+
     if (!clickedCase.visible && !clickedCase.cocherBombe) {
-        // Marque la case comme visible
         clickedCase.visible = true;
+
         if (clickedCase.bombe) {
             perdu.value = true;
             allBombeTrue();
+            clearInterval(intervalId.value as number);
+            return;
         }
 
-        // Vérifie si la case ne contient pas de bombe et le nombre de bombes alentour est égal à zéro
-        if (clickedCase.nbrBombeAlentoure === 0 && !clickedCase.bombe) {
-            // Obtient les indices de ligne et colonne de la case dans une grille de nombreDeLignes.value colonnes
-            const ligne = Math.floor(
-                listCase.value.indexOf(clickedCase) / nombreDeLignes.value
-            );
-            const colonne =
-                listCase.value.indexOf(clickedCase) % nombreDeLignes.value;
-            // Double boucle pour parcourir les voisins de la case
-            for (let j = -1; j <= 1; j++) {
-                for (let k = -1; k <= 1; k++) {
-                    // Calcul de l'index du voisin dans le tableau listCase.value
-                    const voisinIndex =
-                        (ligne + j) * nombreDeLignes.value + (colonne + k);
-
-                    // Vérifie les conditions pour s'assurer que le voisin est valide
-                    if (
-                        voisinIndex >= 0 &&
-                        voisinIndex < taille.value &&
-                        ligne + j ===
-                            Math.floor(voisinIndex / nombreDeLignes.value) &&
-                        colonne + k === voisinIndex % nombreDeLignes.value
-                    ) {
-                        // Récupération du voisin à partir de l'index calculé
-                        const voisin = listCase.value[voisinIndex];
-
-                        // Vérifie si le voisin existe, n'est pas déjà visible et n'a pas de drapeau
-                        if (voisin && !voisin.visible && !voisin.cocherBombe) {
-                            // Appel récursif de la fonction reveleCase pour révéler le voisin
-                            reveleCase(voisin);
-                        }
-                    }
-                }
+        if (clickedCase.nbrBombeAlentoure === 0) {
+            for (const [ni, nj] of getVoisins(i, j)) {
+                reveleCase(ni, nj);
             }
         }
+    }
+}
+
+function genererCarte(firstI: number, firstJ: number) {
+    const safe = new Set<string>();
+    for (const [ni, nj] of getVoisins(firstI, firstJ).concat([
+        [firstI, firstJ],
+    ])) {
+        safe.add(`${ni},${nj}`);
+    }
+
+    let bombs = 0;
+    while (bombs < nombreDeBombes.value) {
+        const i = Math.floor(Math.random() * nombreDeLignes.value);
+        const j = Math.floor(Math.random() * nombreDeColonnes.value);
+        if (!safe.has(`${i},${j}`) && !listCase.value[i][j].bombe) {
+            listCase.value[i][j].bombe = true;
+            bombs++;
+        }
+    }
+
+    for (let i = 0; i < nombreDeLignes.value; i++) {
+        for (let j = 0; j < nombreDeColonnes.value; j++) {
+            const c = listCase.value[i][j];
+            if (!c.bombe) {
+                c.nbrBombeAlentoure = getVoisins(i, j).filter(
+                    ([ni, nj]) => listCase.value[ni][nj].bombe
+                ).length;
+            }
+        }
+    }
+}
+
+function initialiserJeu() {
+    listCase.value = [];
+    perdu.value = false;
+    tempsEcoule.value = 0;
+    firstClick.value = true;
+    if (intervalId.value) clearInterval(intervalId.value);
+
+    for (let i = 0; i < nombreDeLignes.value; i++) {
+        const ligne: Case[] = [];
+        for (let j = 0; j < nombreDeColonnes.value; j++) {
+            ligne.push(new Case(false));
+        }
+        listCase.value.push(ligne);
     }
 }
 
 function genererList() {
-    tempsEcoule.value = 0;
-    perdu.value = false;
-    listCase.value = [];
-    let bombesPlacees = 0;
-
-    // Génération initiale de la liste
-    for (let i = 0; i < taille.value; i++) {
-        const bombe =
-            bombesPlacees < nombreDeBombes.value && Math.random() < 0.4;
-        const nouvelleCase = new Case(bombe, tricherConst.value);
-        listCase.value.push(nouvelleCase);
-        if (bombe) {
-            bombesPlacees++;
-        }
-    }
-
-    // Mélanger la liste
-    for (let i = listCase.value.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [listCase.value[i], listCase.value[j]] = [
-            listCase.value[j],
-            listCase.value[i],
-        ];
-    }
-
-    // Mettre à jour nbrBombeAlentoure
-    for (let i = 0; i < taille.value; i++) {
-        const caseCourante = listCase.value[i];
-
-        if (!caseCourante.bombe) {
-            const ligne = Math.floor(i / nombreDeLignes.value);
-            const colonne = i % nombreDeLignes.value;
-
-            // Vérifier les cases autour
-            for (let j = -1; j <= 1; j++) {
-                for (let k = -1; k <= 1; k++) {
-                    const voisinIndex =
-                        (ligne + j) * nombreDeLignes.value + (colonne + k);
-
-                    if (
-                        voisinIndex >= 0 &&
-                        voisinIndex < taille.value &&
-                        ligne + j ===
-                            Math.floor(voisinIndex / nombreDeLignes.value) &&
-                        colonne + k === voisinIndex % nombreDeLignes.value
-                    ) {
-                        const voisin = listCase.value[voisinIndex];
-
-                        if (voisin.bombe) {
-                            caseCourante.nbrBombeAlentoure++;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-function nombreCasesCocherBombe(): number {
-    return listCase.value.filter((casee) => casee.cocherBombe).length;
+    initialiserJeu();
 }
 
 function allBombeTrue() {
-    listCase.value.forEach((value: Case) => {
-        if (value.bombe) {
-            value.visible = true;
-        }
-    });
-}
-
-function tricher() {
-    tricherConst.value = !tricherConst.value;
-    listCase.value.forEach((value: Case) => {
-        value.visible = !value.visible;
+    listCase.value.flat().forEach((c) => {
+        if (c.bombe) c.visible = true;
     });
 }
 
 function estGagne(): boolean {
-    return listCase.value.every((casee) => casee.cocherBombe === casee.bombe);
+    if (listCase.value.length === 0) return false;
+    return listCase.value
+        .flat()
+        .filter((c) => !c.bombe)
+        .every((c) => c.visible);
 }
 
 function miseAJourTimer() {
@@ -230,26 +225,12 @@ function miseAJourTimer() {
 }
 
 onMounted(() => {
-    //Ouvrir une fenetre
-
-    // const myExternalWindow = window.open(
-    //     "http://localhost:5173",
-    //     "myWindowName",
-    //     "resizable"
-    // );
-    // if (myExternalWindow) {
-    //     myExternalWindow.resizeTo(200, 200);
-    // }
-
-    genererList();
-    setInterval(miseAJourTimer, 1000);
+    initialiserJeu();
 });
 </script>
 
 <style scoped>
 .body-container {
-    height: 100%;
-    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -264,12 +245,19 @@ onMounted(() => {
     gap: 1.5rem;
 }
 
+button:hover {
+    background-color: #e0e0e0;
+    transform: translateY(-2px);
+}
+
 .compteur-container {
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     gap: 5rem;
+    font-size: 1.5rem;
+    font-weight: bold;
 }
 
 .drapeau-compteur-container {
@@ -277,6 +265,9 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     gap: 0.3rem;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
 }
 
 .drapeau-container {
@@ -286,6 +277,8 @@ onMounted(() => {
 .tableau-container {
     display: flex;
     flex-wrap: wrap;
+    border: 2px solid black;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
 }
 .tableau-inactif {
     pointer-events: none;
@@ -301,5 +294,33 @@ onMounted(() => {
     background-position: center;
     background-repeat: no-repeat;
     font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.1s ease-in-out;
+}
+
+.nombre-1 {
+    color: #0000ff;
+}
+.nombre-2 {
+    color: #008000;
+}
+.nombre-3 {
+    color: #ff0000;
+}
+.nombre-4 {
+    color: #000080;
+}
+.nombre-5 {
+    color: #800000;
+}
+.nombre-6 {
+    color: #008080;
+}
+.nombre-7 {
+    color: #000000;
+}
+.nombre-8 {
+    color: #808080;
 }
 </style>
