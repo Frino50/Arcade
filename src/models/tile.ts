@@ -3,5 +3,6 @@ export default interface Tile {
     value: number;
     row: number;
     col: number;
-    merged?: boolean;
+    merged: boolean;
+    isNew: boolean;
 }

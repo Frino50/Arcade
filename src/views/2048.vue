@@ -1,5 +1,18 @@
 <template>
     <div class="game-container">
+        <div class="header">
+            <div class="scores">
+                <div class="score-box">
+                    <div>Score</div>
+                    <div class="score">{{ score }}</div>
+                </div>
+                <div class="score-box">
+                    <div>Best</div>
+                    <div class="score">{{ bestScore }}</div>
+                </div>
+            </div>
+        </div>
+
         <div
             class="board"
             :style="{
@@ -20,13 +33,15 @@
                 v-for="tile in tiles"
                 :key="tile.id"
                 class="tile"
-                :class="[`tile-${tile.value}`, { merged: tile.merged }]"
+                :class="{ merged: tile.merged, new: tile.isNew }"
                 :style="{
                     top: tile.row * (cellSize + gap) + 'px',
                     left: tile.col * (cellSize + gap) + 'px',
                     width: cellSize + 'px',
                     height: cellSize + 'px',
                     fontSize: cellSize / 3 + 'px',
+                    background: getTileGradient(tile.value),
+                    color: getTileTextColor(tile.value),
                 }"
             >
                 {{ tile.value }}
@@ -44,16 +59,20 @@ import { ref, onMounted, onBeforeUnmount } from "vue";
 import Tile from "@/models/tile.ts";
 
 const boardSize = 4;
-const cellSize = 150;
 const gap = 5;
+let cellSize = 150;
+
 const MOVE_DURATION = 200;
 
 const tiles = ref<Tile[]>([]);
 let idCounter = 0;
 const boardCells = Array.from({ length: boardSize * boardSize });
 
+const score = ref(0);
+const bestScore = ref(Number(localStorage.getItem("bestScore") || 0));
+
 function createTile(value: number, row: number, col: number): Tile {
-    return { id: idCounter++, value, row, col, merged: false };
+    return { id: idCounter++, value, row, col, merged: false, isNew: true };
 }
 
 function getEmptyCells() {
@@ -72,12 +91,17 @@ function placeRandomTiles(count: number) {
     for (let k = 0; k < count && emptyCells.length > 0; k++) {
         const idx = Math.floor(Math.random() * emptyCells.length);
         const cell = emptyCells.splice(idx, 1)[0];
-        tiles.value.push(createTile(2, cell.row, cell.col));
+        const newTile = createTile(2, cell.row, cell.col);
+        tiles.value.push(newTile);
+        setTimeout(() => {
+            newTile.isNew = false;
+        }, MOVE_DURATION);
     }
 }
 
 function initializeBoard() {
     tiles.value = [];
+    score.value = 0;
     placeRandomTiles(2);
 }
 
@@ -130,6 +154,13 @@ function move(direction: string) {
                 !tile.merged
             ) {
                 other.value *= 2;
+                score.value += other.value;
+
+                if (score.value > bestScore.value) {
+                    bestScore.value = score.value;
+                    localStorage.setItem("bestScore", String(bestScore.value));
+                }
+
                 other.merged = true;
                 tiles.value = tiles.value.filter((t) => t.id !== tile.id);
                 moved = true;
@@ -138,6 +169,7 @@ function move(direction: string) {
                 break;
             }
         }
+
         tile.row = row;
         tile.col = col;
     }
@@ -145,7 +177,24 @@ function move(direction: string) {
     if (moved) {
         setTimeout(() => {
             placeRandomTiles(1);
+            checkGameOver();
         }, MOVE_DURATION);
+    }
+}
+
+function checkGameOver() {
+    if (getEmptyCells().length > 0) return;
+
+    for (let r = 0; r < boardSize; r++) {
+        for (let c = 0; c < boardSize; c++) {
+            const tile = tiles.value.find((t) => t.row === r && t.col === c);
+            if (!tile) continue;
+            const neighbors = [
+                tiles.value.find((t) => t.row === r + 1 && t.col === c),
+                tiles.value.find((t) => t.row === r && t.col === c + 1),
+            ];
+            if (neighbors.some((n) => n && n.value === tile.value)) return;
+        }
     }
 }
 
@@ -166,14 +215,55 @@ function handleKeyPress(event: KeyboardEvent) {
     }
 }
 
+function updateCellSize() {
+    const maxBoardWidth = Math.min(window.innerWidth * 0.9, 600);
+    cellSize = Math.floor((maxBoardWidth - gap * (boardSize - 1)) / boardSize);
+}
+
 onMounted(() => {
+    updateCellSize();
+    window.addEventListener("resize", updateCellSize);
     initializeBoard();
     window.addEventListener("keydown", handleKeyPress);
 });
 
 onBeforeUnmount(() => {
     window.removeEventListener("keydown", handleKeyPress);
+    window.removeEventListener("resize", updateCellSize);
 });
+
+function getTileGradient(value: number): string {
+    switch (value) {
+        case 2:
+            return "linear-gradient(145deg, #eee4da, #f3e1c4)";
+        case 4:
+            return "linear-gradient(145deg, #ede0c8, #f5e8c0)";
+        case 8:
+            return "linear-gradient(145deg, #f2b179, #f2a679)";
+        case 16:
+            return "linear-gradient(145deg, #f59563, #f58653)";
+        case 32:
+            return "linear-gradient(145deg, #f67c5f, #f56b50)";
+        case 64:
+            return "linear-gradient(145deg, #f65e3b, #f5512e)";
+        case 128:
+            return "linear-gradient(145deg, #edcf72, #edc75a)";
+        case 256:
+            return "linear-gradient(145deg, #edcc61, #edc54a)";
+        case 512:
+            return "linear-gradient(145deg, #edc850, #edc639)";
+        case 1024:
+            return "linear-gradient(145deg, #edc53f, #edc22e)";
+        case 2048:
+            return "linear-gradient(145deg, #edc22e, #edbf1e)";
+        default:
+            return "linear-gradient(145deg, #3c3a32, #4c4a42)";
+    }
+}
+
+function getTileTextColor(value: number): string {
+    return value <= 4 ? "#776e65" : "#fff";
+}
 </script>
 
 <style scoped>
@@ -181,21 +271,53 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     height: 100vh;
+    padding: 20px;
+    background: linear-gradient(135deg, #3e3a35, #2b2926);
+    color: #fff;
+}
+
+.header {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    margin: 0;
+}
+
+.scores {
+    display: flex;
+    gap: 10px;
+}
+
+.score-box {
+    background: #8f7a66;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.score {
+    font-weight: bold;
+    font-size: 1.2rem;
 }
 
 .board {
     position: relative;
-    background: #bbada0;
+    background: linear-gradient(145deg, #a39487, #8c7b6e);
     border-radius: 8px;
     display: grid;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .board-cell.empty {
     width: 100%;
     height: 100%;
-    background: #cdc1b4;
+    background: #b8aca0;
     border-radius: 6px;
 }
 
@@ -205,14 +327,18 @@ onBeforeUnmount(() => {
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    color: #333;
     border-radius: 6px;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.25s ease;
     z-index: 10;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .tile.merged {
-    animation: pop 0.2s ease;
+    animation: pop 0.3s ease;
+}
+
+.tile.new {
+    animation: appear 0.35s ease;
 }
 
 @keyframes pop {
@@ -220,57 +346,43 @@ onBeforeUnmount(() => {
         transform: scale(1);
     }
     50% {
-        transform: scale(1.2);
+        transform: scale(1.1);
     }
     100% {
         transform: scale(1);
     }
 }
 
-.tile-2 {
-    background: #eee4da;
-}
-.tile-4 {
-    background: #ede0c8;
-}
-.tile-8 {
-    background: #f2b179;
-    color: #fff;
-}
-.tile-16 {
-    background: #f59563;
-    color: #fff;
-}
-.tile-32 {
-    background: #f67c5f;
-    color: #fff;
-}
-.tile-64 {
-    background: #f65e3b;
-    color: #fff;
-}
-.tile-128 {
-    background: #edcf72;
-    color: #fff;
-}
-.tile-256 {
-    background: #edcc61;
-    color: #fff;
-}
-.tile-512 {
-    background: #edc850;
-    color: #fff;
-}
-.tile-1024 {
-    background: #edc53f;
-    color: #fff;
-}
-.tile-2048 {
-    background: #edc22e;
-    color: #fff;
+@keyframes appear {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .button-container {
     margin-top: 20px;
+}
+
+.button-container button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    background-color: #8f7a66;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition:
+        transform 0.15s ease,
+        background-color 0.2s ease;
+}
+
+.button-container button:hover {
+    transform: scale(1.05);
+    background-color: #9e8b75;
 }
 </style>
