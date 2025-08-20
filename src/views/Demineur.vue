@@ -286,9 +286,6 @@ button:hover {
     box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
 }
 
-.tableau-inactif {
-    pointer-events: none;
-}
 .case-container {
     border: 1px solid black;
     height: 2.5rem;
