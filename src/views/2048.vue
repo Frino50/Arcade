@@ -1,21 +1,26 @@
 <template>
     <div class="game-container">
-        <div class="board-container">
+        <div class="board">
             <div
-                v-for="(row, rowIndex) in board"
-                :key="rowIndex"
-                class="board-row"
+                v-for="index in boardCells.length"
+                :key="index"
+                class="board-cell empty"
+            ></div>
+
+            <div
+                v-for="tile in tiles"
+                :key="tile.id"
+                class="tile"
+                :class="[`tile-${tile.value}`, { merged: tile.merged }]"
+                :style="{
+                    top: tile.row * (cellSize + gap) + 'px',
+                    left: tile.col * (cellSize + gap) + 'px',
+                }"
             >
-                <div
-                    v-for="(value, colIndex) in row"
-                    :key="colIndex"
-                    class="board-cell"
-                    :class="`tile-${value}`"
-                >
-                    {{ value !== 0 ? value : "" }}
-                </div>
+                {{ tile.value }}
             </div>
         </div>
+
         <div class="button-container">
             <button @click="restartGame">Reset</button>
         </div>
@@ -24,34 +29,45 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from "vue";
+import Tile from "@/models/tile.ts";
 
 const boardSize = 4;
-const board = ref<number[][]>([]);
+const cellSize = 100;
+const gap = 5;
+const MOVE_DURATION = 200;
 
-function initializeBoard() {
-    board.value = Array.from({ length: boardSize }, () =>
-        Array(boardSize).fill(0)
-    );
+const tiles = ref<Tile[]>([]);
+let idCounter = 0;
 
-    placeRandomTiles(2);
+const boardCells = Array.from({ length: boardSize * boardSize });
+
+function createTile(value: number, row: number, col: number): Tile {
+    return { id: idCounter++, value, row, col, merged: false };
+}
+
+function getEmptyCells() {
+    const filled = tiles.value.map((t) => `${t.row},${t.col}`);
+    const empty: { row: number; col: number }[] = [];
+    for (let r = 0; r < boardSize; r++) {
+        for (let c = 0; c < boardSize; c++) {
+            if (!filled.includes(`${r},${c}`)) empty.push({ row: r, col: c });
+        }
+    }
+    return empty;
 }
 
 function placeRandomTiles(count: number) {
-    for (let k = 0; k < count; k++) {
-        const emptyCells = Array.from(
-            { length: boardSize * boardSize },
-            (_, index) => ({
-                row: Math.floor(index / boardSize),
-                col: index % boardSize,
-            })
-        ).filter((cell) => board.value[cell.row][cell.col] === 0);
-
-        if (emptyCells.length > 0) {
-            const randomCell =
-                emptyCells[Math.floor(Math.random() * emptyCells.length)];
-            board.value[randomCell.row][randomCell.col] = 2;
-        }
+    const emptyCells = getEmptyCells();
+    for (let k = 0; k < count && emptyCells.length > 0; k++) {
+        const idx = Math.floor(Math.random() * emptyCells.length);
+        const cell = emptyCells.splice(idx, 1)[0];
+        tiles.value.push(createTile(2, cell.row, cell.col));
     }
+}
+
+function initializeBoard() {
+    tiles.value = [];
+    placeRandomTiles(2);
 }
 
 function restartGame() {
@@ -59,60 +75,67 @@ function restartGame() {
 }
 
 function move(direction: string) {
-    const previousBoard = JSON.parse(JSON.stringify(board.value));
+    let moved = false;
+    tiles.value.forEach((t) => (t.merged = false));
 
-    for (let i = 0; i < boardSize; i++) {
-        const row = [];
-        const mergedRow = [];
+    const sorted = [...tiles.value].sort((a, b) => {
+        if (direction === "up") return a.row - b.row;
+        if (direction === "down") return b.row - a.row;
+        if (direction === "left") return a.col - b.col;
+        if (direction === "right") return b.col - a.col;
+        return 0;
+    });
 
-        for (let j = 0; j < boardSize; j++) {
-            const cell =
-                direction === "up" || direction === "down"
-                    ? board.value[j][i]
-                    : board.value[i][j];
+    for (const tile of sorted) {
+        let { row, col } = tile;
+        while (true) {
+            let nextRow = row;
+            let nextCol = col;
 
-            if (cell !== 0) {
-                row.push(cell);
-            }
-        }
+            if (direction === "up") nextRow--;
+            if (direction === "down") nextRow++;
+            if (direction === "left") nextCol--;
+            if (direction === "right") nextCol++;
 
-        if (direction === "down" || direction === "right") {
-            row.reverse();
-        }
+            if (
+                nextRow < 0 ||
+                nextRow >= boardSize ||
+                nextCol < 0 ||
+                nextCol >= boardSize
+            )
+                break;
 
-        for (let j = 0; j < row.length; j++) {
-            if (j < row.length - 1 && row[j] === row[j + 1]) {
-                mergedRow.push(row[j] * 2);
-                j++;
+            const other = tiles.value.find(
+                (t) => t.row === nextRow && t.col === nextCol
+            );
+
+            if (!other) {
+                row = nextRow;
+                col = nextCol;
+                moved = true;
+            } else if (
+                other.value === tile.value &&
+                !other.merged &&
+                !tile.merged
+            ) {
+                other.value *= 2;
+                other.merged = true;
+                tiles.value = tiles.value.filter((t) => t.id !== tile.id);
+                moved = true;
+                break;
             } else {
-                mergedRow.push(row[j]);
+                break;
             }
         }
-
-        while (mergedRow.length < boardSize) {
-            mergedRow.push(0);
-        }
-
-        if (direction === "down" || direction === "right") {
-            mergedRow.reverse();
-        }
-
-        for (let j = 0; j < boardSize; j++) {
-            if (direction === "up" || direction === "down") {
-                board.value[j][i] = mergedRow[j];
-            } else {
-                board.value[i][j] = mergedRow[j];
-            }
-        }
+        tile.row = row;
+        tile.col = col;
     }
 
-    if (!isEqual(previousBoard, board.value)) {
-        placeRandomTiles(1);
+    if (moved) {
+        setTimeout(() => {
+            placeRandomTiles(1);
+        }, MOVE_DURATION);
     }
-}
-
-function isEqual(arr1: number[][], arr2: number[][]): boolean {
-    return JSON.stringify(arr1) === JSON.stringify(arr2);
 }
 
 function handleKeyPress(event: KeyboardEvent) {
@@ -151,11 +174,28 @@ onBeforeUnmount(() => {
     height: 100vh;
 }
 
-.board-row {
-    display: flex;
+.board {
+    position: relative;
+    width: calc(4 * 100px + 3 * 5px);
+    height: calc(4 * 100px + 3 * 5px);
+    background: #bbada0;
+    border-radius: 8px;
+    display: grid;
+    grid-template-rows: repeat(4, 100px);
+    grid-template-columns: repeat(4, 100px);
+    gap: 5px;
+    /* padding supprimé */
 }
 
-.board-cell {
+.board-cell.empty {
+    width: 100%;
+    height: 100%;
+    background: #cdc1b4;
+    border-radius: 6px;
+}
+
+.tile {
+    position: absolute;
     width: 100px;
     height: 100px;
     display: flex;
@@ -163,55 +203,73 @@ onBeforeUnmount(() => {
     justify-content: center;
     font-size: 24px;
     font-weight: bold;
-    background-color: rgb(205, 193, 180);
-    border: 0.3rem solid rgb(187, 173, 160);
-    color: rgb(50, 50, 50);
+    color: #333;
+    border-radius: 6px;
+    transition: all 0.2s ease-in-out;
+    z-index: 10;
 }
+
+.tile.merged {
+    animation: pop 0.2s ease;
+}
+
+@keyframes pop {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Couleurs */
+.tile-2 {
+    background: #eee4da;
+}
+.tile-4 {
+    background: #ede0c8;
+}
+.tile-8 {
+    background: #f2b179;
+    color: #fff;
+}
+.tile-16 {
+    background: #f59563;
+    color: #fff;
+}
+.tile-32 {
+    background: #f67c5f;
+    color: #fff;
+}
+.tile-64 {
+    background: #f65e3b;
+    color: #fff;
+}
+.tile-128 {
+    background: #edcf72;
+    color: #fff;
+}
+.tile-256 {
+    background: #edcc61;
+    color: #fff;
+}
+.tile-512 {
+    background: #edc850;
+    color: #fff;
+}
+.tile-1024 {
+    background: #edc53f;
+    color: #fff;
+}
+.tile-2048 {
+    background: #edc22e;
+    color: #fff;
+}
+
 .button-container {
     margin-top: 20px;
-}
-
-.tile-2 {
-    background-color: #f5f5dc;
-}
-
-.tile-4 {
-    background-color: #f5f5c1;
-}
-
-.tile-8 {
-    background-color: #f5f59f;
-}
-
-.tile-16 {
-    background-color: #f5f57d;
-}
-
-.tile-32 {
-    background-color: #f5f55a;
-}
-
-.tile-64 {
-    background-color: #eab105;
-}
-
-.tile-128 {
-    background-color: #f58515;
-}
-
-.tile-256 {
-    background-color: #f56200;
-}
-
-.tile-512 {
-    background-color: #d04200;
-}
-
-.tile-1024 {
-    background-color: #a05b00;
-}
-
-.tile-2048 {
-    background-color: #802200;
 }
 </style>
