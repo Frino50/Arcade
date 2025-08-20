@@ -1,20 +1,16 @@
 <template>
-    <svg
-        v-if="boidSelect"
-        v-for="(boid, index) in boids"
-        :key="index"
-        class="line"
-    >
-        <line
-            v-if="distance(boidSelect, boid) < 50"
-            :x1="boidSelect.x + 5"
-            :y1="boidSelect.y + 8"
-            :x2="boid.x + 5"
-            :y2="boid.y + 8"
-            style="stroke: yellow; stroke-width: 2"
-        />
-    </svg>
-
+    <div v-if="boidSelect">
+        <svg v-for="(boid, index) in boids" :key="index" class="line">
+            <line
+                v-if="distance(boidSelect, boid) < 50"
+                :x1="boidSelect.x + 5"
+                :y1="boidSelect.y + 8"
+                :x2="boid.x + 5"
+                :y2="boid.y + 8"
+                style="stroke: yellow; stroke-width: 2"
+            />
+        </svg>
+    </div>
     <div
         v-for="(boid, index) in boids"
         :key="index"
