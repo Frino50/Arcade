@@ -11,7 +11,7 @@ import Selecteur from "@/components/Selecteur.vue";
 
 <style scoped>
 .app-container {
-    background-color: rgb(10, 15, 23);
+    background-color: #2b2926;
     z-index: 1;
 }
 </style>

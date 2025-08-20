@@ -8,12 +8,12 @@
                 class="cell"
                 :class="getCellClass(cell)"
                 :style="{
-                    left: (index % cols) * cellSize + 'px',
-                    top: Math.floor(index / cols) * cellSize + 'px',
+                    left: (index % cols) * cellSize + 6 + 'px',
+                    top: Math.floor(index / cols) * cellSize + 6 + 'px',
                 }"
             ></div>
         </div>
-        <button @click="startGame">Commencer</button>
+        <button class="bouton" @click="startGame">Commencer</button>
         <Message v-if="gameOver" message="Perdu" :isGreen="false"></Message>
     </div>
 </template>
@@ -137,7 +137,6 @@ function movePiece(dx: number, dy: number): boolean {
 }
 
 function rotatePiece() {
-    // Le _ veut dire qu'on ignore la valeur et que seul l'index nous intéresse
     const rotatedPiece = currentPiece.value[0].map((_, i) =>
         currentPiece.value.map((row) => row[i]).reverse()
     );
@@ -235,44 +234,53 @@ onUnmounted(() => {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
+    gap: 1.5rem;
 }
+
 .points {
-    position: absolute;
-    left: 15rem;
-    font-size: 2rem;
+    background: var(--marron-fonce);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: bold;
 }
+
 .game-board {
     position: relative;
-    border: 1px solid #ccc;
+    background: var(--marron);
+    border-radius: 8px;
+    padding: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
+
 .cell {
     position: absolute;
     width: 30px;
     height: 30px;
-    border: 1px solid #333;
+    border-radius: 4px;
+    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);
 }
+
 .color-i {
-    background-color: cyan;
+    background-color: #4dd0e1;
 }
 .color-z {
-    background-color: red;
+    background-color: #f65e3b;
 }
 .color-s {
-    background-color: green;
+    background-color: #81c784;
 }
 .color-o {
-    background-color: yellow;
+    background-color: #f2b179;
 }
 .color-l {
-    background-color: orange;
+    background-color: #ffb74d;
 }
 .color-j {
-    background-color: blue;
+    background-color: #64b5f6;
 }
 .color-t {
-    background-color: purple;
-}
-button {
-    margin-top: 1rem;
+    background-color: #ba68c8;
 }
 </style>

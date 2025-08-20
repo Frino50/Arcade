@@ -24,7 +24,7 @@
                     <svg viewBox="0 0 173.20508075688772 200" height="200">
                         <path
                             d="M86.60254037844386 0L173.20508075688772 50L173.20508075688772 150L86.60254037844386 200L0 150L0 50Z"
-                            fill="#1e2530"
+                            fill="var(--marron-fonce)"
                         ></path>
                     </svg>
                 </a>
@@ -79,7 +79,7 @@ function link(link: string) {
 
 .hexagon-item:hover .hex-item div::before,
 .hexagon-item:hover .hex-item div::after {
-    background-color: #ff0037;
+    background-color: var(--marron-clair);
 }
 
 .hex-item {
@@ -116,7 +116,7 @@ function link(link: string) {
 }
 .hex-item div::before,
 .hex-item div::after {
-    background-color: #1e2530;
+    background-color: var(--marron-fonce);
     content: "";
     position: absolute;
     width: 100%;

@@ -1,7 +1,7 @@
 :root {
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     line-height: 1.5;
-    background-color: rgb(10, 15, 23);
+    background-color: var(--marron-back);
     color: white;
     user-select: none;
     overflow: hidden;
@@ -13,17 +13,19 @@ body {
 }
 
 button {
-    border-radius: 8px;
-    border: 1px solid black;
-    padding: 0.6em 1.2em;
-    font-size: 1em;
-    font-weight: 500;
-    font-family: inherit;
-    background-color: #f9f9f9;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    background-color: var(--marron-fonce);
+    color: white;
+    font-weight: bold;
     cursor: pointer;
-    transition: border-color 0.25s;
+    transition:
+            transform 0.15s ease,
+            background-color 0.2s ease;
 }
 
 button:hover {
-    background-color: lightgray;
+    transform: scale(1.05);
+    background-color: #9e8b75;
 }

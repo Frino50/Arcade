@@ -162,17 +162,24 @@ const gameBoardStyle = computed(() => ({
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
 }
+
 .points {
     position: absolute;
     left: 15rem;
-    font-size: 8rem;
+    font-size: 5rem;
+    font-weight: bold;
 }
+
 .game-board {
     position: relative;
-    border: 1px solid #ccc;
+    margin-bottom: 1rem;
+    margin-top: 4rem;
+    border-radius: 1rem;
+    background-color: var(--marron);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+
 .cell {
     position: absolute;
     width: 20px;
@@ -180,18 +187,19 @@ const gameBoardStyle = computed(() => ({
     transition:
         left 0.1s linear,
         top 0.1s linear;
+    border-radius: 0.3rem;
 }
+
 .cell.snake {
-    background-color: green;
-    border-radius: 50%;
+    background-color: #4caf50;
+    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.2);
 }
+
 .cell.food {
-    background-color: red;
-    border-radius: 50%;
+    background-color: #f44336;
+    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.2);
 }
-button {
-    margin-top: 1rem;
-}
+
 input[type="range"] {
     margin-top: 0.5rem;
 }

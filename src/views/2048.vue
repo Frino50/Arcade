@@ -274,8 +274,6 @@ function getTileTextColor(value: number): string {
     justify-content: flex-start;
     height: 100vh;
     padding: 20px;
-    background: linear-gradient(135deg, #3e3a35, #2b2926);
-    color: #fff;
 }
 
 .header {
@@ -295,7 +293,7 @@ function getTileTextColor(value: number): string {
 }
 
 .score-box {
-    background: #8f7a66;
+    background: var(--marron-fonce);
     padding: 10px;
     border-radius: 6px;
     text-align: center;
@@ -308,7 +306,7 @@ function getTileTextColor(value: number): string {
 
 .board {
     position: relative;
-    background: linear-gradient(145deg, #a39487, #8c7b6e);
+    background: var(--marron);
     border-radius: 8px;
     display: grid;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -317,7 +315,7 @@ function getTileTextColor(value: number): string {
 .board-cell.empty {
     width: 100%;
     height: 100%;
-    background: #b8aca0;
+    background: var(--marron-clair);
     border-radius: 6px;
 }
 
@@ -366,23 +364,5 @@ function getTileTextColor(value: number): string {
 
 .button-container {
     margin-top: 20px;
-}
-
-.button-container button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 6px;
-    background-color: #8f7a66;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    transition:
-        transform 0.15s ease,
-        background-color 0.2s ease;
-}
-
-.button-container button:hover {
-    transform: scale(1.05);
-    background-color: #9e8b75;
 }
 </style>

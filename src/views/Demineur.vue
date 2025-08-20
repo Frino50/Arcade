@@ -1,11 +1,13 @@
 <template>
     <div class="body-container">
+        <!-- Victoire -->
         <Message
             v-if="estGagne()"
             :message="'Victoire'"
             :isGreen="true"
         ></Message>
 
+        <!-- Compteurs -->
         <div class="compteur-container">
             <div class="drapeau-compteur-container">
                 <img
@@ -20,6 +22,7 @@
             </div>
         </div>
 
+        <!-- Grille -->
         <div
             class="tableau-container"
             :style="{ '--colonnes': nombreDeColonnes }"
@@ -53,6 +56,7 @@
             </div>
         </div>
 
+        <!-- Bouton reset -->
         <div class="boutton-container">
             <button @click="genererList()">Reset</button>
         </div>
@@ -65,8 +69,8 @@ import Case from "../models/case.ts";
 import Message from "@/components/Message.vue";
 
 const nombreDeBombes = ref<number>(40);
-const nombreDeLignes = ref<number>(14); // hauteur
-const nombreDeColonnes = ref<number>(18); // largeur
+const nombreDeLignes = ref<number>(14);
+const nombreDeColonnes = ref<number>(18);
 const perdu = ref<boolean>();
 const tempsEcoule = ref<number>(0);
 const firstClick = ref<boolean>(true);
@@ -88,9 +92,9 @@ function formatSecondes(): string {
 }
 
 function getColor(casee: Case) {
-    if (casee.bombe && casee.visible) return "red";
-    if (casee.visible) return "lightgray";
-    return "gray";
+    if (casee.bombe && casee.visible) return "#f65e3b"; // rouge vif
+    if (casee.visible) return "var(--marron-clair)";
+    return "var(--marron)";
 }
 function getImage(casee: Case) {
     if (casee.visible && casee.bombe) {
@@ -232,6 +236,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+:root {
+    --colonnes: 18;
+}
+
 .body-container {
     display: flex;
     flex-direction: column;
@@ -239,67 +247,64 @@ onMounted(() => {
     justify-content: center;
     min-height: 100vh;
     gap: 1.5rem;
-    color: black;
-}
-
-.boutton-container {
-    display: flex;
-    gap: 1.5rem;
-}
-
-button:hover {
-    background-color: #e0e0e0;
-    transform: translateY(-2px);
 }
 
 .compteur-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    gap: 5rem;
-    font-size: 1.5rem;
-    font-weight: bold;
+    gap: 2rem;
 }
 
-.drapeau-compteur-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.3rem;
+.drapeau-compteur-container,
+.timer {
+    background: var(--marron-fonce);
     color: white;
-    font-size: 1.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 1.2rem;
     font-weight: bold;
+    min-width: 80px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .drapeau-container {
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 1.2rem;
+    height: 1.2rem;
 }
-:root {
-    --colonnes: 18;
-}
+
 .tableau-container {
     display: grid;
     grid-template-columns: repeat(var(--colonnes), 2.5rem);
-    border: 2px solid black;
-    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
+    gap: 4px;
+    background: var(--marron);
+    padding: 6px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .case-container {
-    border: 1px solid black;
     height: 2.5rem;
     width: 2.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 6px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        transform 0.1s ease;
+    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.2);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    font-size: 1.5rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.1s ease-in-out;
+}
+
+.case-container:hover {
+    transform: scale(1.05);
 }
 
 .nombre-1 {

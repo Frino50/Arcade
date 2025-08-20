@@ -56,7 +56,7 @@ function switchPage(chemin: string) {
 }
 
 .custom-style {
-    background-color: rgb(30, 37, 48);
+    background: var(--marron);
     width: 3rem;
     height: 3rem;
     margin-bottom: 1rem;
@@ -69,7 +69,7 @@ function switchPage(chemin: string) {
     display: flex;
     justify-content: center;
     cursor: pointer;
-    border: 0.2rem solid black;
+    border: 0.2rem solid var(--marron-fonce);
     border-right: none;
 }
 
@@ -83,10 +83,10 @@ function switchPage(chemin: string) {
 
 .custom-style:hover {
     width: 8rem;
-    background-color: rgb(28, 45, 72);
+    background-color: var(--marron-clair);
 }
 .custom-style:active {
-    background-color: rgb(40, 88, 118);
+    background-color: #8c7b6e;
 }
 
 .image-container {

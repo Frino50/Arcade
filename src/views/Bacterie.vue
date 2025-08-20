@@ -178,7 +178,6 @@ function initialisationList() {
     updateSpatialGrid();
 }
 
-// Le reste du code reste inchangé
 function updateSpatialGrid() {
     for (const key in spatialGrid) {
         delete spatialGrid[key];
