@@ -1,13 +1,11 @@
 <template>
     <div class="body-container">
-        <!-- Victoire -->
         <Message
             v-if="estGagne()"
             :message="'Victoire'"
             :isGreen="true"
         ></Message>
 
-        <!-- Compteurs -->
         <div class="compteur-container">
             <div class="drapeau-compteur-container">
                 <img
@@ -22,7 +20,6 @@
             </div>
         </div>
 
-        <!-- Grille -->
         <div
             class="tableau-container"
             :style="{ '--colonnes': nombreDeColonnes }"
@@ -56,7 +53,6 @@
             </div>
         </div>
 
-        <!-- Bouton reset -->
         <div class="boutton-container">
             <button @click="genererList()">Reset</button>
         </div>
@@ -92,7 +88,7 @@ function formatSecondes(): string {
 }
 
 function getColor(casee: Case) {
-    if (casee.bombe && casee.visible) return "#f65e3b"; // rouge vif
+    if (casee.bombe && casee.visible) return "#f65e3b";
     if (casee.visible) return "var(--marron-clair)";
     return "var(--marron)";
 }
@@ -238,15 +234,6 @@ onMounted(() => {
 <style scoped>
 :root {
     --colonnes: 18;
-}
-
-.body-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    gap: 1.5rem;
 }
 
 .compteur-container {

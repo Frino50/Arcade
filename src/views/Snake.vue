@@ -1,6 +1,12 @@
 <template>
     <div class="body-container">
-        <div class="points">{{ point }}</div>
+        <div>
+            <div class="score-box">
+                <div>Score</div>
+                <div class="score">{{ score }}</div>
+            </div>
+        </div>
+
         <div class="game-board" :style="gameBoardStyle">
             <div
                 v-for="(part, index) in snake"
@@ -11,6 +17,7 @@
                     top: part.y * cellSize + 'px',
                 }"
             ></div>
+
             <div
                 class="cell food"
                 :style="{
@@ -19,8 +26,10 @@
                 }"
             ></div>
         </div>
-        <button @click="startGame">Commencer</button>
-        <Message v-if="loose" message="Perdu" :isGreen="false"></Message>
+
+        <button class="bouton" @click="startGame">Commencer</button>
+
+        <Message v-if="loose" message="Perdu" :isGreen="false" />
     </div>
 </template>
 
@@ -28,47 +37,45 @@
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import Message from "@/components/Message.vue";
 
-const loose = ref<boolean>(false);
+const loose = ref(false);
 const animationId = ref<number | null>(null);
-const gridSize = 40;
+const gridSize = 35;
 const cellSize = 20;
-const direction = ref<string>("right");
+const direction = ref("right");
 const snake = ref<Position[]>([{ x: 10, y: 10 }]);
 const food = ref<Position>({ x: 1, y: 1 });
-const point = ref<number>(0);
-const speed = ref<number>(10);
+const score = ref(0);
+const speed = ref(10);
 const moveInterval = ref<number>(0);
-
+const directionQueue = ref<string[]>([]);
 interface Position {
     x: number;
     y: number;
 }
 
 function moveSnake() {
+    if (directionQueue.value.length > 0) {
+        direction.value = directionQueue.value.shift()!;
+    }
+
     const head = { ...snake.value[0] };
     switch (direction.value) {
         case "right":
             head.x++;
-            if (head.x >= gridSize) head.x = 0; // Réapparition à gauche quand sort à droite
+            if (head.x >= gridSize) head.x = 0;
             break;
         case "left":
             head.x--;
-            if (head.x < 0) head.x = gridSize - 1; // Réapparition à droite quand sort à gauche
+            if (head.x < 0) head.x = gridSize - 1;
             break;
         case "up":
             head.y--;
-            if (head.y < 0) head.y = gridSize - 1; // Réapparition en bas quand sort en haut
+            if (head.y < 0) head.y = gridSize - 1;
             break;
         case "down":
             head.y++;
-            if (head.y >= gridSize) head.y = 0; // Réapparition en haut quand sort en bas
+            if (head.y >= gridSize) head.y = 0;
             break;
-    }
-
-    if (head.x < 0 || head.x >= gridSize || head.y < 0 || head.y >= gridSize) {
-        loose.value = true;
-        clearInterval(moveInterval.value);
-        return;
     }
 
     for (let part of snake.value) {
@@ -83,7 +90,7 @@ function moveSnake() {
 
     if (head.x === food.value.x && head.y === food.value.y) {
         placeFood();
-        point.value++;
+        score.value++;
     } else {
         snake.value.pop();
     }
@@ -95,59 +102,61 @@ function placeFood() {
 }
 
 function startGame() {
-    point.value = 0;
+    score.value = 0;
     loose.value = false;
     direction.value = "right";
     placeFood();
 
     snake.value.splice(0, snake.value.length, { x: 10, y: 10 });
 
-    if (moveInterval.value !== 0) {
-        clearInterval(moveInterval.value);
-    }
+    if (moveInterval.value !== 0) clearInterval(moveInterval.value);
 
     moveInterval.value = setInterval(() => {
         moveSnake();
         if (!loose.value) {
-            animationId.value = requestAnimationFrame(() => {
-                drawSnake();
-            });
+            animationId.value = requestAnimationFrame(drawSnake);
         }
     }, 1000 / speed.value) as unknown as number;
 
-    animationId.value = requestAnimationFrame(() => {
-        drawSnake();
-    });
+    animationId.value = requestAnimationFrame(drawSnake);
 }
 
 function drawSnake() {
     if (!loose.value) {
-        animationId.value = requestAnimationFrame(() => {
-            drawSnake();
-        });
+        animationId.value = requestAnimationFrame(drawSnake);
     }
 }
 
-onMounted(() => {
-    window.addEventListener("keydown", handleKeyDown);
-});
-
+onMounted(() => window.addEventListener("keydown", handleKeyDown));
 onUnmounted(() => {
     window.removeEventListener("keydown", handleKeyDown);
-    if (moveInterval.value !== 0) {
-        clearInterval(moveInterval.value);
-    }
+    if (moveInterval.value !== 0) clearInterval(moveInterval.value);
 });
 
 function handleKeyDown(event: KeyboardEvent) {
-    if (event.key === "ArrowRight" && direction.value !== "left")
-        direction.value = "right";
-    if (event.key === "ArrowLeft" && direction.value !== "right")
-        direction.value = "left";
-    if (event.key === "ArrowUp" && direction.value !== "down")
-        direction.value = "up";
-    if (event.key === "ArrowDown" && direction.value !== "up")
-        direction.value = "down";
+    let newDir = "";
+    if (event.key === "ArrowRight") newDir = "right";
+    if (event.key === "ArrowLeft") newDir = "left";
+    if (event.key === "ArrowUp") newDir = "up";
+    if (event.key === "ArrowDown") newDir = "down";
+
+    if (!newDir) return;
+
+    const lastDir =
+        directionQueue.value.length > 0
+            ? directionQueue.value[directionQueue.value.length - 1]
+            : direction.value;
+
+    if (
+        (lastDir === "left" && newDir === "right") ||
+        (lastDir === "right" && newDir === "left") ||
+        (lastDir === "up" && newDir === "down") ||
+        (lastDir === "down" && newDir === "up")
+    ) {
+        return;
+    }
+
+    directionQueue.value.push(newDir);
 }
 
 const gameBoardStyle = computed(() => ({
@@ -157,50 +166,44 @@ const gameBoardStyle = computed(() => ({
 </script>
 
 <style scoped>
-.body-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+.score-box {
+    background: var(--marron-fonce);
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
 }
 
-.points {
-    position: absolute;
-    left: 15rem;
-    font-size: 5rem;
+.score {
     font-weight: bold;
+    font-size: 1.2rem;
 }
 
 .game-board {
     position: relative;
-    margin-bottom: 1rem;
-    margin-top: 4rem;
-    border-radius: 1rem;
-    background-color: var(--marron);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    background: var(--marron);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
 }
 
 .cell {
     position: absolute;
     width: 20px;
     height: 20px;
+    border-radius: 4px;
     transition:
         left 0.1s linear,
         top 0.1s linear;
-    border-radius: 0.3rem;
 }
 
 .cell.snake {
-    background-color: #4caf50;
-    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(145deg, #57d37f, #3da75e);
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.25);
 }
 
 .cell.food {
-    background-color: #f44336;
-    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.2);
-}
-
-input[type="range"] {
-    margin-top: 0.5rem;
+    background: linear-gradient(145deg, #ff5a5a, #cc3c3c);
+    border-radius: 50%;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.25);
 }
 </style>

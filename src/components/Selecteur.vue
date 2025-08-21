@@ -33,11 +33,11 @@ const pages = [
     { title: "Démineur", link: "Demineur" },
     { title: "Morpion", link: "Morpion" },
     { title: "2048", link: "2048" },
+    { title: "Snake", link: "Snake" },
+    { title: "Tetris", link: "Tetris" },
     { title: "Boids", link: "Boids" },
     { title: "Bactérie", link: "Bacterie" },
     { title: "Ball", link: "Ball" },
-    { title: "Snake", link: "Snake" },
-    { title: "Tetris", link: "Tetris" },
 ];
 
 function switchPage(chemin: string) {

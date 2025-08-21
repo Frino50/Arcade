@@ -1,5 +1,5 @@
 <template>
-    <div class="game-container">
+    <div class="body-container">
         <div class="header">
             <div class="scores">
                 <div class="score-box">
@@ -48,7 +48,7 @@
             </div>
         </div>
 
-        <div class="button-container">
+        <div>
             <button @click="restartGame">Reset</button>
         </div>
     </div>
@@ -267,19 +267,9 @@ function getTileTextColor(value: number): string {
 </script>
 
 <style scoped>
-.game-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    height: 100vh;
-    padding: 20px;
-}
-
 .header {
     display: flex;
     justify-content: center;
-    margin-bottom: 20px;
 }
 
 .header h1 {
@@ -360,9 +350,5 @@ function getTileTextColor(value: number): string {
         transform: scale(1);
         opacity: 1;
     }
-}
-
-.button-container {
-    margin-top: 20px;
 }
 </style>

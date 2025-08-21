@@ -1,29 +1,30 @@
 <template>
     <div class="body-container">
-        <!-- Grille -->
-        <div v-for="(row, rowIndex) in listMorpion" :key="rowIndex" class="row">
-            <div
-                v-for="(value, colIndex) in row"
-                :key="colIndex"
-                @click="handleClick(rowIndex, colIndex, 1)"
-                @contextmenu.prevent="handleClick(rowIndex, colIndex, 2)"
-                class="case"
-                :data-value="value"
-            >
-                {{ value === 1 ? "X" : value === 2 ? "O" : "" }}
-            </div>
-        </div>
-
-        <!-- Bouton reset -->
-        <button class="bouton-container" @click="resetBoard">Reset</button>
-
-        <!-- Messages -->
         <Message v-if="winner" :message="winner + ' gagne'" :isGreen="true" />
         <Message
             v-else-if="isBoardFull() && !winner"
             message="Match nul !"
             :isGreen="false"
         />
+
+        <div class="tableau-container">
+            <div
+                v-for="(value, index) in listMorpion.flat()"
+                :key="index"
+                @click="handleClick(Math.floor(index / 3), index % 3, 1)"
+                @contextmenu.prevent="
+                    handleClick(Math.floor(index / 3), index % 3, 2)
+                "
+                class="case-container"
+                :data-value="value"
+            >
+                {{ value === 1 ? "X" : value === 2 ? "O" : "" }}
+            </div>
+        </div>
+
+        <div class="boutton-container">
+            <button @click="resetBoard">Reset</button>
+        </div>
     </div>
 </template>
 
@@ -80,50 +81,45 @@ function checkWin(rowIndex: number, colIndex: number, value: number) {
 </script>
 
 <style scoped>
-.body-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2rem;
-    min-height: 100vh;
+.tableau-container {
+    display: grid;
+    grid-template-columns: repeat(3, 6rem);
+    grid-template-rows: repeat(3, 6rem);
+    gap: 4px;
+    background: var(--marron);
+    padding: 6px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.row {
-    display: flex;
-    gap: 2.1rem;
-}
-
-.case {
-    height: 8rem;
-    width: 8rem;
+.case-container {
+    height: 6rem;
+    width: 6rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3rem;
+    font-size: 2.5rem;
     font-weight: bold;
     cursor: pointer;
 
+    border-radius: 6px;
     background: var(--marron);
-    border-radius: 12px;
-    margin: 4px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.2);
 
     transition:
-        transform 0.15s ease,
-        background 0.2s ease;
+        background 0.2s ease,
+        transform 0.1s ease;
 }
 
-.case:hover {
+.case-container:hover {
     transform: scale(1.05);
     background: var(--marron-clair);
 }
 
-/* X et O */
-.case[data-value="1"] {
-    color: #ff4444; /* rouge vif */
+.case-container[data-value="1"] {
+    color: #ff4444;
 }
-.case[data-value="2"] {
-    color: #4d94ff; /* bleu */
+.case-container[data-value="2"] {
+    color: #4d94ff;
 }
 </style>

@@ -1,18 +1,49 @@
 <template>
     <div class="body-container">
-        <div class="points">{{ points }}</div>
-        <div class="game-board" :style="gameBoardStyle">
-            <div
-                v-for="(cell, index) in displayedBoard"
-                :key="index"
-                class="cell"
-                :class="getCellClass(cell)"
-                :style="{
-                    left: (index % cols) * cellSize + 6 + 'px',
-                    top: Math.floor(index / cols) * cellSize + 6 + 'px',
-                }"
-            ></div>
+        <div>
+            <div class="score-box">
+                <div>Score</div>
+                <div class="score">{{ score }}</div>
+            </div>
         </div>
+        <div class="game-container">
+            <div class="game-board" :style="gameBoardStyle">
+                <div
+                    v-for="(cell, index) in displayedBoard"
+                    :key="index"
+                    class="cell"
+                    :class="getCellClass(cell)"
+                    :style="{
+                        width: cellSize + 'px',
+                        height: cellSize + 'px',
+                        left: (index % cols) * cellSize + 6 + 'px',
+                        top: Math.floor(index / cols) * cellSize + 6 + 'px',
+                    }"
+                ></div>
+            </div>
+
+            <div class="next-container">
+                <div class="next-piece-container">
+                    <div class="next-piece" :style="nextPieceStyle">
+                        <template v-for="(row, y) in nextPiece">
+                            <template v-for="(cell, x) in row">
+                                <div
+                                    v-if="cell"
+                                    :key="y + '-' + x"
+                                    class="preview-cell"
+                                    :class="getCellClass(nextPieceType)"
+                                    :style="{
+                                        width: previewCellSize + 'px',
+                                        height: previewCellSize + 'px',
+                                    }"
+                                ></div>
+                            </template>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <button class="bouton" @click="startGame">Commencer</button>
         <Message v-if="gameOver" message="Perdu" :isGreen="false"></Message>
     </div>
@@ -24,15 +55,18 @@ import Message from "@/components/Message.vue";
 
 const rows = 20;
 const cols = 10;
-const cellSize = 30;
+const cellSize = 35;
 const speed = ref<number>(500);
-
+const previewCellSize = computed(() => Math.floor(cellSize * 0.7));
 const gameBoard = ref<number[]>(Array(rows * cols).fill(0));
 const currentPiece = ref<number[][]>([]);
 const currentPosition = ref<{ x: number; y: number }>({ x: 0, y: 0 });
-const points = ref<number>(0);
+const score = ref<number>(0);
 const gameOver = ref<boolean>(false);
 const currentPieceType = ref<number>(0);
+
+const nextPiece = ref<number[][]>([]);
+const nextPieceType = ref<number>(0);
 
 const pieces = [
     { forme: [[1, 1, 1, 1]], color: 1 }, // I
@@ -97,17 +131,24 @@ const displayedBoard = computed(() => {
 });
 
 function startGame() {
-    points.value = 0;
+    score.value = 0;
     gameOver.value = false;
     gameBoard.value = Array(rows * cols).fill(0);
+    const first = pieces[Math.floor(Math.random() * pieces.length)];
+    nextPiece.value = first.forme;
+    nextPieceType.value = first.color;
     spawnPiece();
     dropPiece();
 }
 
 function spawnPiece() {
+    currentPiece.value = nextPiece.value;
+    currentPieceType.value = nextPieceType.value;
+
     const piece = pieces[Math.floor(Math.random() * pieces.length)];
-    currentPiece.value = piece.forme;
-    currentPieceType.value = piece.color;
+    nextPiece.value = piece.forme;
+    nextPieceType.value = piece.color;
+
     currentPosition.value = { x: Math.floor(cols / 2) - 1, y: 0 };
     if (!isValidMove(currentPiece.value, currentPosition.value)) {
         gameOver.value = true;
@@ -190,7 +231,11 @@ function clearLines() {
         }
     }
     gameBoard.value = newBoard;
-    points.value += linesCleared * 100;
+
+    if (linesCleared === 1) score.value += 100;
+    else if (linesCleared === 2) score.value += 300;
+    else if (linesCleared === 3) score.value += 500;
+    else if (linesCleared === 4) score.value += 800;
 }
 
 function handleKeyDown(event: KeyboardEvent) {
@@ -218,6 +263,18 @@ const gameBoardStyle = computed(() => ({
     height: `${rows * cellSize}px`,
 }));
 
+const nextPieceStyle = computed(() => {
+    if (!nextPiece.value.length) return {};
+    const width = Math.max(...nextPiece.value.map((row) => row.length));
+    const height = nextPiece.value.length;
+    return {
+        display: "grid",
+        gridTemplateColumns: `repeat(${width}, 20px)`,
+        gridTemplateRows: `repeat(${height}, 20px)`,
+        gap: "2px",
+    };
+});
+
 onMounted(() => {
     window.addEventListener("keydown", handleKeyDown);
 });
@@ -228,22 +285,22 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.body-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    gap: 1.5rem;
+.score-box {
+    background: var(--marron-fonce);
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
 }
 
-.points {
-    background: var(--marron-fonce);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    font-size: 1.2rem;
+.score {
     font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.game-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
 }
 
 .game-board {
@@ -254,12 +311,41 @@ onUnmounted(() => {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+.next-container {
+    position: absolute;
+    left: 100%;
+    margin-left: 2rem;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.next-piece-container {
+    width: 100px;
+    height: 100px;
+    background: var(--marron);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .cell {
     position: absolute;
     width: 30px;
     height: 30px;
     border-radius: 4px;
     box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);
+}
+
+.preview-cell {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.3);
 }
 
 .color-i {
