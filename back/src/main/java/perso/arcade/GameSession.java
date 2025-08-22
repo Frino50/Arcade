@@ -14,7 +14,7 @@ public class GameSession {
 
     public GameSession(String id, WebSocketSession creator) {
         this.id = id;
-        this.players.put(creator, 1); // The creator is player 1 (X)
+        this.players.put(creator, 1);
         Arrays.stream(board).forEach(row -> Arrays.fill(row, 0));
     }
 
@@ -49,10 +49,6 @@ public class GameSession {
 
     public List<WebSocketSession> getSpectators() {
         return spectators;
-    }
-
-    public boolean isFull() {
-        return players.size() == 2;
     }
 
     public int[][] getBoard() {

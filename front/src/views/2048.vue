@@ -71,6 +71,8 @@ const boardCells = Array.from({ length: boardSize * boardSize });
 const score = ref(0);
 const bestScore = ref(Number(localStorage.getItem("bestScore") || 0));
 
+const player = ref(null);
+
 function createTile(value: number, row: number, col: number): Tile {
     return { id: idCounter++, value, row, col, merged: false, isNew: true };
 }
@@ -100,9 +102,11 @@ function placeRandomTiles(count: number) {
 }
 
 function initializeBoard() {
-    tiles.value = [];
-    score.value = 0;
-    placeRandomTiles(2);
+    if (player.value) {
+        tiles.value = [];
+        score.value = 0;
+        placeRandomTiles(2);
+    }
 }
 
 function restartGame() {
@@ -221,10 +225,9 @@ function updateCellSize() {
 }
 
 onMounted(() => {
-    updateCellSize();
     window.addEventListener("resize", updateCellSize);
-    initializeBoard();
     window.addEventListener("keydown", handleKeyPress);
+    updateCellSize();
 });
 
 onBeforeUnmount(() => {

@@ -309,7 +309,6 @@ public class MorpionWebSocketHandler extends TextWebSocketHandler {
                     put("id", game.getId());
                     put("players", game.getPlayers().size());
                     put("spectators", game.getSpectators().size());
-                    put("isFull", game.isFull());
                 }})
                 .collect(Collectors.toList());
 

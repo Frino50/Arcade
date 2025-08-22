@@ -15,7 +15,7 @@
                     </span>
                     <div class="actions">
                         <button
-                            v-if="!game.isFull"
+                            v-if="game.players != 2"
                             @click="$emit('join-game', game.id)"
                         >
                             Rejoindre
@@ -38,7 +38,6 @@ type Game = {
     id: string;
     players: number;
     spectators: number;
-    isFull: boolean;
 };
 
 const games = ref<Game[]>([]);
@@ -57,7 +56,6 @@ function updateLobby(availableGames: Game[]) {
 
 defineExpose({
     updateLobby,
-    isConnected,
 });
 </script>
 

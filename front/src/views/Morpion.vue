@@ -37,7 +37,10 @@
             </div>
 
             <div class="boutton-container">
-                <button v-if="playerSymbol === 1" @click="resetGame">
+                <button
+                    v-if="playerSymbol === 1 && !waitingForPlayer"
+                    @click="resetGame"
+                >
                     Rejouer
                 </button>
                 <button @click="leaveGame">Quitter la partie</button>
@@ -61,7 +64,7 @@ const inGame = ref(false);
 const isPlayer = ref(false);
 const isMyTurn = ref(false);
 const isGameReady = ref(false);
-const waitingForPlayer = ref(false); // Nouvelle variable d'état
+const waitingForPlayer = ref(false);
 const isLeaving = ref(false);
 
 const playerSymbol = ref<PlayerValue | null>(null);

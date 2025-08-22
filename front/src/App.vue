@@ -1,12 +1,15 @@
 <template>
     <div class="app-container">
-        <Selecteur></Selecteur>
+        <Selecteur v-if="localStore.pseudo" />
         <router-view />
     </div>
 </template>
 
 <script setup lang="ts">
 import Selecteur from "@/components/Selecteur.vue";
+import { useLocalStore } from "./store/user.ts";
+
+const localStore = useLocalStore();
 </script>
 
 <style scoped>
