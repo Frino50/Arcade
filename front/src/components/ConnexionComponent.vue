@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineEmits, defineProps } from "vue";
+import { ref, computed } from "vue";
 import ConnexionDto from "@/models/connexionDto.ts";
 
 const props = defineProps({
