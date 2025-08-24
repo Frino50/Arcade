@@ -1,13 +1,17 @@
 package perso.arcade.service;
 
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import perso.arcade.model.ConnexionDto;
+import perso.arcade.model.CustomUserDetails;
 import perso.arcade.model.Player;
 import perso.arcade.repository.PlayerRepository;
 
 @Service
-public class PlayerService {
+public class PlayerService implements UserDetailsService {
+
     private final PlayerRepository playerRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -24,10 +28,10 @@ public class PlayerService {
         return playerRepository.save(player);
     }
 
-    public boolean login(ConnexionDto connexionDto) {
-        return playerRepository.findByPseudo(connexionDto.getPseudo())
-                .map(player -> passwordEncoder.matches(connexionDto.getPassword(), player.getPassword()))
-                .orElse(false);
+    @Override
+    public CustomUserDetails loadUserByUsername(String pseudo) throws UsernameNotFoundException {
+        Player player = playerRepository.findByPseudo(pseudo)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec le pseudo: " + pseudo));
+        return new CustomUserDetails(player);
     }
 }
-

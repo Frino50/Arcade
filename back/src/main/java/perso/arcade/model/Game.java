@@ -1,7 +1,9 @@
 package perso.arcade.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -16,9 +18,9 @@ public class Game {
     private String name;
 
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private Set<Record> records;
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -41,5 +43,17 @@ public class Game {
 
     public void setRecords(Set<Record> records) {
         this.records = records;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Game game = (Game) o;
+        return Objects.equals(id, game.id) && Objects.equals(name, game.name) && Objects.equals(records, game.records);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, records);
     }
 }

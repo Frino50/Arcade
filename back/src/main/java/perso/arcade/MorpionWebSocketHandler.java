@@ -30,7 +30,7 @@ public class MorpionWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         System.out.println("Nouvelle connexion : " + session.getId());
-        allSessions.add(session); // Ajoutez la session à la liste de toutes les sessions
+        allSessions.add(session);
         sendLobbyUpdateToSingleSession(session);
     }
 

@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import { useLocalStore } from "./store/user.ts";
 
-// Vues principales
 import Accueil from "@/views/Accueil.vue";
 import Demineur from "@/views/Demineur.vue";
 import Morpion from "@/views/Morpion.vue";
@@ -12,7 +11,6 @@ import Ball from "@/views/Ball.vue";
 import Snake from "@/views/Snake.vue";
 import Tetris from "@/views/Tetris.vue";
 
-// Auth
 import Login from "@/views/Login.vue";
 import Register from "@/views/Register.vue";
 
@@ -88,7 +86,6 @@ const router = createRouter({
     routes,
 });
 
-// ✅ Guard global
 router.beforeEach((to, _from, next) => {
     const localStore = useLocalStore();
 

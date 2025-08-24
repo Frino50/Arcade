@@ -605,7 +605,7 @@ const colorGroups = computed(() => {
         }
     });
 
-    const familyCounts: Record<string, FamilyCount> = {};
+    const familyCounts: Record<string, any> = {};
 
     Object.entries(exactColorCounts).forEach(([color, count]) => {
         const family = getColorFamily(color);

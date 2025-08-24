@@ -1,0 +1,4 @@
+export default interface LoginResponseDto {
+    token: string;
+    pseudo: string;
+}

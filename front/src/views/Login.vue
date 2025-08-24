@@ -17,6 +17,7 @@ import auth from "../services/auth.ts";
 import ConnexionDto from "@/models/connexionDto.ts";
 import ConnexionComponent from "@/components/ConnexionComponent.vue";
 import { useLocalStore } from "../store/user.ts";
+import LoginResponseDto from "@/models/loginResponseDto.ts";
 
 const router = useRouter();
 const localstore = useLocalStore();
@@ -25,12 +26,10 @@ const loginError = ref("");
 async function handleLogin(connexionDto: ConnexionDto) {
     try {
         const res = await auth.login(connexionDto);
-        if (res.data === true) {
-            localstore.pseudo = connexionDto.pseudo;
-            await router.push("/");
-        } else {
-            loginError.value = "Pseudo ou mot de passe incorrect";
-        }
+        const loginResponseDto: LoginResponseDto = res.data;
+        localstore.pseudo = loginResponseDto.pseudo;
+        localstore.token = loginResponseDto.token;
+        await router.push("/");
     } catch (e) {
         loginError.value = "Erreur serveur, veuillez réessayer";
     }

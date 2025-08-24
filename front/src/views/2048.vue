@@ -52,27 +52,47 @@
             <button @click="restartGame">Reset</button>
         </div>
     </div>
+
+    <Leaderboard
+        style="position: absolute; left: 10rem; top: 10rem"
+        :key="keyLeaderBord"
+        :gameName="GAME_NAME"
+    />
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import Tile from "@/models/tile.ts";
+import SaveRecordDto from "@/models/saveRecordDto.ts";
+import { GameType } from "@/models/enums/gameType.ts";
+import scoreService from "@/services/scoreService.ts";
+import Leaderboard from "../components/LeaderBord.vue";
 
-const boardSize = 4;
-const gap = 5;
-let cellSize = 150;
+const boardSize = <number>4;
+const gap = <number>5;
+const GAME_NAME = GameType.DEUX_MILLE_QUARANTE_HUIT;
+let keyLeaderBord = ref<number>(0);
+let cellSize = <number>150;
 
 const MOVE_DURATION = 200;
 
 const tiles = ref<Tile[]>([]);
-let idCounter = 0;
+let idCounter = <number>0;
 const boardCells = Array.from({ length: boardSize * boardSize });
 
-const score = ref(0);
-const bestScore = ref(Number(localStorage.getItem("bestScore") || 0));
+const score = ref<number>(0);
+const bestScore = ref<number>(0);
 
 function createTile(value: number, row: number, col: number): Tile {
     return { id: idCounter++, value, row, col, merged: false, isNew: true };
+}
+async function getBestScore() {
+    try {
+        const response = await scoreService.getBestScore(GAME_NAME);
+        bestScore.value = response.data;
+    } catch (error) {
+        console.error("Failed to get record:", error);
+    }
 }
 
 function getEmptyCells() {
@@ -106,7 +126,22 @@ function initializeBoard() {
 }
 
 function restartGame() {
+    saveCurrentRecord();
     initializeBoard();
+}
+
+async function saveCurrentRecord() {
+    if (score.value <= 0) {
+        return;
+    }
+    const recordData = new SaveRecordDto(GAME_NAME, score.value);
+    try {
+        const response = await scoreService.saveRecord(recordData);
+        bestScore.value = response.data.score;
+        keyLeaderBord.value++;
+    } catch (error) {
+        console.error("Failed to save record:", error);
+    }
 }
 
 function move(direction: string) {
@@ -156,11 +191,6 @@ function move(direction: string) {
                 other.value *= 2;
                 score.value += other.value;
 
-                if (score.value > bestScore.value) {
-                    bestScore.value = score.value;
-                    localStorage.setItem("bestScore", String(bestScore.value));
-                }
-
                 other.merged = true;
                 tiles.value = tiles.value.filter((t) => t.id !== tile.id);
                 moved = true;
@@ -196,6 +226,8 @@ function checkGameOver() {
             if (neighbors.some((n) => n && n.value === tile.value)) return;
         }
     }
+    saveCurrentRecord();
+    // alert("Game over!");
 }
 
 function handleKeyPress(event: KeyboardEvent) {
@@ -226,9 +258,11 @@ onMounted(() => {
     initializeBoard();
     window.addEventListener("keydown", handleKeyPress);
     updateCellSize();
+    getBestScore();
 });
 
 onBeforeUnmount(() => {
+    saveCurrentRecord();
     window.removeEventListener("keydown", handleKeyPress);
     window.removeEventListener("resize", updateCellSize);
 });
@@ -268,6 +302,21 @@ function getTileTextColor(value: number): string {
 </script>
 
 <style scoped>
+/* Conteneur principal qui aligne le jeu et le classement */
+.page-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 30px;
+    padding: 20px;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .header {
     display: flex;
     justify-content: center;
