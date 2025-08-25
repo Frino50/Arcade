@@ -90,12 +90,12 @@ router.beforeEach((to, _from, next) => {
     const localStore = useLocalStore();
 
     if (to.meta.requiresAuth && !localStore.pseudo) {
-        next("/login"); // pas connecté → login
+        next("/login");
     } else if (
         (to.path === "/login" || to.path === "/register") &&
         localStore.pseudo
     ) {
-        next("/"); // déjà connecté → accueil
+        next("/");
     } else {
         next();
     }
