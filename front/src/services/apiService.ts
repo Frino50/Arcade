@@ -35,7 +35,7 @@ apiService.interceptors.response.use(
                 localstore.pseudo = "";
                 localstore.token = "";
 
-                // ✅ Rediriger immédiatement vers /login
+                //  Rediriger immédiatement vers /login
                 router.push("/login").catch(() => {});
             }
         }
