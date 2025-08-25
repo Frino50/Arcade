@@ -41,12 +41,17 @@ public class RecordService {
         Record existingRecord = recordRepository.findByPlayerAndGame(player, game).orElse(null);
 
         if (existingRecord != null) {
-            //  Met à jour l’existant
-            existingRecord.setScore(saveRecordDto.getScore());
-            existingRecord.setRecordDate(LocalDateTime.now());
-            return recordRepository.save(existingRecord);
+            // Met à jour uniquement si le nouveau score est meilleur
+            if (saveRecordDto.getScore() > existingRecord.getScore()) {
+                existingRecord.setScore(saveRecordDto.getScore());
+                existingRecord.setRecordDate(LocalDateTime.now());
+                return recordRepository.save(existingRecord);
+            } else {
+                // Retourne l'existant sans modification
+                return existingRecord;
+            }
         } else {
-            //  Crée un nouveau record si inexistant
+            // Crée un nouveau record si inexistant
             Record record = new Record();
             record.setScore(saveRecordDto.getScore());
             record.setRecordDate(LocalDateTime.now());
@@ -55,6 +60,7 @@ public class RecordService {
             return recordRepository.save(record);
         }
     }
+
 
     public List<ClassementDto> getLeaderboard(String gameName) {
         return gameRepository.getLeaderboard(gameName);
