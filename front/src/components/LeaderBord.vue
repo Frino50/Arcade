@@ -27,9 +27,7 @@ async function afficherClassement() {
     try {
         const result = await req.getLeaderboard(props.gameName);
         records.value = result.data;
-    } catch (error) {
-        console.error("Failed to fetch leaderboard:", error);
-    }
+    } catch (error) {}
 }
 
 onMounted(() => {

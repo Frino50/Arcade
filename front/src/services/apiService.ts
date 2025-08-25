@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useLocalStore } from "@/store/user.ts";
+import router from "@/router"; // ⬅️ import du router
 
 const apiService = axios.create({
     baseURL: "http://localhost:8080/api",
@@ -8,7 +9,6 @@ const apiService = axios.create({
     },
 });
 
-// Ajoute l'intercepteur de requête
 apiService.interceptors.request.use(
     (config) => {
         const localstore = useLocalStore();
@@ -19,7 +19,27 @@ apiService.interceptors.request.use(
         }
         return config;
     },
+    (error) => Promise.reject(error)
+);
+
+apiService.interceptors.response.use(
+    (response) => response,
     (error) => {
+        const localstore = useLocalStore();
+
+        if (error.response && error.response.status === 401) {
+            const message = error.response.data?.error;
+
+            if (message === "INVALID_OR_EXPIRED_TOKEN") {
+                // Réinitialiser le store
+                localstore.pseudo = "";
+                localstore.token = "";
+
+                // ✅ Rediriger immédiatement vers /login
+                router.push("/login").catch(() => {});
+            }
+        }
+
         return Promise.reject(error);
     }
 );

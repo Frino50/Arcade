@@ -13,7 +13,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import auth from "../services/auth.ts";
+import auth from "../services/authService.ts";
 import ConnexionDto from "@/models/connexionDto.ts";
 import ConnexionComponent from "@/components/ConnexionComponent.vue";
 

@@ -90,9 +90,7 @@ async function getBestScore() {
     try {
         const response = await scoreService.getBestScore(GAME_NAME);
         bestScore.value = response.data;
-    } catch (error) {
-        console.error("Failed to get record:", error);
-    }
+    } catch (error) {}
 }
 
 function getEmptyCells() {
@@ -139,9 +137,7 @@ async function saveCurrentRecord() {
         const response = await scoreService.saveRecord(recordData);
         bestScore.value = response.data.score;
         keyLeaderBord.value++;
-    } catch (error) {
-        console.error("Failed to save record:", error);
-    }
+    } catch (error) {}
 }
 
 function move(direction: string) {
