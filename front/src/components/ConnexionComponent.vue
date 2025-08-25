@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import ConnexionDto from "@/models/connexionDto.ts";
 
 const props = defineProps({
@@ -62,6 +62,13 @@ function handleSubmit() {
     internalError.value = "";
     emit("submit", new ConnexionDto(pseudo.value, password.value));
 }
+onMounted(() => {
+    window.addEventListener("keydown", handleSubmit);
+});
+
+onUnmounted(() => {
+    window.removeEventListener("keydown", handleSubmit);
+});
 </script>
 
 <style scoped>
