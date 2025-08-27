@@ -129,30 +129,32 @@ function cocherBombe(clickedCase: Case) {
 }
 
 function reveleCase(i: number, j: number) {
-    const clickedCase = listCase.value[i][j];
+    if (!perdu.value) {
+        const clickedCase = listCase.value[i][j];
 
-    if (firstClick.value) {
-        genererCarte(i, j);
-        firstClick.value = false;
-        intervalId.value = setInterval(
-            miseAJourTimer,
-            1000
-        ) as unknown as number;
-    }
-
-    if (!clickedCase.visible && !clickedCase.cocherBombe) {
-        clickedCase.visible = true;
-
-        if (clickedCase.bombe) {
-            perdu.value = true;
-            allBombeTrue();
-            clearInterval(intervalId.value as number);
-            return;
+        if (firstClick.value) {
+            genererCarte(i, j);
+            firstClick.value = false;
+            intervalId.value = setInterval(
+                miseAJourTimer,
+                1000
+            ) as unknown as number;
         }
 
-        if (clickedCase.nbrBombeAlentoure === 0) {
-            for (const [ni, nj] of getVoisins(i, j)) {
-                reveleCase(ni, nj);
+        if (!clickedCase.visible && !clickedCase.cocherBombe) {
+            clickedCase.visible = true;
+
+            if (clickedCase.bombe) {
+                perdu.value = true;
+                allBombeTrue();
+                clearInterval(intervalId.value as number);
+                return;
+            }
+
+            if (clickedCase.nbrBombeAlentoure === 0) {
+                for (const [ni, nj] of getVoisins(i, j)) {
+                    reveleCase(ni, nj);
+                }
             }
         }
     }

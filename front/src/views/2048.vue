@@ -298,21 +298,6 @@ function getTileTextColor(value: number): string {
 </script>
 
 <style scoped>
-/* Conteneur principal qui aligne le jeu et le classement */
-.page-container {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 30px;
-    padding: 20px;
-}
-
-.game-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
 .header {
     display: flex;
     justify-content: center;

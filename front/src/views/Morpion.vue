@@ -89,7 +89,7 @@ onBeforeUnmount(() => {
 });
 
 function connectWebSocket() {
-    socket = new WebSocket("ws://202.15.200.35:8080/morpion");
+    socket = new WebSocket("ws://202.15.200.35:8085/morpion");
     socket.onopen = () => {
         console.log("Connecté au serveur WebSocket");
         isLeaving.value = false;

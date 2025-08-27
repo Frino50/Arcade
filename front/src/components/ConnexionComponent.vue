@@ -62,12 +62,19 @@ function handleSubmit() {
     internalError.value = "";
     emit("submit", new ConnexionDto(pseudo.value, password.value));
 }
+
+function handleSubmitPress(event: KeyboardEvent) {
+    if (event.key === "Enter") {
+        handleSubmit();
+    }
+}
+
 onMounted(() => {
-    window.addEventListener("keydown", handleSubmit);
+    window.addEventListener("keydown", handleSubmitPress);
 });
 
 onUnmounted(() => {
-    window.removeEventListener("keydown", handleSubmit);
+    window.removeEventListener("keydown", handleSubmitPress);
 });
 </script>
 

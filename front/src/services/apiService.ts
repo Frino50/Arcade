@@ -3,7 +3,7 @@ import { useLocalStore } from "@/store/user.ts";
 import router from "@/router";
 
 const apiService = axios.create({
-    baseURL: "http://localhost:8080/api",
+    baseURL: import.meta.env.VITE_API_BASE_URL,
     headers: {
         "Content-Type": "application/json",
     },
