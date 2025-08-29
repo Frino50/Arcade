@@ -2,4 +2,5 @@ export enum GameType {
     DEUX_MILLE_QUARANTE_HUIT = "DEUX_MILLE_QUARANTE_HUIT",
     TETRIS = "TETRIS",
     SNAKE = "SNAKE",
+    DEMINEUR = "DEMINEUR",
 }

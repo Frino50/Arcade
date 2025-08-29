@@ -1,11 +1,5 @@
 <template>
     <div class="body-container">
-        <Message
-            v-if="estGagne()"
-            :message="'Victoire'"
-            :isGreen="true"
-        ></Message>
-
         <div class="compteur-container">
             <div class="drapeau-compteur-container">
                 <img
@@ -18,6 +12,7 @@
             <div class="timer">
                 {{ formatMinutes() }}:{{ formatSecondes() }}
             </div>
+            <RecordComponent :key="keyLeaderBord" :game-name="GAME_NAME" />
         </div>
 
         <div
@@ -57,12 +52,21 @@
             <button @click="genererList()">Reset</button>
         </div>
     </div>
+    <Leaderboard
+        style="position: absolute; left: 10rem; top: 10rem"
+        :key="keyLeaderBord"
+        :gameName="GAME_NAME"
+    />
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import Case from "../models/case.ts";
-import Message from "@/components/Message.vue";
+import SaveRecordDto from "@/models/saveRecordDto.ts";
+import scoreService from "@/services/scoreService.ts";
+import { GameType } from "@/models/enums/gameType.ts";
+import Leaderboard from "@/components/LeaderBord.vue";
+import RecordComponent from "@/components/RecordComponent.vue";
 
 const nombreDeBombes = ref<number>(40);
 const nombreDeLignes = ref<number>(14);
@@ -71,6 +75,8 @@ const perdu = ref<boolean>();
 const tempsEcoule = ref<number>(0);
 const firstClick = ref<boolean>(true);
 const intervalId = ref<number | null>(null);
+const GAME_NAME = GameType.DEMINEUR;
+let keyLeaderBord = ref<number>(0);
 
 const listCase = ref<Case[][]>([]);
 
@@ -125,6 +131,34 @@ function getVoisins(i: number, j: number): [number, number][] {
 function cocherBombe(clickedCase: Case) {
     if (!clickedCase.visible) {
         clickedCase.cocherBombe = !clickedCase.cocherBombe;
+        verifierToutesBombesTrouvees();
+    }
+}
+
+async function verifierToutesBombesTrouvees() {
+    const bombes = listCase.value.flat().filter((c) => c.bombe);
+    const gagne =
+        bombes.length === nombreDeBombes.value &&
+        bombes.every((c) => c.cocherBombe) &&
+        nombreCasesCocherBombe.value === nombreDeBombes.value;
+
+    if (gagne) {
+        clearInterval(intervalId.value as number); // stop timer
+
+        // sauvegarder le temps en ms comme score
+        const score = tempsEcoule.value * 1000;
+        if (score > 0) {
+            const recordData = new SaveRecordDto(GAME_NAME, score);
+            try {
+                await scoreService.saveRecord(recordData);
+                keyLeaderBord.value++;
+            } catch (error) {
+                console.error(
+                    "Erreur lors de la sauvegarde du record :",
+                    error
+                );
+            }
+        }
     }
 }
 
@@ -214,14 +248,6 @@ function allBombeTrue() {
     listCase.value.flat().forEach((c) => {
         if (c.bombe) c.visible = true;
     });
-}
-
-function estGagne(): boolean {
-    if (listCase.value.length === 0) return false;
-    return listCase.value
-        .flat()
-        .filter((c) => !c.bombe)
-        .every((c) => c.visible);
 }
 
 function miseAJourTimer() {

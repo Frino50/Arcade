@@ -6,10 +6,7 @@
                     <div>Score</div>
                     <div class="score">{{ score }}</div>
                 </div>
-                <div class="score-box">
-                    <div>Best</div>
-                    <div class="score">{{ bestScore }}</div>
-                </div>
+                <RecordComponent :key="keyLeaderBord" :game-name="GAME_NAME" />
             </div>
         </div>
 
@@ -67,6 +64,7 @@ import SaveRecordDto from "@/models/saveRecordDto.ts";
 import { GameType } from "@/models/enums/gameType.ts";
 import scoreService from "@/services/scoreService.ts";
 import Leaderboard from "../components/LeaderBord.vue";
+import RecordComponent from "@/components/RecordComponent.vue";
 
 const boardSize = <number>4;
 const gap = <number>5;
@@ -81,16 +79,9 @@ let idCounter = <number>0;
 const boardCells = Array.from({ length: boardSize * boardSize });
 
 const score = ref<number>(0);
-const bestScore = ref<number>(0);
 
 function createTile(value: number, row: number, col: number): Tile {
     return { id: idCounter++, value, row, col, merged: false, isNew: true };
-}
-async function getBestScore() {
-    try {
-        const response = await scoreService.getBestScore(GAME_NAME);
-        bestScore.value = response.data;
-    } catch (error) {}
 }
 
 function getEmptyCells() {
@@ -134,8 +125,7 @@ async function saveCurrentRecord() {
     }
     const recordData = new SaveRecordDto(GAME_NAME, score.value);
     try {
-        const response = await scoreService.saveRecord(recordData);
-        bestScore.value = response.data.score;
+        await scoreService.saveRecord(recordData);
         keyLeaderBord.value++;
     } catch (error) {}
 }
@@ -254,7 +244,6 @@ onMounted(() => {
     initializeBoard();
     window.addEventListener("keydown", handleKeyPress);
     updateCellSize();
-    getBestScore();
 });
 
 onBeforeUnmount(() => {
