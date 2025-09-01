@@ -34,6 +34,7 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
                 UserDetails userDetails = playerService.loadUserByUsername(username);
+                System.out.println("Requête de l'utilisateur : " + username + " requête : " + request.getMethod() + " " + request.getRequestURI());
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

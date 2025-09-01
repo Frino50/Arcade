@@ -3,21 +3,14 @@ import SaveRecordDto from "@/models/saveRecordDto.ts";
 
 export default {
     async saveRecord(saveRecordDto: SaveRecordDto) {
-        return await apiService.post(
-            `${import.meta.env.VITE_API_BASE_URL}/record`,
-            saveRecordDto
-        );
+        return await apiService.post("/record", saveRecordDto);
     },
 
     async getLeaderboard(gameName: string) {
-        return await apiService.get(
-            `${import.meta.env.VITE_API_BASE_URL}/record/leaderboard/${gameName}`
-        );
+        return await apiService.get(`/record/leaderboard/${gameName}`);
     },
 
     async getBestScore(gameName: string) {
-        return await apiService.get(
-            `${import.meta.env.VITE_API_BASE_URL}/record/bestScore/${gameName}`
-        );
+        return await apiService.get(`/record/bestScore/${gameName}`);
     },
 };

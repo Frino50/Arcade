@@ -7,7 +7,7 @@
                 <span class="score-value">{{ record.score }}</span>
             </li>
         </ol>
-        <p v-else>No records found.</p>
+        <p v-else>Pas encore de record</p>
     </div>
 </template>
 
