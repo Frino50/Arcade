@@ -2,7 +2,7 @@
     <div class="chat">
         <div class="messages" ref="messagesContainer">
             <div v-for="msg in messages" :key="msg.id" class="message">
-                <strong>{{ msg.sender }}:</strong> {{ msg.content }}
+                <strong>{{ msg.player }}:</strong> {{ msg.content }}
                 <small>{{ formatTime(msg.timestamp) }}</small>
             </div>
         </div>
@@ -23,7 +23,7 @@ import messageService from "@/services/messageService.ts";
 
 const text = ref("");
 const messages = ref<
-    { id: number; sender: string; content: string; timestamp: string }[]
+    { id: number; player: string; content: string; timestamp: string }[]
 >([]);
 let stompClient: Client;
 

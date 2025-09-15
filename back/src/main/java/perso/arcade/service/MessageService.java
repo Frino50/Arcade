@@ -28,7 +28,7 @@ public class MessageService {
         Player player = utilService.getPlayer();
 
         Message msg = new Message();
-        msg.setSender(player);
+        msg.setPlayer(player);
         msg.setContent(message);
         msg.setTimestamp(LocalDateTime.now());
         msg = messageRepository.save(msg);
@@ -40,7 +40,7 @@ public class MessageService {
     public List<MessageDTO> getRecentMessages() {
         return messageRepository.findTop50ByOrderByTimestampAsc()
                 .stream()
-                .map(m -> new MessageDTO(m.getId(), m.getSender().getPseudo(), m.getContent(), m.getTimestamp()))
+                .map(m -> new MessageDTO(m.getId(), m.getPlayer().getPseudo(), m.getContent(), m.getTimestamp()))
                 .collect(Collectors.toList());
     }
 }

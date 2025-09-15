@@ -14,9 +14,9 @@ public class Message {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id", nullable = false)
+    @JoinColumn(name = "player_id", nullable = false)
     @JsonBackReference
-    private Player sender;
+    private Player player;
 
     @Column(nullable = false)
     private String content;
@@ -28,9 +28,9 @@ public class Message {
         this.timestamp = LocalDateTime.now();
     }
 
-    public Message(Player sender, String content) {
+    public Message(Player player, String content) {
         this();
-        this.sender = sender;
+        this.player = player;
         this.content = content;
     }
 
@@ -43,12 +43,12 @@ public class Message {
         this.id = id;
     }
 
-    public Player getSender() {
-        return sender;
+    public Player getPlayer() {
+        return player;
     }
 
-    public void setSender(Player sender) {
-        this.sender = sender;
+    public void setPlayer(Player player) {
+        this.player = player;
     }
 
     public String getContent() {

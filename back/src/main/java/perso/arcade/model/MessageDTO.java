@@ -4,16 +4,16 @@ import java.time.LocalDateTime;
 
 public class MessageDTO {
     private Long id;
-    private String sender;
+    private String player;
     private String content;
     private LocalDateTime timestamp;
 
     public MessageDTO() {
     }
 
-    public MessageDTO(Long id, String sender, String content, LocalDateTime timestamp) {
+    public MessageDTO(Long id, String player, String content, LocalDateTime timestamp) {
         this.id = id;
-        this.sender = sender;
+        this.player = player;
         this.content = content;
         this.timestamp = timestamp;
     }
@@ -34,12 +34,12 @@ public class MessageDTO {
         this.content = content;
     }
 
-    public String getSender() {
-        return sender;
+    public String getPlayer() {
+        return player;
     }
 
-    public void setSender(String sender) {
-        this.sender = sender;
+    public void setPlayer(String player) {
+        this.player = player;
     }
 
     public Long getId() {
