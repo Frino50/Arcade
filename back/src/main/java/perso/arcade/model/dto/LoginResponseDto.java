@@ -1,4 +1,4 @@
-package perso.arcade.model;
+package perso.arcade.model.dto;
 
 public class LoginResponseDto {
     private String token;

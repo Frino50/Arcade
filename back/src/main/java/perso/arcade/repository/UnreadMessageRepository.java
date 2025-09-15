@@ -1,7 +1,7 @@
 package perso.arcade.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import perso.arcade.model.UnreadMessage;
+import perso.arcade.model.entities.UnreadMessage;
 
 import java.util.List;
 

@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import perso.arcade.model.ConnexionDto;
-import perso.arcade.model.LoginResponseDto;
-import perso.arcade.model.Player;
+import perso.arcade.model.dto.ConnexionDto;
+import perso.arcade.model.dto.LoginResponseDto;
+import perso.arcade.model.entities.Player;
 import perso.arcade.security.JwtUtils;
 import perso.arcade.service.PlayerService;
 

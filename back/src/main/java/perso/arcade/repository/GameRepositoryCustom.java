@@ -1,6 +1,6 @@
 package perso.arcade.repository;
 
-import perso.arcade.model.ClassementDto;
+import perso.arcade.model.dto.ClassementDto;
 
 import java.util.List;
 

@@ -3,9 +3,9 @@ package perso.arcade.Controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import perso.arcade.model.ClassementDto;
-import perso.arcade.model.Record;
-import perso.arcade.model.SaveRecordDto;
+import perso.arcade.model.dto.ClassementDto;
+import perso.arcade.model.dto.SaveRecordDto;
+import perso.arcade.model.entities.Record;
 import perso.arcade.service.RecordService;
 
 import java.util.List;

@@ -1,17 +1,17 @@
-package perso.arcade.model;
+package perso.arcade.model.dto;
 
 import java.time.LocalDateTime;
 
-public class MessageDTO {
+public class MessageDto {
     private Long id;
     private String player;
     private String content;
     private LocalDateTime timestamp;
 
-    public MessageDTO() {
+    public MessageDto() {
     }
 
-    public MessageDTO(Long id, String player, String content, LocalDateTime timestamp) {
+    public MessageDto(Long id, String player, String content, LocalDateTime timestamp) {
         this.id = id;
         this.player = player;
         this.content = content;

@@ -3,7 +3,7 @@ package perso.arcade.repository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
-import perso.arcade.model.ClassementDto;
+import perso.arcade.model.dto.ClassementDto;
 
 import java.util.List;
 

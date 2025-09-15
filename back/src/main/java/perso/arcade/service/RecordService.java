@@ -1,8 +1,11 @@
 package perso.arcade.service;
 
 import org.springframework.stereotype.Service;
-import perso.arcade.model.*;
-import perso.arcade.model.Record;
+import perso.arcade.model.dto.ClassementDto;
+import perso.arcade.model.dto.SaveRecordDto;
+import perso.arcade.model.entities.Game;
+import perso.arcade.model.entities.Player;
+import perso.arcade.model.entities.Record;
 import perso.arcade.repository.GameRepository;
 import perso.arcade.repository.PlayerRepository;
 import perso.arcade.repository.RecordRepository;
@@ -16,17 +19,17 @@ public class RecordService {
     private final RecordRepository recordRepository;
     private final PlayerRepository playerRepository;
     private final GameRepository gameRepository;
-    private final UtilService utilService;
+    private final UtilsService utilsService;
 
-    public RecordService(RecordRepository recordRepository, PlayerRepository playerRepository, GameRepository gameRepository, UtilService utilService) {
+    public RecordService(RecordRepository recordRepository, PlayerRepository playerRepository, GameRepository gameRepository, UtilsService utilsService) {
         this.recordRepository = recordRepository;
         this.playerRepository = playerRepository;
         this.gameRepository = gameRepository;
-        this.utilService = utilService;
+        this.utilsService = utilsService;
     }
 
     public Record saveRecord(SaveRecordDto saveRecordDto) {
-        String pseudo = utilService.getPseudo();
+        String pseudo = utilsService.getPseudo();
         Player player = playerRepository.findByPseudo(pseudo)
                 .orElseThrow(() -> new RuntimeException("Player not found with pseudo: " + pseudo));
 
@@ -62,7 +65,7 @@ public class RecordService {
     }
 
     public Long getBestScore(String gameName) {
-        Player player = utilService.getPlayer();
+        Player player = utilsService.getPlayer();
 
         Game game = gameRepository.findByName(gameName)
                 .orElseThrow(() -> new RuntimeException("Game not found with name: " + gameName));

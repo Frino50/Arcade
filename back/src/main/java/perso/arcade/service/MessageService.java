@@ -2,9 +2,9 @@ package perso.arcade.service;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import perso.arcade.model.Message;
-import perso.arcade.model.MessageDTO;
-import perso.arcade.model.Player;
+import perso.arcade.model.dto.MessageDto;
+import perso.arcade.model.entities.Message;
+import perso.arcade.model.entities.Player;
 import perso.arcade.repository.MessageRepository;
 
 import java.time.LocalDateTime;
@@ -16,16 +16,16 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final SimpMessagingTemplate messagingTemplate;
-    private final UtilService utilService;
+    private final UtilsService utilsService;
 
-    public MessageService(MessageRepository messageRepository, SimpMessagingTemplate messagingTemplate, UtilService utilService) {
+    public MessageService(MessageRepository messageRepository, SimpMessagingTemplate messagingTemplate, UtilsService utilsService) {
         this.messageRepository = messageRepository;
         this.messagingTemplate = messagingTemplate;
-        this.utilService = utilService;
+        this.utilsService = utilsService;
     }
 
     public void sendMessage(String message) {
-        Player player = utilService.getPlayer();
+        Player player = utilsService.getPlayer();
 
         Message msg = new Message();
         msg.setPlayer(player);
@@ -34,13 +34,13 @@ public class MessageService {
         msg = messageRepository.save(msg);
 
         messagingTemplate.convertAndSend("/topic/chat",
-                new MessageDTO(msg.getId(), player.getPseudo(), msg.getContent(), msg.getTimestamp()));
+                new MessageDto(msg.getId(), player.getPseudo(), msg.getContent(), msg.getTimestamp()));
     }
 
-    public List<MessageDTO> getRecentMessages() {
+    public List<MessageDto> getRecentMessages() {
         return messageRepository.findTop50ByOrderByTimestampAsc()
                 .stream()
-                .map(m -> new MessageDTO(m.getId(), m.getPlayer().getPseudo(), m.getContent(), m.getTimestamp()))
+                .map(m -> new MessageDto(m.getId(), m.getPlayer().getPseudo(), m.getContent(), m.getTimestamp()))
                 .collect(Collectors.toList());
     }
 }

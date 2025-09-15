@@ -4,9 +4,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import perso.arcade.model.ConnexionDto;
 import perso.arcade.model.CustomUserDetails;
-import perso.arcade.model.Player;
+import perso.arcade.model.dto.ConnexionDto;
+import perso.arcade.model.entities.Player;
 import perso.arcade.repository.PlayerRepository;
 
 @Service

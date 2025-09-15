@@ -1,7 +1,7 @@
 package perso.arcade.Controller;
 
 import org.springframework.web.bind.annotation.*;
-import perso.arcade.model.MessageDTO;
+import perso.arcade.model.dto.MessageDto;
 import perso.arcade.service.MessageService;
 
 import java.util.List;
@@ -23,7 +23,7 @@ public class MessageController {
 
     @GetMapping()
     @ResponseBody
-    public List<MessageDTO> getRecent() {
+    public List<MessageDto> getRecent() {
         return messageService.getRecentMessages();
     }
 }

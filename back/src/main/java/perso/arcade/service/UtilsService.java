@@ -3,15 +3,15 @@ package perso.arcade.service;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import perso.arcade.model.Player;
+import perso.arcade.model.entities.Player;
 import perso.arcade.repository.PlayerRepository;
 
 @Service
-public class UtilService {
+public class UtilsService {
 
     private final PlayerRepository playerRepository;
 
-    public UtilService(PlayerRepository playerRepository) {
+    public UtilsService(PlayerRepository playerRepository) {
         this.playerRepository = playerRepository;
     }
 

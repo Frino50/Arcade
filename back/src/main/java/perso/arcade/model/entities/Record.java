@@ -1,4 +1,4 @@
-package perso.arcade.model;
+package perso.arcade.model.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
