@@ -37,13 +37,12 @@ onMounted(() => {
 
 <style scoped>
 .leaderboard-container {
-    background-color: var(--marron);
+    background-color: var(--marron-fonce);
     border-radius: 8px;
     padding: 20px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     color: #fff;
     width: 15rem;
-    margin-right: 20px;
     text-align: center;
 }
 

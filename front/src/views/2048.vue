@@ -1,60 +1,63 @@
 <template>
     <div class="body-container">
-        <div class="header">
-            <div class="scores">
-                <div class="score-box">
-                    <div>Score</div>
-                    <div class="score">{{ score }}</div>
+        <div class="main-container">
+            <Leaderboard :key="keyLeaderBord" :gameName="GAME_NAME" />
+            <div class="game-container">
+                <div class="header">
+                    <div class="scores">
+                        <div class="score-box">
+                            <div>Score</div>
+                            <div class="score">{{ score }}</div>
+                        </div>
+                        <RecordComponent
+                            :key="keyLeaderBord"
+                            :game-name="GAME_NAME"
+                        />
+                    </div>
                 </div>
-                <RecordComponent :key="keyLeaderBord" :game-name="GAME_NAME" />
+                <div
+                    class="board"
+                    :style="{
+                        width:
+                            boardSize * cellSize + (boardSize - 1) * gap + 'px',
+                        height:
+                            boardSize * cellSize + (boardSize - 1) * gap + 'px',
+                        gridTemplateRows: `repeat(${boardSize}, ${cellSize}px)`,
+                        gridTemplateColumns: `repeat(${boardSize}, ${cellSize}px)`,
+                        gap: gap + 'px',
+                    }"
+                >
+                    <div
+                        v-for="index in boardCells.length"
+                        :key="index"
+                        class="board-cell empty"
+                    ></div>
+
+                    <div
+                        v-for="tile in tiles"
+                        :key="tile.id"
+                        class="tile"
+                        :class="{ merged: tile.merged, new: tile.isNew }"
+                        :style="{
+                            top: tile.row * (cellSize + gap) + 'px',
+                            left: tile.col * (cellSize + gap) + 'px',
+                            width: cellSize + 'px',
+                            height: cellSize + 'px',
+                            fontSize: cellSize / 3 + 'px',
+                            background: getTileGradient(tile.value),
+                            color: getTileTextColor(tile.value),
+                        }"
+                    >
+                        {{ tile.value }}
+                    </div>
+                </div>
+                <div>
+                    <button @click="restartGame">Reset</button>
+                </div>
             </div>
-        </div>
-
-        <div
-            class="board"
-            :style="{
-                width: boardSize * cellSize + (boardSize - 1) * gap + 'px',
-                height: boardSize * cellSize + (boardSize - 1) * gap + 'px',
-                gridTemplateRows: `repeat(${boardSize}, ${cellSize}px)`,
-                gridTemplateColumns: `repeat(${boardSize}, ${cellSize}px)`,
-                gap: gap + 'px',
-            }"
-        >
-            <div
-                v-for="index in boardCells.length"
-                :key="index"
-                class="board-cell empty"
-            ></div>
-
-            <div
-                v-for="tile in tiles"
-                :key="tile.id"
-                class="tile"
-                :class="{ merged: tile.merged, new: tile.isNew }"
-                :style="{
-                    top: tile.row * (cellSize + gap) + 'px',
-                    left: tile.col * (cellSize + gap) + 'px',
-                    width: cellSize + 'px',
-                    height: cellSize + 'px',
-                    fontSize: cellSize / 3 + 'px',
-                    background: getTileGradient(tile.value),
-                    color: getTileTextColor(tile.value),
-                }"
-            >
-                {{ tile.value }}
-            </div>
-        </div>
-
-        <div>
-            <button @click="restartGame">Reset</button>
+            <Chat />
         </div>
     </div>
-
-    <Leaderboard
-        style="position: absolute; left: 10rem; top: 10rem"
-        :key="keyLeaderBord"
-        :gameName="GAME_NAME"
-    />
 </template>
 
 <script setup lang="ts">
@@ -65,6 +68,7 @@ import { GameType } from "@/models/enums/gameType.ts";
 import scoreService from "@/services/scoreService.ts";
 import Leaderboard from "../components/LeaderBord.vue";
 import RecordComponent from "@/components/RecordComponent.vue";
+import Chat from "@/components/Chat.vue";
 
 const boardSize = <number>4;
 const gap = <number>5;
@@ -287,14 +291,20 @@ function getTileTextColor(value: number): string {
 </script>
 
 <style scoped>
-.header {
+.main-container {
     display: flex;
     justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 4rem;
+    margin-left: 13rem;
 }
 
-.header h1 {
-    font-size: 2.5rem;
-    margin: 0;
+.game-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
 }
 
 .scores {

@@ -12,4 +12,7 @@ export default defineConfig({
         },
     },
     plugins: [vue()],
+    define: {
+        global: "window",
+    },
 });

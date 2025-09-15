@@ -1,7 +1,5 @@
 package perso.arcade.service;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import perso.arcade.model.*;
 import perso.arcade.model.Record;
@@ -18,20 +16,17 @@ public class RecordService {
     private final RecordRepository recordRepository;
     private final PlayerRepository playerRepository;
     private final GameRepository gameRepository;
+    private final UtilService utilService;
 
-    public RecordService(RecordRepository recordRepository, PlayerRepository playerRepository, GameRepository gameRepository) {
+    public RecordService(RecordRepository recordRepository, PlayerRepository playerRepository, GameRepository gameRepository, UtilService utilService) {
         this.recordRepository = recordRepository;
         this.playerRepository = playerRepository;
         this.gameRepository = gameRepository;
-    }
-
-    private String getPseudo() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getName();
+        this.utilService = utilService;
     }
 
     public Record saveRecord(SaveRecordDto saveRecordDto) {
-        String pseudo = getPseudo();
+        String pseudo = utilService.getPseudo();
         Player player = playerRepository.findByPseudo(pseudo)
                 .orElseThrow(() -> new RuntimeException("Player not found with pseudo: " + pseudo));
 
@@ -67,10 +62,7 @@ public class RecordService {
     }
 
     public Long getBestScore(String gameName) {
-        String pseudo = getPseudo();
-
-        Player player = playerRepository.findByPseudo(pseudo)
-                .orElseThrow(() -> new RuntimeException("Player not found with pseudo: " + pseudo));
+        Player player = utilService.getPlayer();
 
         Game game = gameRepository.findByName(gameName)
                 .orElseThrow(() -> new RuntimeException("Game not found with name: " + gameName));
@@ -79,5 +71,4 @@ public class RecordService {
                 .map(Record::getScore) // retourne le score
                 .orElse(0L); // si aucun record, renvoyer 0
     }
-
 }
