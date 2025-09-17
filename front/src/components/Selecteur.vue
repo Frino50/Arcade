@@ -31,7 +31,6 @@ const isHovered = ref(false);
 const router = useRouter();
 const pages = [
     { title: "Démineur", link: "Demineur" },
-    { title: "Morpion", link: "Morpion" },
     { title: "2048", link: "2048" },
     { title: "Snake", link: "Snake" },
     { title: "Tetris", link: "Tetris" },

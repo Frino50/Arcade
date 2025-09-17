@@ -3,7 +3,6 @@ import { useLocalStore } from "./store/local.ts";
 
 import Accueil from "@/views/Accueil.vue";
 import Demineur from "@/views/Demineur.vue";
-import Morpion from "@/views/Morpion.vue";
 import DeuxMilleQuaranteHuit from "@/views/2048.vue";
 import Boids from "@/views/Boids.vue";
 import Bacterie from "@/views/Bacterie.vue";
@@ -25,12 +24,6 @@ const routes: Array<RouteRecordRaw> = [
         path: "/demineur",
         name: "Demineur",
         component: Demineur,
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/morpion",
-        name: "Morpion",
-        component: Morpion,
         meta: { requiresAuth: true },
     },
     {
