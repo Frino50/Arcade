@@ -46,11 +46,12 @@ function switchPage(chemin: string) {
 
 <style scoped>
 .container {
+    position: fixed;
+    right: 0;
+    height: 100vh;
     display: flex;
     flex-direction: column;
-    position: absolute;
-    right: 0;
-    top: 20%;
+    justify-content: center;
     align-items: flex-end;
 }
 
