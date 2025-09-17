@@ -6,6 +6,6 @@ export default {
     },
 
     async sendMessage(message: string) {
-        return await apiService.post(`/messages/${message}`);
+        return await apiService.post(`/messages`, { message });
     },
 };

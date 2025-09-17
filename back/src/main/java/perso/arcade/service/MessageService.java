@@ -27,6 +27,10 @@ public class MessageService {
     }
 
     public void sendMessage(String message) {
+        if (message == null || message.trim().isEmpty()) {
+            throw new IllegalArgumentException("Le message ne peut pas être vide ou ne contenir que des espaces.");
+        }
+
         Player player = utilsService.getPlayer();
 
         Message msg = new Message();
@@ -38,6 +42,7 @@ public class MessageService {
         messagingTemplate.convertAndSend("/topic/chat",
                 new MessageDto(msg.getId(), player.getPseudo(), msg.getContent(), msg.getTimestamp()));
     }
+
 
     public Page<MessageDto> getMessages(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());

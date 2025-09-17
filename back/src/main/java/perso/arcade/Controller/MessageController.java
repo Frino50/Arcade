@@ -5,6 +5,8 @@ import perso.arcade.model.PageResponse;
 import perso.arcade.model.dto.MessageDto;
 import perso.arcade.service.MessageService;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/messages")
 public class MessageController {
@@ -15,10 +17,11 @@ public class MessageController {
         this.messageService = messageService;
     }
 
-    @PostMapping("/{message}")
-    public void sendMessage(@PathVariable String message) {
-        messageService.sendMessage(message);
+    @PostMapping()
+    public void sendMessage(@RequestBody Map<String, String> data) {
+        messageService.sendMessage(data.get("message"));
     }
+
 
     @GetMapping()
     public PageResponse<MessageDto> getMessages(@RequestParam int page, @RequestParam int size) {
