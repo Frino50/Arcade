@@ -7,7 +7,7 @@
 
 <script setup lang="ts">
 import Selecteur from "@/components/Selecteur.vue";
-import { useLocalStore } from "./store/user.ts";
+import { useLocalStore } from "./store/local.ts";
 
 const localStore = useLocalStore();
 </script>

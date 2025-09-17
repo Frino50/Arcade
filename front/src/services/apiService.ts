@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useLocalStore } from "@/store/user.ts";
+import { useLocalStore } from "@/store/local.ts";
 import router from "@/router";
 
 const apiService = axios.create({

@@ -18,7 +18,7 @@
 import { ref, onMounted, onBeforeUnmount, nextTick } from "vue";
 import SockJS from "sockjs-client";
 import { Client, IMessage } from "@stomp/stompjs";
-import { useLocalStore } from "@/store/user.ts";
+import { useLocalStore } from "@/store/local.ts";
 import messageService from "@/services/messageService.ts";
 
 const text = ref("");

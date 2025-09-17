@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
-import { useLocalStore } from "./store/user.ts";
+import { useLocalStore } from "./store/local.ts";
 
 import Accueil from "@/views/Accueil.vue";
 import Demineur from "@/views/Demineur.vue";
