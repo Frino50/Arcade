@@ -14,7 +14,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import auth from "../services/authService.ts";
-import ConnexionDto from "@/models/connexionDto.ts";
+import ConnexionDto from "@/models/dtos/connexionDto.ts";
 import ConnexionComponent from "@/components/ConnexionComponent.vue";
 
 const router = useRouter();

@@ -63,7 +63,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import Tile from "@/models/tile.ts";
-import SaveRecordDto from "@/models/saveRecordDto.ts";
+import SaveRecordDto from "@/models/dtos/saveRecordDto.ts";
 import { GameType } from "@/models/enums/gameType.ts";
 import scoreService from "@/services/scoreService.ts";
 import Leaderboard from "../components/LeaderBord.vue";

@@ -15,7 +15,7 @@
 import { ref, onMounted } from "vue";
 import { GameType } from "@/models/enums/gameType.ts";
 import req from "@/services/scoreService.ts";
-import ClassementDto from "@/models/classementDto.ts";
+import ClassementDto from "@/models/dtos/classementDto.ts";
 
 const props = defineProps<{
     gameName: GameType;

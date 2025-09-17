@@ -1,4 +1,4 @@
-import ConnexionDto from "@/models/connexionDto.ts";
+import ConnexionDto from "@/models/dtos/connexionDto.ts";
 import apiService from "@/services/apiService.ts";
 
 export default {

@@ -31,7 +31,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
-import ConnexionDto from "@/models/connexionDto.ts";
+import ConnexionDto from "@/models/dtos/connexionDto.ts";
 
 const props = defineProps({
     title: String,

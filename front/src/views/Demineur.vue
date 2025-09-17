@@ -62,7 +62,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import Case from "../models/case.ts";
-import SaveRecordDto from "@/models/saveRecordDto.ts";
+import SaveRecordDto from "@/models/dtos/saveRecordDto.ts";
 import scoreService from "@/services/scoreService.ts";
 import { GameType } from "@/models/enums/gameType.ts";
 import Leaderboard from "@/components/LeaderBord.vue";

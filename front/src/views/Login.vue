@@ -14,10 +14,10 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import auth from "../services/authService.ts";
-import ConnexionDto from "@/models/connexionDto.ts";
+import ConnexionDto from "@/models/dtos/connexionDto.ts";
 import ConnexionComponent from "@/components/ConnexionComponent.vue";
 import { useLocalStore } from "../store/local.ts";
-import LoginResponseDto from "@/models/loginResponseDto.ts";
+import LoginResponseDto from "@/models/dtos/loginResponseDto.ts";
 
 const router = useRouter();
 const localstore = useLocalStore();

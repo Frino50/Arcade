@@ -1,5 +1,5 @@
 import apiService from "@/services/apiService.ts";
-import SaveRecordDto from "@/models/saveRecordDto.ts";
+import SaveRecordDto from "@/models/dtos/saveRecordDto.ts";
 
 export default {
     async saveRecord(saveRecordDto: SaveRecordDto) {
