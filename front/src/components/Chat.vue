@@ -1,6 +1,6 @@
 <template>
     <div class="chat">
-        <div class="messages" ref="messagesContainer">
+        <div class="messages" ref="messagesContainer" @scroll="onScroll">
             <div v-for="msg in messages" :key="msg.id" class="message">
                 <strong>{{ msg.player }}:</strong> {{ msg.content }}
                 <small>{{ formatTime(msg.timestamp) }}</small>
@@ -25,11 +25,15 @@ const text = ref("");
 const messages = ref<
     { id: number; player: string; content: string; timestamp: string }[]
 >([]);
+
 let stompClient: Client;
-
 const localstore = useLocalStore();
-
 const messagesContainer = ref<HTMLDivElement | null>(null);
+
+const page = ref(0);
+const size = 20;
+const loading = ref(false);
+let reachedEnd = false;
 
 function connect() {
     const socket = new SockJS("http://202.15.200.35:8085/ws");
@@ -58,10 +62,32 @@ function disconnect() {
     stompClient?.deactivate();
 }
 
-async function loadRecentMessages() {
-    const res = await messageService.loadRecentMessages();
-    messages.value = res.data;
-    scrollToBottom();
+async function loadMessages() {
+    if (loading.value || reachedEnd) return;
+    loading.value = true;
+
+    if (!messagesContainer.value) return;
+
+    const container = messagesContainer.value;
+    const scrollHeightBefore = container.scrollHeight;
+
+    const res = await messageService.loadMessages(page.value, size);
+    const newMessages = res.data.content;
+
+    if (newMessages.length === 0) {
+        reachedEnd = true;
+    } else {
+        messages.value = [...newMessages.reverse(), ...messages.value];
+
+        await nextTick();
+
+        const scrollHeightAfter = container.scrollHeight;
+        container.scrollTop = scrollHeightAfter - scrollHeightBefore;
+
+        page.value++;
+    }
+
+    loading.value = false;
 }
 
 async function sendMessage() {
@@ -71,7 +97,13 @@ async function sendMessage() {
 }
 
 function formatTime(ts: string) {
-    return new Date(ts).toLocaleTimeString();
+    const date = new Date(ts);
+    return date.toLocaleString("fr-FR", {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
 }
 
 function scrollToBottom() {
@@ -83,9 +115,16 @@ function scrollToBottom() {
     });
 }
 
+function onScroll() {
+    if (messagesContainer.value && messagesContainer.value.scrollTop === 0) {
+        loadMessages();
+    }
+}
+
 onMounted(async () => {
-    await loadRecentMessages();
+    await loadMessages();
     connect();
+    scrollToBottom();
 });
 
 onBeforeUnmount(() => {
@@ -98,11 +137,11 @@ onBeforeUnmount(() => {
     background-color: var(--marron-fonce);
     border-radius: 8px;
     padding: 15px;
-    width: 350px;
+    width: 30rem;
 }
 
 .messages {
-    height: 389px;
+    height: 28.5rem;
     overflow-y: auto;
     padding: 10px;
     border-radius: 6px;

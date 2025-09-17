@@ -1,10 +1,9 @@
 package perso.arcade.Controller;
 
 import org.springframework.web.bind.annotation.*;
+import perso.arcade.model.PageResponse;
 import perso.arcade.model.dto.MessageDto;
 import perso.arcade.service.MessageService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/messages")
@@ -22,8 +21,7 @@ public class MessageController {
     }
 
     @GetMapping()
-    @ResponseBody
-    public List<MessageDto> getRecent() {
-        return messageService.getRecentMessages();
+    public PageResponse<MessageDto> getMessages(@RequestParam int page, @RequestParam int size) {
+        return new PageResponse<>(messageService.getMessages(page, size));
     }
 }

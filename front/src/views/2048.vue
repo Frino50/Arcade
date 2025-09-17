@@ -1,7 +1,7 @@
 <template>
     <div class="body-container">
         <div class="main-container">
-            <Leaderboard :key="keyLeaderBord" :gameName="GAME_NAME" />
+            <Chat />
             <div class="game-container">
                 <div class="header">
                     <div class="scores">
@@ -55,7 +55,7 @@
                     <button @click="restartGame">Reset</button>
                 </div>
             </div>
-            <Chat />
+            <Leaderboard :key="keyLeaderBord" :gameName="GAME_NAME" />
         </div>
     </div>
 </template>
@@ -297,7 +297,6 @@ function getTileTextColor(value: number): string {
     align-items: center;
     width: 100%;
     gap: 4rem;
-    margin-left: 13rem;
 }
 
 .game-container {

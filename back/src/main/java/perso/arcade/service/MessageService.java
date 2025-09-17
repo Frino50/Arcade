@@ -1,5 +1,9 @@
 package perso.arcade.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import perso.arcade.model.dto.MessageDto;
@@ -8,8 +12,6 @@ import perso.arcade.model.entities.Player;
 import perso.arcade.repository.MessageRepository;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class MessageService {
@@ -37,10 +39,9 @@ public class MessageService {
                 new MessageDto(msg.getId(), player.getPseudo(), msg.getContent(), msg.getTimestamp()));
     }
 
-    public List<MessageDto> getRecentMessages() {
-        return messageRepository.findTop50ByOrderByTimestampAsc()
-                .stream()
-                .map(m -> new MessageDto(m.getId(), m.getPlayer().getPseudo(), m.getContent(), m.getTimestamp()))
-                .collect(Collectors.toList());
+    public Page<MessageDto> getMessages(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
+        return messageRepository.findAllMessages(pageable);
     }
+
 }
