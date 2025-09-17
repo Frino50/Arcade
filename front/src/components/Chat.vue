@@ -2,14 +2,31 @@
     <div class="chat">
         <div class="messages" ref="messagesContainer" @scroll="onScroll">
             <div v-for="msg in messages" :key="msg.id" class="message">
-                <strong>{{ msg.player }}:</strong> {{ msg.content }}
+                <strong>{{ msg.player }}: </strong>
+                <span>{{ parseEmojis(msg.content) }}</span>
                 <small>{{ formatTime(msg.timestamp) }}</small>
             </div>
         </div>
 
-        <form @submit.prevent="sendMessage">
+        <form @submit.prevent="sendMessage" class="input-container">
             <input v-model="text" placeholder="Écris un message..." />
+
+            <div class="emoji-btn" @click="showEmojiMenu = !showEmojiMenu">
+                {{ Emoji.COOL }}
+            </div>
+
             <button type="submit">Envoyer</button>
+
+            <div v-if="showEmojiMenu" class="emoji-menu">
+                <span
+                    v-for="(emoji, shortcut) in emojiMap"
+                    :key="shortcut"
+                    class="emoji-item"
+                    @click="selectEmoji(shortcut)"
+                >
+                    {{ emoji }}
+                </span>
+            </div>
         </form>
     </div>
 </template>
@@ -20,11 +37,13 @@ import SockJS from "sockjs-client";
 import { Client, IMessage } from "@stomp/stompjs";
 import { useLocalStore } from "@/store/local.ts";
 import messageService from "@/services/messageService.ts";
+import { Emoji, emojiMap } from "@/models/enums/emoji.ts";
 
 const text = ref("");
 const messages = ref<
     { id: number; player: string; content: string; timestamp: string }[]
 >([]);
+const showEmojiMenu = ref(false);
 
 let stompClient: Client;
 const localstore = useLocalStore();
@@ -34,6 +53,19 @@ const page = ref(0);
 const size = 20;
 const loading = ref(false);
 let reachedEnd = false;
+
+function parseEmojis(text: string): string {
+    let parsedText = text;
+    for (const [shortcut, emoji] of Object.entries(emojiMap)) {
+        parsedText = parsedText.split(shortcut).join(emoji);
+    }
+    return parsedText;
+}
+
+function selectEmoji(shortcut: string) {
+    text.value += shortcut + " ";
+    showEmojiMenu.value = false;
+}
 
 function connect() {
     const socket = new SockJS("http://202.15.200.35:8085/ws");
@@ -169,10 +201,12 @@ onBeforeUnmount(() => {
     font-size: 0.7em;
 }
 
-form {
+.input-container {
     display: flex;
-    gap: 10px;
+    align-items: center;
+    gap: 5px;
     margin-top: 15px;
+    position: relative;
 }
 
 input {
@@ -186,15 +220,55 @@ input {
 }
 
 button {
-    background-color: #4caf50;
     border: none;
-    padding: 10px 20px;
+    padding: 10px 15px;
     border-radius: 20px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    background-color: #4caf50;
+    color: white;
 }
 
 button:hover {
     background-color: #45a049;
+}
+
+.emoji-btn {
+    cursor: pointer;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.emoji-btn:hover {
+    background-color: #45a049;
+    border-radius: 8px;
+}
+
+.emoji-menu {
+    position: absolute;
+    bottom: 50px;
+    left: 13rem;
+    background-color: #3c3a32;
+    border: 1px solid #555;
+    border-radius: 8px;
+    padding: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    max-width: 300px;
+    z-index: 100;
+}
+
+.emoji-item {
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 3px;
+    border-radius: 4px;
+}
+
+.emoji-item:hover {
+    background-color: #4caf50;
 }
 </style>

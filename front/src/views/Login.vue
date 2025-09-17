@@ -6,7 +6,7 @@
         altButtonText="Créer un compte"
         :external-error="loginError"
         @submit="handleLogin"
-        @alt-click="goToRegister"
+        @alt-click="router.push('/register')"
     />
 </template>
 
@@ -34,6 +34,4 @@ async function handleLogin(connexionDto: ConnexionDto) {
         loginError.value = "Erreur serveur, veuillez réessayer";
     }
 }
-
-const goToRegister = () => router.push("/register");
 </script>
