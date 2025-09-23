@@ -1,10 +1,14 @@
 <template>
     <div class="auth-page">
-        <div class="auth-card">
+        <div class="auth-card" v-loading="isLoading">
             <h2>{{ props.title }}</h2>
 
             <div class="input-group">
-                <input v-model="pseudo" placeholder="Pseudo" />
+                <input
+                    v-model="pseudo"
+                    placeholder="Pseudo"
+                    @keyup.enter="handleSubmit"
+                />
             </div>
 
             <div class="input-group">
@@ -12,6 +16,7 @@
                     v-model="password"
                     type="password"
                     placeholder="Mot de passe"
+                    @keyup.enter="handleSubmit"
                 />
             </div>
 
@@ -19,56 +24,78 @@
 
             <p class="alt-text">
                 {{ props.altText }}
-                <button @click="$emit('alt-click')" class="link-button">
+                <button @click="redirection()" class="link-button">
                     {{ props.altButtonText }}
                 </button>
             </p>
+
+            <p v-if="internalError" class="error-text">{{ internalError }}</p>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref } from "vue";
 import ConnexionDto from "@/models/dtos/connexionDto.ts";
+import auth from "@/services/authService.ts";
+import LoginResponseDto from "@/models/dtos/loginResponseDto.ts";
+import router from "@/router.ts";
+import { useLocalStore } from "@/store/local.ts";
+const localstore = useLocalStore();
 
 const props = defineProps({
     title: String,
     buttonText: String,
     altText: String,
     altButtonText: String,
+    mode: String,
 });
-
-const emit = defineEmits<{
-    (e: "submit", connexionDto: ConnexionDto): void;
-    (e: "alt-click"): void;
-}>();
 
 const pseudo = ref("");
 const password = ref("");
 const internalError = ref("");
+const isLoading = ref(false);
 
-function handleSubmit() {
+async function handleSubmit() {
     if (!pseudo.value || !password.value) {
         internalError.value = "Veuillez remplir tous les champs";
         return;
     }
-    internalError.value = "";
-    emit("submit", new ConnexionDto(pseudo.value, password.value));
-}
 
-function handleSubmitPress(event: KeyboardEvent) {
-    if (event.key === "Enter") {
-        handleSubmit();
+    internalError.value = "";
+    isLoading.value = true;
+
+    try {
+        if (props.mode === "login") {
+            await login();
+        } else {
+            await register();
+        }
+    } finally {
+        isLoading.value = false;
     }
 }
 
-onMounted(() => {
-    window.addEventListener("keydown", handleSubmitPress);
-});
+async function login() {
+    const res = await auth.login(connexionDto());
+    const loginResponseDto: LoginResponseDto = res.data;
+    localstore.pseudo = loginResponseDto.pseudo;
+    localstore.token = loginResponseDto.token;
+    await router.push("/");
+}
 
-onUnmounted(() => {
-    window.removeEventListener("keydown", handleSubmitPress);
-});
+async function register() {
+    await auth.register(connexionDto());
+    await router.push("/login");
+}
+
+function connexionDto(): ConnexionDto {
+    return new ConnexionDto(pseudo.value, password.value);
+}
+
+function redirection() {
+    router.push(props.mode === "login" ? "/register" : "/login");
+}
 </script>
 
 <style scoped>
@@ -78,7 +105,6 @@ onUnmounted(() => {
     align-items: center;
     height: 100vh;
     background: var(--marron-back);
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .auth-card {
@@ -119,6 +145,16 @@ input:focus {
     border-color: var(--marron-fonce);
 }
 
+button {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 5px;
+    background-color: var(--marron-fonce);
+    color: white;
+    cursor: pointer;
+}
+
 .alt-text {
     margin-top: 1.5rem;
     font-size: 0.9rem;
@@ -132,6 +168,12 @@ input:focus {
     cursor: pointer;
     text-decoration: underline;
     padding: 0;
+    font-size: 0.9rem;
+}
+
+.error-text {
+    margin-top: 1rem;
+    color: red;
     font-size: 0.9rem;
 }
 </style>

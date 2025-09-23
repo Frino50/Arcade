@@ -1,5 +1,5 @@
 <template>
-    <div class="chat">
+    <div class="chat" v-loading="isLoading">
         <div class="messages" ref="messagesContainer" @scroll="onScroll">
             <div v-for="msg in messages" :key="msg.id" class="message">
                 <strong>{{ msg.player }}: </strong>
@@ -44,6 +44,7 @@ const messages = ref<
     { id: number; player: string; content: string; timestamp: string }[]
 >([]);
 const showEmojiMenu = ref(false);
+const isLoading = ref(false);
 
 let stompClient: Client;
 const localstore = useLocalStore();
@@ -154,9 +155,14 @@ function onScroll() {
 }
 
 onMounted(async () => {
-    await loadMessages();
-    connect();
-    scrollToBottom();
+    try {
+        isLoading.value = true;
+        await loadMessages();
+        connect();
+        scrollToBottom();
+    } finally {
+        isLoading.value = false;
+    }
 });
 
 onBeforeUnmount(() => {

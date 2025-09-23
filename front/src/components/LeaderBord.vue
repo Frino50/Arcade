@@ -1,5 +1,5 @@
 <template>
-    <div class="leaderboard-container">
+    <div class="leaderboard-container" v-loading="isLoading">
         <h2>Leaderboard</h2>
         <ol v-if="records.length > 0">
             <li v-for="(record, key) in records" :key="key">
@@ -22,12 +22,16 @@ const props = defineProps<{
 }>();
 
 const records = ref<ClassementDto[]>([]);
+const isLoading = ref(false);
 
 async function afficherClassement() {
     try {
+        isLoading.value = true;
         const result = await req.getLeaderboard(props.gameName);
         records.value = result.data;
-    } catch (error) {}
+    } finally {
+        isLoading.value = false;
+    }
 }
 
 onMounted(() => {
