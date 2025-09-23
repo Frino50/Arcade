@@ -1,5 +1,5 @@
 <template>
-    <div class="score-box">
+    <div class="score-box" v-loading="isLoading">
         <div>Best</div>
         <div class="score">{{ bestScore }}</div>
     </div>
@@ -15,13 +15,15 @@ const props = defineProps<{
 }>();
 
 const bestScore = ref<number>(0);
+const isLoading = ref<boolean>(false);
 
 async function getBestScore() {
     try {
+        isLoading.value = true;
         const response = await scoreService.getBestScore(props.gameName);
         bestScore.value = response.data;
-    } catch (error) {
-        console.error("Erreur récupération best score", error);
+    } finally {
+        isLoading.value = false;
     }
 }
 
