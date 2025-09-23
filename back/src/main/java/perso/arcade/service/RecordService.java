@@ -59,7 +59,6 @@ public class RecordService {
         }
     }
 
-
     public List<ClassementDto> getLeaderboard(String gameName) {
         return gameRepository.getLeaderboard(gameName);
     }

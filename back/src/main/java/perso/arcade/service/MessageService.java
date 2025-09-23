@@ -43,10 +43,8 @@ public class MessageService {
                 new MessageDto(msg.getId(), player.getPseudo(), msg.getContent(), msg.getTimestamp()));
     }
 
-
     public Page<MessageDto> getMessages(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
         return messageRepository.findAllMessages(pageable);
     }
-
 }

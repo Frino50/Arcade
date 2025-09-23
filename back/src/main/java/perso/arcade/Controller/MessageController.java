@@ -22,7 +22,6 @@ public class MessageController {
         messageService.sendMessage(data.get("message"));
     }
 
-
     @GetMapping()
     public PageResponse<MessageDto> getMessages(@RequestParam int page, @RequestParam int size) {
         return new PageResponse<>(messageService.getMessages(page, size));

@@ -12,5 +12,4 @@ import java.util.Optional;
 @Repository
 public interface RecordRepository extends JpaRepository<Record, Long> {
     Optional<Record> findByPlayerAndGame(Player player, Game game);
-
 }
