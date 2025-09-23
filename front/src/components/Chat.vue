@@ -9,7 +9,11 @@
         </div>
 
         <form @submit.prevent="sendMessage" class="input-container">
-            <input v-model="text" placeholder="Écris un message..." />
+            <input
+                v-model="text"
+                placeholder="Écris un message..."
+                maxlength="50"
+            />
 
             <div class="emoji-btn" @click="showEmojiMenu = !showEmojiMenu">
                 {{ Emoji.COOL }}
@@ -124,7 +128,13 @@ async function loadMessages() {
 }
 
 async function sendMessage() {
-    if (!text.value.trim() || !stompClient || !stompClient.connected) return;
+    if (
+        !text.value.trim() ||
+        !stompClient ||
+        !stompClient.connected ||
+        text.value.length > 50
+    )
+        return;
     await messageService.sendMessage(text.value);
     text.value = "";
 }
