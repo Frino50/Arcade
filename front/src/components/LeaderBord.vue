@@ -1,6 +1,6 @@
 <template>
     <div class="leaderboard-container">
-        <h2>Top 10</h2>
+        <h2>Leaderboard</h2>
         <ol v-if="records.length > 0">
             <li v-for="(record, key) in records" :key="key">
                 <span class="player-pseudo">{{ record.pseudo }}</span>
