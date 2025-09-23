@@ -1,5 +1,6 @@
 <template>
     <div class="app-container">
+        <Toast />
         <Selecteur v-if="localStore.pseudo" />
         <router-view />
     </div>
@@ -8,6 +9,7 @@
 <script setup lang="ts">
 import Selecteur from "@/components/Selecteur.vue";
 import { useLocalStore } from "./store/local.ts";
+import Toast from "@/components/Toast.vue";
 
 const localStore = useLocalStore();
 </script>

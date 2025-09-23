@@ -14,19 +14,13 @@ public class UnreadMessage {
     @JoinColumn(name = "message_id", nullable = false)
     private Message message;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "player_id", nullable = false)
-    private Player receiver;
-
     public UnreadMessage() {
     }
 
-    public UnreadMessage(Message message, Player receiver) {
+    public UnreadMessage(Message message) {
         this.message = message;
-        this.receiver = receiver;
     }
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -43,11 +37,5 @@ public class UnreadMessage {
         this.message = message;
     }
 
-    public Player getReceiver() {
-        return receiver;
-    }
 
-    public void setReceiver(Player receiver) {
-        this.receiver = receiver;
-    }
 }

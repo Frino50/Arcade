@@ -1,7 +1,5 @@
 package perso.arcade.Controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import perso.arcade.model.dto.ClassementDto;
 import perso.arcade.model.dto.SaveRecordDto;
@@ -21,21 +19,17 @@ public class RecordController {
     }
 
     @PostMapping
-    public ResponseEntity<Record> saveRecord(@RequestBody SaveRecordDto saveRecordDto) {
-        Record savedRecord = recordService.saveRecord(saveRecordDto);
-        return new ResponseEntity<>(savedRecord, HttpStatus.CREATED);
+    public Record saveRecord(@RequestBody SaveRecordDto saveRecordDto) {
+        return recordService.saveRecord(saveRecordDto);
     }
 
     @GetMapping("/leaderboard/{gameName}")
-    public ResponseEntity<List<ClassementDto>> getLeaderboard(@PathVariable String gameName) {
-        List<ClassementDto> leaderboard = recordService.getLeaderboard(gameName);
-        return new ResponseEntity<>(leaderboard, HttpStatus.OK);
+    public List<ClassementDto> getLeaderboard(@PathVariable String gameName) {
+        return recordService.getLeaderboard(gameName);
     }
 
     @GetMapping("/bestScore/{gameName}")
-    public ResponseEntity<Long> getBestScore(@PathVariable String gameName) {
-        Long bestScore = recordService.getBestScore(gameName);
-        return new ResponseEntity<>(bestScore, HttpStatus.OK);
+    public Long getBestScore(@PathVariable String gameName) {
+        return recordService.getBestScore(gameName);
     }
-
 }

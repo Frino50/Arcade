@@ -21,11 +21,9 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthTokenFilter authTokenFilter;
-    private final AuthEntryPointJwt unauthorizedHandler;
 
-    public SecurityConfig(JwtAuthTokenFilter authTokenFilter, AuthEntryPointJwt unauthorizedHandler) {
+    public SecurityConfig(JwtAuthTokenFilter authTokenFilter) {
         this.authTokenFilter = authTokenFilter;
-        this.unauthorizedHandler = unauthorizedHandler;
     }
 
     @Bean
@@ -43,7 +41,6 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedHandler))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/ws/**").permitAll()

@@ -28,7 +28,7 @@ export const emojiMap: Record<string, Emoji> = {
     ";)": Emoji.WINK,
     XD: Emoji.LAUGH,
     T_T: Emoji.CRY,
-    ">:(": Emoji.ANGRY,
+    ":<(": Emoji.ANGRY,
     "<3": Emoji.HEART,
     ":+1:": Emoji.THUMBS_UP,
     ":-1:": Emoji.THUMBS_DOWN,

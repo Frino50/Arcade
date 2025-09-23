@@ -1,6 +1,9 @@
 import axios from "axios";
 import { useLocalStore } from "@/store/local.ts";
 import router from "@/router";
+import { useToast } from "@/services/toast.ts";
+
+const toast = useToast();
 
 const apiService = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -27,14 +30,25 @@ apiService.interceptors.response.use(
     (error) => {
         const localstore = useLocalStore();
 
-        if (error.response && error.response.status === 401) {
-            const message = error.response.data?.error;
+        if (axios.isAxiosError(error)) {
+            if (error.code === "ERR_NETWORK") {
+                toast.show("Serveur injoignable", "error");
+            } else if (error.response) {
+                const status = error.response.status;
+                const message =
+                    error.response.data?.message || "Erreur inconnue";
 
-            if (message === "INVALID_OR_EXPIRED_TOKEN") {
-                localstore.pseudo = "";
-                localstore.token = "";
-
-                router.push("/login").catch(() => {});
+                if (status === 401) {
+                    const err = error.response.data?.error;
+                    if (err === "INVALID_OR_EXPIRED_TOKEN") {
+                        localstore.pseudo = "";
+                        localstore.token = "";
+                        router.push("/login").catch(() => {});
+                    }
+                }
+                toast.show(message, "error");
+            } else {
+                toast.show("Erreur inconnue", "error");
             }
         }
 

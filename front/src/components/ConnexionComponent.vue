@@ -17,8 +17,6 @@
 
             <button @click="handleSubmit">{{ props.buttonText }}</button>
 
-            <p class="error" v-if="errorToShow">{{ errorToShow }}</p>
-
             <p class="alt-text">
                 {{ props.altText }}
                 <button @click="$emit('alt-click')" class="link-button">
@@ -30,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import ConnexionDto from "@/models/dtos/connexionDto.ts";
 
 const props = defineProps({
@@ -38,7 +36,6 @@ const props = defineProps({
     buttonText: String,
     altText: String,
     altButtonText: String,
-    externalError: String,
 });
 
 const emit = defineEmits<{
@@ -49,10 +46,6 @@ const emit = defineEmits<{
 const pseudo = ref("");
 const password = ref("");
 const internalError = ref("");
-
-const errorToShow = computed(
-    () => internalError.value || props.externalError || ""
-);
 
 function handleSubmit() {
     if (!pseudo.value || !password.value) {
@@ -124,13 +117,6 @@ input {
 
 input:focus {
     border-color: var(--marron-fonce);
-}
-
-.error {
-    color: #d71011;
-    margin-top: 0.75rem;
-    text-align: center;
-    font-weight: bold;
 }
 
 .alt-text {
