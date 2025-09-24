@@ -94,20 +94,4 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
             System.out.println("STOMP " + accessor.getCommand() + " de l'utilisateur : " + user.getName());
         }
     }
-
-    public String getPseudo(String sessionId) {
-        Principal principal = sessionUserMap.get(sessionId);
-        if (principal instanceof UsernamePasswordAuthenticationToken authToken) {
-            Object userDetailsObj = authToken.getPrincipal();
-            if (userDetailsObj instanceof UserDetails userDetails) {
-                return userDetails.getUsername();
-            } else {
-                return authToken.getName();
-            }
-        } else if (principal != null) {
-            return principal.getName();
-        } else {
-            return null;
-        }
-    }
 }
