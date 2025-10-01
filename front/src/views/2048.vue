@@ -10,7 +10,7 @@
                             <div class="score">{{ score }}</div>
                         </div>
                         <RecordComponent
-                            :key="keyLeaderBord"
+                            ref="recordcomponentRef"
                             :game-name="GAME_NAME"
                         />
                     </div>
@@ -55,7 +55,7 @@
                     <button @click="restartGame">Reset</button>
                 </div>
             </div>
-            <Leaderboard :key="keyLeaderBord" :gameName="GAME_NAME" />
+            <Leaderboard ref="leaderboardRef" :gameName="GAME_NAME" />
         </div>
     </div>
 </template>
@@ -72,11 +72,13 @@ import Chat from "@/components/Chat.vue";
 
 const boardSize = <number>4;
 const gap = <number>5;
-const GAME_NAME = GameType.DEUX_MILLE_QUARANTE_HUIT;
-let keyLeaderBord = ref<number>(0);
-let cellSize = <number>150;
-
 const MOVE_DURATION = 200;
+const GAME_NAME = GameType.DEUX_MILLE_QUARANTE_HUIT;
+let cellSize = <number>150;
+const recordcomponentRef = ref<InstanceType<typeof RecordComponent> | null>(
+    null
+);
+const leaderboardRef = ref<InstanceType<typeof Leaderboard> | null>(null);
 
 const tiles = ref<Tile[]>([]);
 let idCounter = <number>0;
@@ -130,7 +132,8 @@ async function saveCurrentRecord() {
     const recordData = new SaveRecordDto(GAME_NAME, score.value);
     try {
         await scoreService.saveRecord(recordData);
-        keyLeaderBord.value++;
+        leaderboardRef.value?.refresh();
+        recordcomponentRef.value?.refresh();
     } catch (error) {}
 }
 

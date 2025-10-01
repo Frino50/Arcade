@@ -34,6 +34,10 @@ async function afficherClassement() {
     }
 }
 
+defineExpose({
+    refresh: afficherClassement,
+});
+
 onMounted(() => {
     afficherClassement();
 });

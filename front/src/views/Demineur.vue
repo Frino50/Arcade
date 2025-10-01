@@ -1,62 +1,66 @@
 <template>
     <div class="body-container">
-        <div class="compteur-container">
-            <div class="drapeau-compteur-container">
-                <img
-                    class="drapeau-container"
-                    src="../assets/drapeau.png"
-                    alt="drapeau.png"
-                />
-                {{ nombreDeBombes - nombreCasesCocherBombe }}
-            </div>
-            <div class="timer">
-                {{ formatMinutes() }}:{{ formatSecondes() }}
-            </div>
-            <RecordComponent :key="keyLeaderBord" :game-name="GAME_NAME" />
-        </div>
+        <div class="main-container">
+            <Chat />
+            <div class="game-container">
+                <div class="compteur-container">
+                    <div class="drapeau-compteur-container">
+                        <img
+                            class="drapeau-container"
+                            src="../assets/drapeau.png"
+                            alt="drapeau.png"
+                        />
+                        {{ nombreDeBombes - nombreCasesCocherBombe }}
+                    </div>
+                    <div class="timer">
+                        {{ formatMinutes() }}:{{ formatSecondes() }}
+                    </div>
+                    <RecordComponent
+                        ref="recordcomponentRef"
+                        :game-name="GAME_NAME"
+                    />
+                </div>
 
-        <div
-            class="tableau-container"
-            :style="{ '--colonnes': nombreDeColonnes }"
-        >
-            <div
-                v-for="(casee, index) in listCase.flat()"
-                :key="casee.id"
-                class="case-container"
-                :style="{
-                    backgroundImage: getImage(casee),
-                    backgroundColor: getColor(casee),
-                }"
-                @click="
-                    reveleCase(
-                        Math.floor(index / nombreDeColonnes),
-                        index % nombreDeColonnes
-                    )
-                "
-                @contextmenu.prevent="cocherBombe(casee)"
-            >
                 <div
-                    v-if="
-                        casee.visible &&
-                        casee.nbrBombeAlentoure !== 0 &&
-                        !casee.bombe
-                    "
-                    :class="`nombre-${casee.nbrBombeAlentoure}`"
+                    class="tableau-container"
+                    :style="{ '--colonnes': nombreDeColonnes }"
                 >
-                    {{ casee.nbrBombeAlentoure }}
+                    <div
+                        v-for="(casee, index) in listCase.flat()"
+                        :key="casee.id"
+                        class="case-container"
+                        :style="{
+                            backgroundImage: getImage(casee),
+                            backgroundColor: getColor(casee),
+                        }"
+                        @click="
+                            reveleCase(
+                                Math.floor(index / nombreDeColonnes),
+                                index % nombreDeColonnes
+                            )
+                        "
+                        @contextmenu.prevent="cocherBombe(casee)"
+                    >
+                        <div
+                            v-if="
+                                casee.visible &&
+                                casee.nbrBombeAlentoure !== 0 &&
+                                !casee.bombe
+                            "
+                            :class="`nombre-${casee.nbrBombeAlentoure}`"
+                        >
+                            {{ casee.nbrBombeAlentoure }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="boutton-container">
+                    <button @click="genererList()">Reset</button>
                 </div>
             </div>
-        </div>
-
-        <div class="boutton-container">
-            <button @click="genererList()">Reset</button>
+            <Leaderboard ref="leaderboardRef" :gameName="GAME_NAME" />
         </div>
     </div>
-    <Leaderboard
-        style="position: absolute; left: 10rem; top: 10rem"
-        :key="keyLeaderBord"
-        :gameName="GAME_NAME"
-    />
 </template>
 
 <script setup lang="ts">
@@ -67,6 +71,7 @@ import scoreService from "@/services/scoreService.ts";
 import { GameType } from "@/models/enums/gameType.ts";
 import Leaderboard from "@/components/LeaderBord.vue";
 import RecordComponent from "@/components/RecordComponent.vue";
+import Chat from "@/components/Chat.vue";
 
 const nombreDeBombes = ref<number>(40);
 const nombreDeLignes = ref<number>(14);
@@ -76,8 +81,10 @@ const tempsEcoule = ref<number>(0);
 const firstClick = ref<boolean>(true);
 const intervalId = ref<number | null>(null);
 const GAME_NAME = GameType.DEMINEUR;
-let keyLeaderBord = ref<number>(0);
-
+const recordcomponentRef = ref<InstanceType<typeof RecordComponent> | null>(
+    null
+);
+const leaderboardRef = ref<InstanceType<typeof Leaderboard> | null>(null);
 const listCase = ref<Case[][]>([]);
 
 const nombreCasesCocherBombe = computed(() => {
@@ -151,7 +158,8 @@ async function verifierToutesBombesTrouvees() {
             const recordData = new SaveRecordDto(GAME_NAME, score);
             try {
                 await scoreService.saveRecord(recordData);
-                keyLeaderBord.value++;
+                leaderboardRef.value?.refresh();
+                recordcomponentRef.value?.refresh();
             } catch (error) {
                 console.error(
                     "Erreur lors de la sauvegarde du record :",
@@ -262,6 +270,21 @@ onMounted(() => {
 <style scoped>
 :root {
     --colonnes: 18;
+}
+
+.main-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 4rem;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
 }
 
 .compteur-container {

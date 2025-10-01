@@ -1,6 +1,6 @@
 <template>
     <div class="score-box" v-loading="isLoading">
-        <div>Best</div>
+        <div>Record</div>
         <div class="score">{{ bestScore }}</div>
     </div>
 </template>
@@ -26,6 +26,10 @@ async function getBestScore() {
         isLoading.value = false;
     }
 }
+
+defineExpose({
+    refresh: getBestScore,
+});
 
 onMounted(() => {
     getBestScore();
