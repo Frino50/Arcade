@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import perso.arcade.Exception.JwtAuthenticationException;
 import perso.arcade.model.CustomUserDetails;
 
 import java.security.Key;
@@ -51,7 +52,7 @@ public class JwtUtils {
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             logger.error("JWT validation error: {}", e.getMessage());
-            throw new RuntimeException("INVALID_OR_EXPIRED_TOKEN");
+            throw new JwtAuthenticationException("INVALID_OR_EXPIRED_TOKEN");
         }
     }
 }

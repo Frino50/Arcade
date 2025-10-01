@@ -30,30 +30,45 @@ apiService.interceptors.response.use(
     (error) => {
         const localstore = useLocalStore();
 
-        if (axios.isAxiosError(error)) {
-            if (error.code === "ERR_NETWORK") {
-                toast.show("Serveur injoignable", "error");
-            } else if (error.response) {
-                const status = error.response.status;
-                const message =
-                    error.response.data?.message || "Erreur inconnue";
+        if (!axios.isAxiosError(error)) {
+            showError("Erreur inconnue");
+            return Promise.reject(error);
+        }
 
-                if (status === 401) {
-                    const err = error.response.data?.error;
-                    if (err === "INVALID_OR_EXPIRED_TOKEN") {
-                        localstore.pseudo = "";
-                        localstore.token = "";
-                        router.push("/login").catch(() => {});
-                    }
-                }
-                toast.show(message, "error");
-            } else {
-                toast.show("Erreur inconnue", "error");
+        // Back non lancé
+        if (error.code === "ERR_NETWORK") {
+            showError("Serveur injoignable");
+            return Promise.reject(error);
+        }
+
+        // Gestion des réponses du serveur
+        if (error.response) {
+            const { data } = error.response;
+            const message = data?.message || "Erreur inconnue";
+
+            if (data?.error === "INVALID_OR_EXPIRED_TOKEN") {
+                handleInvalidToken(localstore);
+                return Promise.reject(error);
             }
+
+            showError(message);
+        } else {
+            showError("Erreur inconnue");
         }
 
         return Promise.reject(error);
     }
 );
+
+function showError(message: string) {
+    toast.show(message, "error");
+}
+
+function handleInvalidToken(localstore: ReturnType<typeof useLocalStore>) {
+    localstore.pseudo = "";
+    localstore.token = "";
+    router.push("/login").catch(() => {});
+    showError("Session expirée, veuillez vous reconnecter.");
+}
 
 export default apiService;
