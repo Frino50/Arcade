@@ -1,7 +1,7 @@
 <template>
-    <div class="score-box" v-loading="isLoading">
+    <div v-loading="isLoading">
         <div>Record</div>
-        <div class="score">{{ bestScore }}</div>
+        <div>{{ bestScore }}</div>
     </div>
 </template>
 
@@ -35,16 +35,3 @@ onMounted(() => {
     getBestScore();
 });
 </script>
-
-<style scoped>
-.score-box {
-    background: var(--marron-fonce);
-    padding: 10px;
-    border-radius: 6px;
-    text-align: center;
-}
-.score {
-    font-weight: bold;
-    font-size: 1.2rem;
-}
-</style>

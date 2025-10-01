@@ -1,63 +1,52 @@
 <template>
-    <div class="body-container">
-        <div class="main-container">
-            <Chat />
-            <div class="game-container">
-                <div class="header">
-                    <div class="scores">
-                        <div class="score-box">
-                            <div>Score</div>
-                            <div class="score">{{ score }}</div>
-                        </div>
-                        <RecordComponent
-                            ref="recordcomponentRef"
-                            :game-name="GAME_NAME"
-                        />
-                    </div>
-                </div>
+    <GameLayout :game-name="GAME_NAME" ref="gameLayoutRef">
+        <template #header>
+            <div>
+                <div>Score</div>
+                <div>{{ score }}</div>
+            </div>
+        </template>
+
+        <template #default>
+            <div
+                class="board"
+                :style="{
+                    width: boardSize * cellSize + (boardSize - 1) * gap + 'px',
+                    height: boardSize * cellSize + (boardSize - 1) * gap + 'px',
+                    gridTemplateRows: `repeat(${boardSize}, ${cellSize}px)`,
+                    gridTemplateColumns: `repeat(${boardSize}, ${cellSize}px)`,
+                    gap: gap + 'px',
+                }"
+            >
                 <div
-                    class="board"
+                    v-for="index in boardCells.length"
+                    :key="index"
+                    class="board-cell empty"
+                ></div>
+
+                <div
+                    v-for="tile in tiles"
+                    :key="tile.id"
+                    class="tile"
+                    :class="{ merged: tile.merged, new: tile.isNew }"
                     :style="{
-                        width:
-                            boardSize * cellSize + (boardSize - 1) * gap + 'px',
-                        height:
-                            boardSize * cellSize + (boardSize - 1) * gap + 'px',
-                        gridTemplateRows: `repeat(${boardSize}, ${cellSize}px)`,
-                        gridTemplateColumns: `repeat(${boardSize}, ${cellSize}px)`,
-                        gap: gap + 'px',
+                        top: tile.row * (cellSize + gap) + 'px',
+                        left: tile.col * (cellSize + gap) + 'px',
+                        width: cellSize + 'px',
+                        height: cellSize + 'px',
+                        fontSize: cellSize / 3 + 'px',
+                        background: getTileGradient(tile.value),
+                        color: getTileTextColor(tile.value),
                     }"
                 >
-                    <div
-                        v-for="index in boardCells.length"
-                        :key="index"
-                        class="board-cell empty"
-                    ></div>
-
-                    <div
-                        v-for="tile in tiles"
-                        :key="tile.id"
-                        class="tile"
-                        :class="{ merged: tile.merged, new: tile.isNew }"
-                        :style="{
-                            top: tile.row * (cellSize + gap) + 'px',
-                            left: tile.col * (cellSize + gap) + 'px',
-                            width: cellSize + 'px',
-                            height: cellSize + 'px',
-                            fontSize: cellSize / 3 + 'px',
-                            background: getTileGradient(tile.value),
-                            color: getTileTextColor(tile.value),
-                        }"
-                    >
-                        {{ tile.value }}
-                    </div>
-                </div>
-                <div>
-                    <button @click="restartGame">Reset</button>
+                    {{ tile.value }}
                 </div>
             </div>
-            <Leaderboard ref="leaderboardRef" :gameName="GAME_NAME" />
-        </div>
-    </div>
+            <div>
+                <button @click="restartGame">Reset</button>
+            </div>
+        </template>
+    </GameLayout>
 </template>
 
 <script setup lang="ts">
@@ -66,25 +55,18 @@ import Tile from "@/models/tile.ts";
 import SaveRecordDto from "@/models/dtos/saveRecordDto.ts";
 import { GameType } from "@/models/enums/gameType.ts";
 import scoreService from "@/services/scoreService.ts";
-import Leaderboard from "../components/LeaderBord.vue";
-import RecordComponent from "@/components/RecordComponent.vue";
-import Chat from "@/components/Chat.vue";
+import GameLayout from "@/components/GameLayout.vue";
 
 const boardSize = <number>4;
 const gap = <number>5;
 const MOVE_DURATION = 200;
 const GAME_NAME = GameType.DEUX_MILLE_QUARANTE_HUIT;
-let cellSize = <number>150;
-const recordcomponentRef = ref<InstanceType<typeof RecordComponent> | null>(
-    null
-);
-const leaderboardRef = ref<InstanceType<typeof Leaderboard> | null>(null);
-
-const tiles = ref<Tile[]>([]);
-let idCounter = <number>0;
-const boardCells = Array.from({ length: boardSize * boardSize });
-
+const gameLayoutRef = ref<GameLayout>();
 const score = ref<number>(0);
+const tiles = ref<Tile[]>([]);
+const boardCells = Array.from({ length: boardSize * boardSize });
+let idCounter = <number>0;
+let cellSize = <number>150;
 
 function createTile(value: number, row: number, col: number): Tile {
     return { id: idCounter++, value, row, col, merged: false, isNew: true };
@@ -120,8 +102,8 @@ function initializeBoard() {
     placeRandomTiles(2);
 }
 
-function restartGame() {
-    saveCurrentRecord();
+async function restartGame() {
+    await saveCurrentRecord();
     initializeBoard();
 }
 
@@ -132,8 +114,7 @@ async function saveCurrentRecord() {
     const recordData = new SaveRecordDto(GAME_NAME, score.value);
     try {
         await scoreService.saveRecord(recordData);
-        leaderboardRef.value?.refresh();
-        recordcomponentRef.value?.refresh();
+        gameLayoutRef.value?.refresh();
     } catch (error) {}
 }
 
@@ -220,7 +201,6 @@ function checkGameOver() {
         }
     }
     saveCurrentRecord();
-    // alert("Game over!");
 }
 
 function handleKeyPress(event: KeyboardEvent) {
@@ -294,38 +274,6 @@ function getTileTextColor(value: number): string {
 </script>
 
 <style scoped>
-.main-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    gap: 4rem;
-}
-
-.game-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    align-items: center;
-}
-
-.scores {
-    display: flex;
-    gap: 10px;
-}
-
-.score-box {
-    background: var(--marron-fonce);
-    padding: 10px;
-    border-radius: 6px;
-    text-align: center;
-}
-
-.score {
-    font-weight: bold;
-    font-size: 1.2rem;
-}
-
 .board {
     position: relative;
     background: var(--marron);
