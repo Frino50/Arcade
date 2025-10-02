@@ -17,6 +17,9 @@ public class Game {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Column(name = "lower_is_better", nullable = false)
+    private boolean lowerIsBetter = false;
+
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private Set<Record> records;
@@ -45,15 +48,23 @@ public class Game {
         this.records = records;
     }
 
+    public boolean isLowerIsBetter() {
+        return lowerIsBetter;
+    }
+
+    public void setLowerIsBetter(boolean lowerIsBetter) {
+        this.lowerIsBetter = lowerIsBetter;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Game game = (Game) o;
-        return Objects.equals(id, game.id) && Objects.equals(name, game.name) && Objects.equals(records, game.records);
+        return lowerIsBetter == game.lowerIsBetter && Objects.equals(id, game.id) && Objects.equals(name, game.name) && Objects.equals(records, game.records);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, records);
+        return Objects.hash(id, name, lowerIsBetter, records);
     }
 }

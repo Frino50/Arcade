@@ -1,6 +1,6 @@
 <template>
     <div class="toast-container" :class="{ 'has-messages': messages.length }">
-        <TransitionGroup name="toast-list" tag="div">
+        <TransitionGroup name="toast" tag="div">
             <div
                 v-for="(msg, index) in messages"
                 :key="index"
@@ -70,18 +70,22 @@ const { messages, removeToast } = useToast();
     flex-direction: column;
     gap: 0.75rem;
     z-index: 9999;
-    max-width: 90%;
+    max-width: 90vw;
 }
 
 .toast {
-    padding: 1rem 1.25rem;
-    border-radius: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     min-width: 250px;
     max-width: 400px;
-    transition: all 0.5s ease;
+    width: 100%;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    background-color: #333;
+    color: #fff;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .toast.success {
@@ -98,22 +102,21 @@ const { messages, removeToast } = useToast();
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex: 1;
 }
 
 .toast-icon svg {
     width: 24px;
     height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .toast-text {
     margin: 0;
     font-size: 1rem;
-    font-weight: 500;
     line-height: 1.4;
-    white-space: nowrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
 }
 
 .close-btn {
@@ -122,12 +125,10 @@ const { messages, removeToast } = useToast();
     color: #fff;
     cursor: pointer;
     padding: 0.25rem;
-    margin-left: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    transition: background-color 0.2s ease;
 }
 
 .close-btn:hover {
@@ -139,18 +140,19 @@ const { messages, removeToast } = useToast();
     height: 18px;
 }
 
-.toast-list-enter-active,
-.toast-list-leave-active {
-    transition: all 0.4s cubic-bezier(0.55, 0, 0.1, 1);
+.toast-enter-active,
+.toast-leave-active {
+    transition: all 0.4s ease;
 }
 
-.toast-list-enter-from,
-.toast-list-leave-to {
+.toast-enter-from,
+.toast-leave-to {
     opacity: 0;
     transform: translateX(100%);
 }
 
-.toast-list-leave-active {
-    position: absolute;
+.toast-leave-to {
+    opacity: 0;
+    transform: translateX(100%);
 }
 </style>

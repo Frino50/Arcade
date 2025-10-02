@@ -12,7 +12,6 @@ import perso.arcade.repository.RecordRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class RecordService {
@@ -39,18 +38,23 @@ public class RecordService {
 
         Record existingRecord = recordRepository.findByPlayerAndGame(player, game).orElse(null);
 
+        Long newScore = saveRecordDto.getScore();
+
         if (existingRecord != null) {
-            // Met à jour uniquement si le nouveau score est meilleur
-            if (saveRecordDto.getScore() > existingRecord.getScore()) {
-                existingRecord.setScore(saveRecordDto.getScore());
+            Long currentScore = existingRecord.getScore();
+
+            boolean shouldUpdate = game.isLowerIsBetter()
+                    ? newScore < currentScore   // si lower is better → plus petit est meilleur
+                    : newScore > currentScore;  // sinon → plus grand est meilleur
+
+            if (shouldUpdate) {
+                existingRecord.setScore(newScore);
                 existingRecord.setRecordDate(LocalDateTime.now());
                 return recordRepository.save(existingRecord);
             } else {
-                // Retourne l'existant sans modification
                 return existingRecord;
             }
         } else {
-            // Crée un nouveau record si inexistant
             Record record = new Record();
             record.setScore(saveRecordDto.getScore());
             record.setRecordDate(LocalDateTime.now());
@@ -58,23 +62,24 @@ public class RecordService {
             record.setGame(game);
             return recordRepository.save(record);
         }
+
     }
 
     public List<ClassementDto> getLeaderboard(String gameName) {
-        List<ClassementDto> classementDtoList = gameRepository.getLeaderboard(gameName);
+        Game game = gameRepository.findByName(gameName)
+                .orElseThrow(() -> new RuntimeException("Game not found with name: " + gameName));
+
+        List<ClassementDto> classementDtoList = gameRepository.getLeaderboard(gameName, game.isLowerIsBetter());
 
         for (ClassementDto dto : classementDtoList) {
-            if (isTimeBasedGame(gameName)) {
+            if (game.isLowerIsBetter()) {
                 dto.setScore(formatTime(dto.getScore()));
             } else {
                 dto.setScore(String.valueOf(dto.getScore()));
             }
         }
-        return classementDtoList;
-    }
 
-    private boolean isTimeBasedGame(String gameName) {
-        return Objects.equals("DEMINEUR", gameName);
+        return classementDtoList;
     }
 
     private String formatTime(String millis) {

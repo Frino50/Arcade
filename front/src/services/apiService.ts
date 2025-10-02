@@ -12,6 +12,8 @@ const apiService = axios.create({
     },
 });
 
+let isTokenExpiredToastShown = false;
+
 apiService.interceptors.request.use(
     (config) => {
         const localstore = useLocalStore();
@@ -35,19 +37,24 @@ apiService.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        // Back non lancé
         if (error.code === "ERR_NETWORK") {
             showError("Serveur injoignable");
             return Promise.reject(error);
         }
 
-        // Gestion des réponses du serveur
         if (error.response) {
-            const { data } = error.response;
+            const { status, data } = error.response;
             const message = data?.message || "Erreur inconnue";
 
-            if (data?.error === "INVALID_OR_EXPIRED_TOKEN") {
+            if (status === 401 && data?.error === "INVALID_OR_EXPIRED_TOKEN") {
                 handleInvalidToken(localstore);
+                return Promise.reject(error);
+            }
+
+            if (status === 500) {
+                showError(
+                    "Une erreur serveur est survenue. Veuillez réessayer plus tard."
+                );
                 return Promise.reject(error);
             }
 
@@ -65,10 +72,18 @@ function showError(message: string) {
 }
 
 function handleInvalidToken(localstore: ReturnType<typeof useLocalStore>) {
+    if (isTokenExpiredToastShown) return;
+
+    isTokenExpiredToastShown = true;
     localstore.pseudo = "";
     localstore.token = "";
+
     router.push("/login").catch(() => {});
     showError("Session expirée, veuillez vous reconnecter.");
+
+    setTimeout(() => {
+        isTokenExpiredToastShown = false;
+    }, 5000);
 }
 
 export default apiService;

@@ -28,23 +28,34 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
             throws ServletException, IOException {
-        String jwt = parseJwt(request);
-        if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-            String username = jwtUtils.getUserNameFromJwtToken(jwt);
-            UserDetails userDetails = playerService.loadUserByUsername(username);
-            System.out.println("Requête de l'utilisateur : " + username + " requête : " + request.getMethod() + " " + request.getRequestURI());
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            String jwt = parseJwt(request);
+            if (jwt != null) {
+                if (jwtUtils.validateJwtToken(jwt)) {
+                    String username = jwtUtils.getUserNameFromJwtToken(jwt);
+                    UserDetails userDetails = playerService.loadUserByUsername(username);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    throw new RuntimeException("JWT invalide ou expiré");
+                }
+            }
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"INVALID_OR_EXPIRED_TOKEN\"}");
+            return;
         }
-
 
         filterChain.doFilter(request, response);
     }
+
 
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
