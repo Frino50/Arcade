@@ -12,6 +12,7 @@ import perso.arcade.repository.RecordRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class RecordService {
@@ -60,7 +61,27 @@ public class RecordService {
     }
 
     public List<ClassementDto> getLeaderboard(String gameName) {
-        return gameRepository.getLeaderboard(gameName);
+        List<ClassementDto> classementDtoList = gameRepository.getLeaderboard(gameName);
+
+        for (ClassementDto dto : classementDtoList) {
+            if (isTimeBasedGame(gameName)) {
+                dto.setScore(formatTime(dto.getScore()));
+            } else {
+                dto.setScore(String.valueOf(dto.getScore()));
+            }
+        }
+        return classementDtoList;
+    }
+
+    private boolean isTimeBasedGame(String gameName) {
+        return Objects.equals("DEMINEUR", gameName);
+    }
+
+    private String formatTime(String millis) {
+        long ms = Long.parseLong(millis);
+        long minutes = ms / 60000;
+        long seconds = (ms % 60000) / 1000;
+        return String.format("%dm%02ds", minutes, seconds);
     }
 
     public Long getBestScore(String gameName) {

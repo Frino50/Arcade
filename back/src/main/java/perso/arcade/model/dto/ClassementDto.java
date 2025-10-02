@@ -2,9 +2,9 @@ package perso.arcade.model.dto;
 
 public class ClassementDto {
     private String pseudo;
-    private Long score;
+    private String score;
 
-    public ClassementDto(String pseudo, Long score) {
+    public ClassementDto(String pseudo, String score) {
         this.pseudo = pseudo;
         this.score = score;
     }
@@ -17,11 +17,11 @@ public class ClassementDto {
         this.pseudo = pseudo;
     }
 
-    public Long getScore() {
+    public String getScore() {
         return score;
     }
 
-    public void setScore(Long score) {
+    public void setScore(String score) {
         this.score = score;
     }
 }

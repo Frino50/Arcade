@@ -17,7 +17,10 @@ public class GameRepositoryImpl implements GameRepositoryCustom {
     @Override
     public List<ClassementDto> getLeaderboard(String gameName) {
         String req = """
-                    SELECT p.pseudo, r.score
+                    SELECT new perso.arcade.model.dto.ClassementDto(
+                               p.pseudo,
+                               CAST(r.score AS string)
+                           )
                     FROM Record r
                     JOIN r.player p
                     JOIN r.game g
