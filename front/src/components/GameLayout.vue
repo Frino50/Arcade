@@ -30,11 +30,12 @@ import { ref } from "vue";
 import Chat from "@/components/Chat.vue";
 import RecordComponent from "@/components/RecordComponent.vue";
 import Leaderboard from "@/components/LeaderBord.vue";
+import { GameType } from "@/models/enums/gameType.ts";
 
-const props = defineProps<{ gameName: string }>();
+const props = defineProps<{ gameName: GameType }>();
 
-const recordcomponentRef = ref<RecordComponent>();
-const leaderboardRef = ref<Leaderboard>();
+const recordcomponentRef = ref<InstanceType<typeof RecordComponent>>();
+const leaderboardRef = ref<InstanceType<typeof Leaderboard>>();
 
 function refreshComponents() {
     recordcomponentRef.value?.refresh();

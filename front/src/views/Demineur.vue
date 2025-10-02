@@ -68,7 +68,7 @@ const intervalId = ref<number | null>(null);
 const perdu = ref<boolean>();
 const firstClick = ref<boolean>(true);
 const GAME_NAME = GameType.DEMINEUR;
-const gameLayoutRef = ref<GameLayout>();
+const gameLayoutRef = ref<InstanceType<typeof GameLayout>>();
 const listCase = ref<Case[][]>([]);
 
 const nombreCasesCocherBombe = computed(() => {
