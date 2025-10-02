@@ -21,7 +21,7 @@ public class GameRepositoryImpl implements GameRepositoryCustom {
         String req = """
                 SELECT new perso.arcade.model.dto.ClassementDto(p.pseudo, CAST(r.score AS string))
                 FROM Record r
-                JOIN r.plaayer p
+                JOIN r.player p
                 JOIN r.game g
                 WHERE g.name = :gameName
                 ORDER BY r.score
