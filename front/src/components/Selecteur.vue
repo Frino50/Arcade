@@ -57,17 +57,17 @@ function switchPage(chemin: string) {
 }
 
 .custom-style {
-    background: rgba(0, 20, 30, 0.5);
+    background: var(--futurist-blur-bg);
     width: 3rem;
     height: 3rem;
     margin-bottom: 1rem;
     border-top-left-radius: 1rem;
     border-bottom-left-radius: 1rem;
-    border: 1px solid rgba(0, 255, 255, 0.2);
+    border: 1px solid var(--futurist-shadow);
     border-right: none;
     box-shadow:
-        0 0 10px rgba(0, 255, 255, 0.2),
-        inset 0 0 15px rgba(0, 255, 255, 0.05);
+        0 0 10px var(--futurist-shadow),
+        inset 0 0 15px rgba(var(--scrollbar-track));
     transition:
         width 0.35s ease,
         background 0.35s ease,
@@ -91,7 +91,7 @@ function switchPage(chemin: string) {
 .image-container {
     height: 2rem;
     width: 2rem;
-    filter: drop-shadow(0 0 6px rgba(0, 255, 255, 0.6));
+    filter: drop-shadow(0 0 6px var(--futurist-shadow-strong));
     transition:
         transform 0.3s ease,
         filter 0.3s ease;
@@ -99,16 +99,16 @@ function switchPage(chemin: string) {
 
 .custom-style:hover {
     width: 9rem;
-    background: rgba(0, 255, 255, 0.1);
+    background: rgba(var(--futurist-accent), 0.1);
     box-shadow:
-        0 0 25px rgba(0, 255, 255, 0.5),
-        inset 0 0 20px rgba(0, 255, 255, 0.2);
-    border-color: rgba(0, 255, 255, 0.5);
+        0 0 25px var(--futurist-shadow-strong),
+        inset 0 0 20px rgba(var(--futurist-emoji-hover-bg));
+    border-color: var(--futurist-shadow-strong);
 }
 
 .custom-style:hover .image-container {
     transform: scale(1.2);
-    filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.8));
+    filter: drop-shadow(0 0 10px var(--futurist-shadow-strong));
 }
 
 .custom-style:hover .text {
@@ -117,7 +117,7 @@ function switchPage(chemin: string) {
 }
 
 .text {
-    color: #00ffff;
+    color: var(--futurist-accent);
     font-weight: bold;
     text-transform: uppercase;
     font-size: 0.85rem;
@@ -130,20 +130,20 @@ function switchPage(chemin: string) {
         opacity 0.4s ease,
         transform 0.4s ease;
     text-shadow:
-        0 0 6px rgba(0, 255, 255, 0.8),
-        0 0 12px rgba(0, 255, 255, 0.5);
+        0 0 6px var(--futurist-shadow-strong),
+        0 0 12px rgba(var(--button-shadow));
 }
 
 @keyframes pulse {
     0%,
     100% {
         box-shadow:
-            0 0 10px rgba(0, 255, 255, 0.2),
+            0 0 10px var(--futurist-shadow),
             inset 0 0 10px rgba(0, 255, 255, 0.05);
     }
     50% {
         box-shadow:
-            0 0 25px rgba(0, 255, 255, 0.5),
+            0 0 25px var(--futurist-shadow-strong),
             inset 0 0 20px rgba(0, 255, 255, 0.1);
     }
 }
@@ -154,9 +154,9 @@ function switchPage(chemin: string) {
 
 .custom-style:active {
     transform: scale(0.95);
-    background: rgba(0, 255, 255, 0.2);
+    background: rgba(var(--futurist-accent), 0.2);
     box-shadow:
-        0 0 30px rgba(0, 255, 255, 0.6),
-        inset 0 0 25px rgba(255, 255, 255, 0.15);
+        0 0 30px var(--futurist-shadow-strong),
+        inset 0 0 25px rgba(var(--scrollbar-track));
 }
 </style>

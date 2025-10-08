@@ -2,6 +2,7 @@
     <div class="app-container">
         <Toast />
         <Selecteur v-if="localStore.pseudo" />
+        <ThemeSwitcher class="theme-switcher" v-if="localStore.pseudo" />
         <router-view />
     </div>
 </template>
@@ -10,13 +11,19 @@
 import Selecteur from "@/components/Selecteur.vue";
 import { useLocalStore } from "./store/local.ts";
 import Toast from "@/components/Toast.vue";
+import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
 
 const localStore = useLocalStore();
 </script>
 
 <style scoped>
-.app-container {
-    background-color: #2b2926;
-    z-index: 1;
+.theme-switcher {
+    position: fixed;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 9999;
+    border-radius: 0.5rem;
+    backdrop-filter: blur(4px);
+    transition: opacity 0.3s ease;
 }
 </style>

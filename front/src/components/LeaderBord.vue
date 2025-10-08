@@ -120,7 +120,7 @@ li {
 }
 
 li:hover {
-    transform: translateY(-2px);
+    transform: scale(1.05);
     background: var(--futurist-list-bg-hover);
     box-shadow: 0 0 15px var(--futurist-shadow);
 }

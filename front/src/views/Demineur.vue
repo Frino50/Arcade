@@ -250,7 +250,6 @@ onMounted(() => {
 :root {
     --colonnes: 18;
 }
-
 .header-container {
     display: flex;
     align-items: center;
@@ -260,7 +259,7 @@ onMounted(() => {
 .drapeau-container {
     width: 1.4rem;
     height: 1.4rem;
-    filter: drop-shadow(0 0 6px #00ffff);
+    filter: drop-shadow(0 0 6px var(--futurist-accent));
 }
 
 .tableau-container {
@@ -284,68 +283,69 @@ onMounted(() => {
         background 0.25s ease,
         transform 0.15s ease,
         box-shadow 0.3s ease;
-    background-color: #0b1d26;
+    background-color: var(--futurist-bg-dark);
     box-shadow:
-        inset 0 0 4px rgba(0, 255, 255, 0.15),
-        0 0 2px rgba(0, 255, 255, 0.1);
+        inset 0 0 4px var(--futurist-shadow),
+        0 0 2px var(--futurist-shadow-strong);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }
 
 .case-container[style*="122b3d"] {
-    background-color: #122b3d;
+    background-color: var(--futurist-bg-mid);
     box-shadow:
-        inset 0 0 6px rgba(0, 255, 255, 0.2),
-        0 0 4px rgba(0, 255, 255, 0.1);
+        inset 0 0 6px var(--futurist-shadow),
+        0 0 4px var(--futurist-shadow-strong);
 }
 
 .case-container:hover {
     transform: scale(1.08);
     box-shadow:
-        0 0 12px rgba(0, 255, 255, 0.4),
-        inset 0 0 8px rgba(0, 255, 255, 0.2);
-    background-color: rgba(0, 40, 60, 0.8);
+        0 0 12px var(--futurist-shadow-strong),
+        inset 0 0 8px var(--futurist-shadow);
+    background-color: var(--futurist-list-bg-hover);
 }
 
+/* Nombres de 1 à 8 */
 .nombre-1 {
-    color: #00ffff;
-    text-shadow: 0 0 6px #00ffff;
+    color: var(--piece-s-light);
+    text-shadow: 0 0 6px var(--piece-s-light);
 }
 .nombre-2 {
-    color: #00ff99;
-    text-shadow: 0 0 6px #00ff99;
+    color: var(--piece-s-dark);
+    text-shadow: 0 0 6px var(--piece-s-dark);
 }
 .nombre-3 {
-    color: #ff00ff;
-    text-shadow: 0 0 6px #ff00ff;
+    color: var(--piece-j-light);
+    text-shadow: 0 0 6px var(--piece-j-light);
 }
 .nombre-4 {
-    color: #ff6600;
-    text-shadow: 0 0 6px #ff6600;
+    color: var(--piece-l-light);
+    text-shadow: 0 0 6px var(--piece-l-light);
 }
 .nombre-5 {
-    color: #ffff00;
-    text-shadow: 0 0 6px #ffff00;
+    color: var(--piece-l-dark);
+    text-shadow: 0 0 6px var(--piece-l-dark);
 }
 .nombre-6 {
-    color: #00ffcc;
-    text-shadow: 0 0 6px #00ffcc;
+    color: var(--piece-t-light);
+    text-shadow: 0 0 6px var(--piece-t-light);
 }
 .nombre-7 {
-    color: #ff0080;
-    text-shadow: 0 0 6px #ff0080;
+    color: var(--piece-t-dark);
+    text-shadow: 0 0 6px var(--piece-t-dark);
 }
 .nombre-8 {
-    color: #ffffff;
-    text-shadow: 0 0 6px #ffffff;
+    color: var(--text-color);
+    text-shadow: 0 0 6px var(--text-color);
 }
 
 .case-container[style*="demineur.png"] {
-    filter: drop-shadow(0 0 8px #ff1744);
+    filter: drop-shadow(0 0 8px var(--futurist-danger));
 }
 
 .case-container[style*="drapeau.png"] {
-    filter: drop-shadow(0 0 6px #00ffff);
+    filter: drop-shadow(0 0 6px var(--futurist-accent));
 }
 </style>

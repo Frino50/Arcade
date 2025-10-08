@@ -5,7 +5,7 @@ interface HTMLElementWithLoading extends HTMLElement {
     _loadingInstance?: any;
 }
 
-export const vLoading = {
+export const loading = {
     mounted(el: HTMLElementWithLoading, binding: any) {
         if (getComputedStyle(el).position === "static") {
             el.style.position = "relative";
