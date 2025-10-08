@@ -36,7 +36,6 @@
                         height: cellSize + 'px',
                         fontSize: cellSize / 3 + 'px',
                         background: getTileGradient(tile.value),
-                        color: getTileTextColor(tile.value),
                     }"
                 >
                     {{ tile.value }}
@@ -238,55 +237,51 @@ onBeforeUnmount(() => {
     window.removeEventListener("keydown", handleKeyPress);
     window.removeEventListener("resize", updateCellSize);
 });
-
 function getTileGradient(value: number): string {
     switch (value) {
         case 2:
-            return "linear-gradient(145deg, #eee4da, #f3e1c4)";
+            return "radial-gradient(circle at top left, rgba(0,255,255,0.6), rgba(0,102,204,0.5))";
         case 4:
-            return "linear-gradient(145deg, #ede0c8, #f5e8c0)";
+            return "radial-gradient(circle at top left, rgba(0,188,212,0.6), rgba(0,102,153,0.5))";
         case 8:
-            return "linear-gradient(145deg, #f2b179, #f2a679)";
+            return "radial-gradient(circle at top left, rgba(123,47,247,0.6), rgba(102,51,204,0.5))";
         case 16:
-            return "linear-gradient(145deg, #f59563, #f58653)";
+            return "radial-gradient(circle at top left, rgba(213,0,249,0.6), rgba(138,0,255,0.5))";
         case 32:
-            return "linear-gradient(145deg, #f67c5f, #f56b50)";
+            return "radial-gradient(circle at top left, rgba(255,64,129,0.6), rgba(220,30,100,0.5))";
         case 64:
-            return "linear-gradient(145deg, #f65e3b, #f5512e)";
+            return "radial-gradient(circle at top left, rgba(255,23,68,0.6), rgba(200,50,50,0.5))";
         case 128:
-            return "linear-gradient(145deg, #edcf72, #edc75a)";
+            return "radial-gradient(circle at top left, rgba(255,175,50,0.6), rgba(255,120,0,0.5))";
         case 256:
-            return "linear-gradient(145deg, #edcc61, #edc54a)";
+            return "radial-gradient(circle at top left, rgba(255,214,0,0.6), rgba(255,140,0,0.5))";
         case 512:
-            return "linear-gradient(145deg, #edc850, #edc639)";
+            return "radial-gradient(circle at top left, rgba(255,234,0,0.6), rgba(255,160,0,0.5))";
         case 1024:
-            return "linear-gradient(145deg, #edc53f, #edc22e)";
+            return "radial-gradient(circle at top left, rgba(255,241,118,0.6), rgba(255,205,80,0.5))";
         case 2048:
-            return "linear-gradient(145deg, #edc22e, #edbf1e)";
+            return "radial-gradient(circle at top left, rgba(255,255,255,0.7), rgba(240,210,80,0.5))";
         default:
-            return "linear-gradient(145deg, #3c3a32, #4c4a42)";
+            return "radial-gradient(circle at top left, rgba(50,70,80,0.5), rgba(10,10,10,0.4))";
     }
-}
-
-function getTileTextColor(value: number): string {
-    return value <= 4 ? "#776e65" : "#fff";
 }
 </script>
 
 <style scoped>
 .board {
     position: relative;
-    background: var(--marron);
-    border-radius: 8px;
     display: grid;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-radius: 1rem;
+    overflow: hidden;
 }
 
 .board-cell.empty {
     width: 100%;
     height: 100%;
-    background: var(--marron-clair);
-    border-radius: 6px;
+    background: var(--futurist-input-bg);
+    border-radius: 10px;
+    border: 1px solid rgba(0, 255, 255, 0.1);
+    box-shadow: inset 0 0 8px rgba(0, 255, 255, 0.05);
 }
 
 .tile {
@@ -295,18 +290,26 @@ function getTileTextColor(value: number): string {
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    border-radius: 6px;
+    border-radius: 10px;
     transition: all 0.25s ease;
     z-index: 10;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    animation: pulse-glow 4s ease-in-out infinite;
+    color: #fff;
 }
 
 .tile.merged {
     animation: pop 0.3s ease;
+    box-shadow:
+        0 0 20px var(--futurist-shadow-strong),
+        inset 0 0 12px rgba(255, 255, 255, 0.3);
 }
 
 .tile.new {
-    animation: appear 0.35s ease;
+    animation: appear 0.4s ease;
+    box-shadow:
+        0 0 18px var(--futurist-shadow-strong),
+        inset 0 0 12px rgba(255, 255, 255, 0.2);
 }
 
 @keyframes pop {
@@ -314,7 +317,7 @@ function getTileTextColor(value: number): string {
         transform: scale(1);
     }
     50% {
-        transform: scale(1.1);
+        transform: scale(1.12);
     }
     100% {
         transform: scale(1);
@@ -329,6 +332,20 @@ function getTileTextColor(value: number): string {
     100% {
         transform: scale(1);
         opacity: 1;
+    }
+}
+
+@keyframes pulse-glow {
+    0%,
+    100% {
+        box-shadow:
+            0 0 25px var(--futurist-shadow),
+            inset 0 0 30px rgba(0, 255, 255, 0.08);
+    }
+    50% {
+        box-shadow:
+            0 0 45px var(--futurist-shadow-strong),
+            inset 0 0 40px rgba(0, 255, 255, 0.15);
     }
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
     <GameLayout :game-name="GAME_NAME" ref="gameLayoutRef">
         <template #header>
-            <div>
+            <div class="header-container">
                 <img
                     class="drapeau-container"
                     src="../assets/drapeau.png"
@@ -22,7 +22,10 @@
                     class="case-container"
                     :style="{
                         backgroundImage: getImage(casee),
-                        backgroundColor: getColor(casee),
+                        backgroundColor:
+                            casee.visible && !casee.bombe
+                                ? '#122b3d'
+                                : '#0b1d26',
                     }"
                     @click="
                         reveleCase(
@@ -45,9 +48,7 @@
                 </div>
             </div>
 
-            <div class="boutton-container">
-                <button @click="genererList()">Reset</button>
-            </div>
+            <button @click="genererList()">Reset</button>
         </template>
     </GameLayout>
 </template>
@@ -84,11 +85,6 @@ function formatSecondes(): string {
     return secondes < 10 ? `0${secondes}` : `${secondes}`;
 }
 
-function getColor(casee: Case) {
-    if (casee.bombe && casee.visible) return "#f65e3b";
-    if (casee.visible) return "var(--marron-clair)";
-    return "var(--marron)";
-}
 function getImage(casee: Case) {
     if (casee.visible && casee.bombe) {
         return "url(../src/assets/demineur.png)";
@@ -255,66 +251,101 @@ onMounted(() => {
     --colonnes: 18;
 }
 
+.header-container {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
 .drapeau-container {
-    width: 1.2rem;
-    height: 1.2rem;
+    width: 1.4rem;
+    height: 1.4rem;
+    filter: drop-shadow(0 0 6px #00ffff);
 }
 
 .tableau-container {
     display: grid;
-    grid-template-columns: repeat(var(--colonnes), 2.5rem);
-    gap: 4px;
-    background: var(--marron);
-    padding: 6px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    grid-template-columns: repeat(var(--colonnes), 2.8rem);
+    gap: 0.12rem;
+    transition: all 0.3s ease;
 }
 
 .case-container {
-    height: 2.5rem;
-    width: 2.5rem;
+    height: 2.8rem;
+    width: 2.8rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 6px;
+    border-radius: 0.6rem;
     font-size: 1.2rem;
     font-weight: bold;
     cursor: pointer;
     transition:
-        background 0.2s ease,
-        transform 0.1s ease;
-    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.2);
+        background 0.25s ease,
+        transform 0.15s ease,
+        box-shadow 0.3s ease;
+    background-color: #0b1d26;
+    box-shadow:
+        inset 0 0 4px rgba(0, 255, 255, 0.15),
+        0 0 2px rgba(0, 255, 255, 0.1);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }
 
+.case-container[style*="122b3d"] {
+    background-color: #122b3d;
+    box-shadow:
+        inset 0 0 6px rgba(0, 255, 255, 0.2),
+        0 0 4px rgba(0, 255, 255, 0.1);
+}
+
 .case-container:hover {
-    transform: scale(1.05);
+    transform: scale(1.08);
+    box-shadow:
+        0 0 12px rgba(0, 255, 255, 0.4),
+        inset 0 0 8px rgba(0, 255, 255, 0.2);
+    background-color: rgba(0, 40, 60, 0.8);
 }
 
 .nombre-1 {
-    color: #0000ff;
+    color: #00ffff;
+    text-shadow: 0 0 6px #00ffff;
 }
 .nombre-2 {
-    color: #008000;
+    color: #00ff99;
+    text-shadow: 0 0 6px #00ff99;
 }
 .nombre-3 {
-    color: #ff0000;
+    color: #ff00ff;
+    text-shadow: 0 0 6px #ff00ff;
 }
 .nombre-4 {
-    color: #000080;
+    color: #ff6600;
+    text-shadow: 0 0 6px #ff6600;
 }
 .nombre-5 {
-    color: #800000;
+    color: #ffff00;
+    text-shadow: 0 0 6px #ffff00;
 }
 .nombre-6 {
-    color: #008080;
+    color: #00ffcc;
+    text-shadow: 0 0 6px #00ffcc;
 }
 .nombre-7 {
-    color: #000000;
+    color: #ff0080;
+    text-shadow: 0 0 6px #ff0080;
 }
 .nombre-8 {
-    color: #808080;
+    color: #ffffff;
+    text-shadow: 0 0 6px #ffffff;
+}
+
+.case-container[style*="demineur.png"] {
+    filter: drop-shadow(0 0 8px #ff1744);
+}
+
+.case-container[style*="drapeau.png"] {
+    filter: drop-shadow(0 0 6px #00ffff);
 }
 </style>

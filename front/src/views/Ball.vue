@@ -212,6 +212,7 @@ watchEffect(() => {
     display: flex;
     justify-content: center;
     margin-top: 2rem;
+    background-color: transparent;
 }
 .ball {
     position: absolute;

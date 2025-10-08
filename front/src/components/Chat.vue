@@ -182,70 +182,124 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .chat {
-    background-color: var(--marron-fonce);
-    border-radius: 8px;
-    padding: 15px;
+    background: radial-gradient(
+        circle at top left,
+        var(--futurist-bg-dark),
+        var(--futurist-bg-light)
+    );
+    border-radius: 1rem;
+    padding: 1rem;
     width: 30rem;
+    color: var(--futurist-text-light);
+    box-shadow: 0 0 20px var(--futurist-shadow);
+    border: 1px solid var(--futurist-border);
+    backdrop-filter: blur(6px);
+    position: relative;
+    overflow: hidden;
+    margin-top: 2.5rem;
+}
+
+.chat::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+        from 180deg,
+        transparent,
+        var(--futurist-shadow-strong),
+        transparent
+    );
+    animation: rotate 6s linear infinite;
+    z-index: 0;
+}
+
+@keyframes rotate {
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .messages {
     height: 28.5rem;
     overflow-y: auto;
-    padding: 10px;
-    border-radius: 6px;
-    background-color: #3c3a32;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background: var(--futurist-panel-bg);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 0.8rem;
+    z-index: 1;
+    backdrop-filter: blur(4px);
+    box-shadow: inset 0 0 10px var(--futurist-shadow);
+    scrollbar-width: thin;
+    scrollbar-color: var(--futurist-accent) var(--futurist-bg-dark);
 }
 
 .message {
-    padding: 8px 12px;
-    background-color: var(--marron-clair);
-    border-radius: 12px;
+    padding: 10px 15px;
+    background: linear-gradient(
+        135deg,
+        var(--futurist-bg-dark),
+        var(--futurist-bg-mid)
+    );
+    border: 1px solid var(--futurist-border);
+    border-radius: 15px;
     word-wrap: break-word;
-    color: var(--marron-back);
+    color: var(--futurist-text-light);
+    position: relative;
+    box-shadow: 0 0 8px var(--futurist-shadow);
+    animation: fadeIn 0.3s ease;
 }
 
 .message strong {
-    color: #4caf50;
+    color: var(--futurist-accent);
+    text-shadow: 0 0 5px var(--futurist-accent);
 }
 
 .message small {
     display: block;
     text-align: right;
     font-size: 0.7em;
+    color: var(--futurist-accent-light);
+    opacity: 0.8;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .input-container {
     display: flex;
     align-items: center;
-    gap: 5px;
-    margin-top: 15px;
+    gap: 0.5rem;
+    margin-top: 1rem;
     position: relative;
+    z-index: 2;
 }
 
 input {
     flex: 1;
-    padding: 10px 15px;
-    border-radius: 20px;
-    border: none;
-    background-color: var(--marron-clair);
-    color: var(--marron-back);
+    padding: 0.75rem 1rem;
+    border-radius: 30px;
+    border: 1px solid var(--futurist-border);
+    background-color: var(--futurist-blur-bg);
+    color: var(--futurist-accent);
     outline: none;
+    transition: 0.3s;
 }
 
-button {
-    border: none;
-    padding: 10px 15px;
-    border-radius: 20px;
-    cursor: pointer;
-    background-color: #4caf50;
-    color: white;
-}
-
-button:hover {
-    background-color: #45a049;
+input:focus {
+    box-shadow: 0 0 10px var(--futurist-accent);
 }
 
 .emoji-btn {
@@ -255,36 +309,48 @@ button:hover {
     display: flex;
     justify-content: center;
     align-items: center;
+    font-size: 1.3rem;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    color: var(--futurist-accent);
+    box-shadow: 0 0 8px var(--futurist-shadow);
 }
 
 .emoji-btn:hover {
-    background-color: #45a049;
-    border-radius: 8px;
+    background-color: var(--futurist-emoji-hover-bg);
+    box-shadow: 0 0 10px var(--futurist-shadow-strong);
 }
 
 .emoji-menu {
     position: absolute;
-    bottom: 50px;
-    left: 13rem;
-    background-color: #3c3a32;
-    border: 1px solid #555;
-    border-radius: 8px;
-    padding: 5px;
+    bottom: 3.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--futurist-emoji-bg);
+    border: 1px solid var(--futurist-border-strong);
+    border-radius: 10px;
+    padding: 8px;
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: 6px;
     max-width: 300px;
-    z-index: 100;
+    z-index: 10;
+    box-shadow: 0 0 15px var(--futurist-shadow-strong);
+    backdrop-filter: blur(6px);
 }
 
 .emoji-item {
     cursor: pointer;
-    font-size: 1.2rem;
-    padding: 3px;
-    border-radius: 4px;
+    font-size: 1.4rem;
+    padding: 4px;
+    border-radius: 6px;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
 }
 
 .emoji-item:hover {
-    background-color: #4caf50;
+    background-color: var(--futurist-emoji-hover-bg);
+    transform: scale(1.2);
 }
 </style>

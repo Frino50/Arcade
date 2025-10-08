@@ -1,9 +1,8 @@
 <template>
     <div class="body-container">
         <div>
-            <div class="score-box">
-                <div>Score</div>
-                <div class="score">{{ score }}</div>
+            <div class="header">
+                <div>Score {{ score }}</div>
             </div>
         </div>
 
@@ -166,44 +165,85 @@ const gameBoardStyle = computed(() => ({
 </script>
 
 <style scoped>
-.score-box {
-    background: var(--marron-fonce);
-    padding: 10px;
-    border-radius: 6px;
+.header {
+    padding: 0.8rem 1.2rem;
+    border-radius: 8px;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--futurist-accent);
+    text-shadow: 0 0 8px var(--futurist-shadow-strong);
+    position: relative;
 }
 
-.score {
-    font-weight: bold;
-    font-size: 1.2rem;
+.header > * {
+    background: var(--futurist-blur-bg);
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--futurist-border);
+    box-shadow: 0 0 12px var(--futurist-shadow);
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.header > *:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px var(--futurist-shadow-strong);
 }
 
 .game-board {
     position: relative;
-    border-radius: 12px;
-    background: var(--marron);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background: radial-gradient(
+        circle at center,
+        var(--futurist-bg-dark),
+        var(--futurist-bg-mid) 80%
+    );
+    box-shadow: 0 0 20px var(--futurist-shadow);
     overflow: hidden;
+    border-radius: 6px;
 }
 
 .cell {
     position: absolute;
     width: 20px;
     height: 20px;
-    border-radius: 4px;
+    border-radius: 6px;
     transition:
         left 0.1s linear,
-        top 0.1s linear;
+        top 0.1s linear,
+        transform 0.15s ease;
 }
 
 .cell.snake {
-    background: linear-gradient(145deg, #57d37f, #3da75e);
-    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.25);
+    background: linear-gradient(
+        145deg,
+        var(--futurist-accent-light),
+        var(--futurist-accent)
+    );
+    box-shadow:
+        inset 0 0 8px var(--futurist-shadow),
+        0 0 12px var(--futurist-shadow-strong);
+    border: 1px solid var(--futurist-border-strong);
+}
+
+.cell.snake:hover {
+    transform: scale(1.1);
+    box-shadow:
+        inset 0 0 12px var(--futurist-shadow-strong),
+        0 0 20px var(--futurist-shadow-strong);
 }
 
 .cell.food {
-    background: linear-gradient(145deg, #ff5a5a, #cc3c3c);
+    background: linear-gradient(
+        145deg,
+        var(--futurist-danger),
+        var(--futurist-danger-light)
+    );
     border-radius: 50%;
-    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.25);
 }
 </style>

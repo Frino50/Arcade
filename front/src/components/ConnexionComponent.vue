@@ -22,12 +22,12 @@
 
             <button @click="handleSubmit">{{ props.buttonText }}</button>
 
-            <p class="alt-text">
+            <div class="alt-text">
                 {{ props.altText }}
-                <button @click="redirection()" class="link-button">
+                <div @click="redirection()" class="alt-button">
                     {{ props.altButtonText }}
-                </button>
-            </p>
+                </div>
+            </div>
 
             <p v-if="internalError" class="error-text">{{ internalError }}</p>
         </div>
@@ -104,14 +104,14 @@ function redirection() {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background: var(--marron-back);
+    background: var(--futurist-bg-dark);
 }
 
 .auth-card {
-    background: var(--marron-clair);
+    background: var(--futurist-panel-bg);
     padding: 2rem 3rem;
     border-radius: 10px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 20px var(--futurist-shadow-strong);
     width: 100%;
     max-width: 400px;
     display: flex;
@@ -121,7 +121,7 @@ function redirection() {
 
 h2 {
     margin-bottom: 1.5rem;
-    color: var(--marron-fonce);
+    color: var(--futurist-text-light);
 }
 
 .input-group {
@@ -133,47 +133,49 @@ input {
     width: 92%;
     padding: 0.75rem 1rem;
     border-radius: 5px;
-    border: 1px solid var(--marron);
+    border: 1px solid var(--futurist-border);
     outline: none;
     font-size: 1rem;
-    transition: border-color 0.3s;
-    background-color: white;
-    color: var(--marron-fonce);
+    transition:
+        border-color 0.3s,
+        box-shadow 0.3s;
+    background-color: var(--futurist-input-bg);
+    color: var(--futurist-text-light);
 }
 
 input:focus {
-    border-color: var(--marron-fonce);
+    border-color: var(--futurist-accent);
+    box-shadow: 0 0 8px var(--futurist-accent);
 }
 
-button {
-    margin-top: 1rem;
-    padding: 0.75rem 1rem;
-    border: none;
-    border-radius: 5px;
-    background-color: var(--marron-fonce);
-    color: white;
+.alt-button {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-weight: bold;
+    text-decoration: underline;
     cursor: pointer;
+    color: var(--futurist-accent);
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+.alt-button:hover {
+    color: var(--futurist-accent-light);
+    text-decoration-thickness: 2px;
+    transform: translateY(-2px);
 }
 
 .alt-text {
+    display: flex;
+    align-items: center;
     margin-top: 1.5rem;
     font-size: 0.9rem;
-    color: var(--marron-fonce);
-}
-
-.link-button {
-    background: none;
-    border: none;
-    color: var(--marron-fonce);
-    cursor: pointer;
-    text-decoration: underline;
-    padding: 0;
-    font-size: 0.9rem;
+    color: var(--futurist-text-weak);
 }
 
 .error-text {
     margin-top: 1rem;
-    color: red;
+    color: var(--futurist-danger);
     font-size: 0.9rem;
 }
 </style>

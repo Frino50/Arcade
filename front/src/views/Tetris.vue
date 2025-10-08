@@ -1,13 +1,12 @@
 <template>
     <div class="body-container">
         <div>
-            <div class="score-box">
-                <div>Score</div>
-                <div class="score">{{ score }}</div>
+            <div class="header">
+                <div>Score {{ score }}</div>
             </div>
         </div>
         <div class="game-container">
-            <div class="game-board" :style="gameBoardStyle">
+            <div :style="gameBoardStyle">
                 <div
                     v-for="(cell, index) in displayedBoard"
                     :key="index"
@@ -285,30 +284,41 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.score-box {
-    background: var(--marron-fonce);
-    padding: 10px;
-    border-radius: 6px;
+.header {
+    padding: 0.8rem 1.2rem;
+    border-radius: 8px;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--futurist-accent);
+    text-shadow: 0 0 8px var(--futurist-shadow-strong);
+    position: relative;
 }
 
-.score {
-    font-weight: bold;
-    font-size: 1.2rem;
+.header > * {
+    background: var(--futurist-blur-bg);
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--futurist-border);
+    box-shadow: 0 0 12px var(--futurist-shadow);
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.header > *:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px var(--futurist-shadow-strong);
 }
 
 .game-container {
     position: relative;
     display: flex;
     justify-content: center;
-}
-
-.game-board {
-    position: relative;
-    background: var(--marron);
-    border-radius: 8px;
-    padding: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .next-container {
@@ -325,12 +335,14 @@ onUnmounted(() => {
 .next-piece-container {
     width: 100px;
     height: 100px;
-    background: var(--marron);
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 8px var(--futurist-shadow);
     display: flex;
     align-items: center;
     justify-content: center;
+    background: var(--futurist-blur-bg);
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--futurist-border);
 }
 
 .cell {
@@ -338,35 +350,68 @@ onUnmounted(() => {
     width: 30px;
     height: 30px;
     border-radius: 4px;
-    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 0 3px var(--futurist-shadow);
+    background: var(--futurist-bg-dark);
 }
 
 .preview-cell {
     width: 20px;
     height: 20px;
     border-radius: 3px;
-    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 0 2px var(--futurist-shadow);
 }
 
-.color-i {
-    background-color: #4dd0e1;
-}
-.color-z {
-    background-color: #f65e3b;
-}
 .color-s {
-    background-color: #81c784;
+    background: linear-gradient(
+        145deg,
+        var(--piece-s-light),
+        var(--piece-s-dark)
+    );
+    box-shadow:
+        inset 0 0 5px var(--piece-s-light),
+        0 0 10px var(--piece-s-dark);
+}
+
+.color-l {
+    background: linear-gradient(
+        145deg,
+        var(--piece-l-light),
+        var(--piece-l-dark)
+    );
+    box-shadow:
+        inset 0 0 5px var(--piece-l-light),
+        0 0 10px var(--piece-l-dark);
+}
+
+.color-j {
+    background: linear-gradient(
+        145deg,
+        var(--piece-j-light),
+        var(--piece-j-dark)
+    );
+    box-shadow:
+        inset 0 0 5px var(--piece-j-light),
+        0 0 10px var(--piece-j-dark);
+}
+
+.color-t {
+    background: linear-gradient(
+        145deg,
+        var(--piece-t-light),
+        var(--piece-t-dark)
+    );
+    box-shadow:
+        inset 0 0 5px var(--piece-t-light),
+        0 0 10px var(--piece-t-dark);
 }
 .color-o {
-    background-color: #f2b179;
-}
-.color-l {
-    background-color: #ffb74d;
-}
-.color-j {
-    background-color: #64b5f6;
-}
-.color-t {
-    background-color: #ba68c8;
+    background: linear-gradient(
+        145deg,
+        var(--piece-o-light),
+        var(--piece-o-dark)
+    );
+    box-shadow:
+        inset 0 0 5px var(--piece-o-light),
+        0 0 10px var(--piece-o-dark);
 }
 </style>

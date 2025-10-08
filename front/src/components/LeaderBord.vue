@@ -45,42 +45,97 @@ onMounted(() => {
 
 <style scoped>
 .leaderboard-container {
-    background-color: var(--marron-fonce);
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    color: #fff;
+    background: radial-gradient(
+        circle at top left,
+        var(--futurist-bg-dark),
+        var(--futurist-bg-light)
+    );
+    border-radius: 1rem;
+    padding: 1.5rem;
     width: 15rem;
     text-align: center;
+    color: var(--futurist-text-light);
+    box-shadow: 0 0 20px var(--futurist-shadow);
+    border: 1px solid var(--futurist-border);
+    backdrop-filter: blur(8px);
+    position: relative;
+    overflow: hidden;
+}
+
+.leaderboard-container::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+        from 180deg,
+        transparent,
+        var(--futurist-shadow),
+        transparent
+    );
+    animation: rotate 8s linear infinite;
+    z-index: 0;
+}
+
+@keyframes rotate {
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 h2 {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     margin-top: 0;
-    color: antiquewhite;
+    margin-bottom: 1rem;
+    color: var(--futurist-accent);
+    text-shadow: 0 0 10px var(--futurist-accent);
+    z-index: 1;
+    position: relative;
 }
 
 ol {
     list-style-type: none;
     padding: 0;
+    margin: 0;
+    z-index: 1;
+    position: relative;
 }
 
 li {
     display: flex;
     justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    align-items: center;
+    padding: 0.6rem 0.5rem;
+    margin: 0.3rem 0;
+    border-radius: 10px;
+    background: var(--futurist-list-bg);
+    border: 1px solid var(--futurist-border);
+    box-shadow: 0 0 8px var(--futurist-shadow);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
 }
 
-li:last-child {
-    border-bottom: none;
+li:hover {
+    transform: translateY(-2px);
+    background: var(--futurist-list-bg-hover);
+    box-shadow: 0 0 15px var(--futurist-shadow);
 }
 
 .player-pseudo {
     font-weight: bold;
+    color: var(--futurist-accent);
+    text-shadow: 0 0 6px var(--futurist-accent);
+    font-size: 1rem;
 }
 
 .score-value {
-    font-weight: normal;
+    font-weight: 500;
+    color: var(--futurist-text-weak);
+    font-size: 0.95rem;
+    text-shadow: 0 0 5px var(--futurist-shadow);
 }
 </style>

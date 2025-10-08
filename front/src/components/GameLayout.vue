@@ -46,7 +46,6 @@ defineExpose({
     refresh: refreshComponents,
 });
 </script>
-
 <style scoped>
 .main-container {
     display: flex;
@@ -56,35 +55,46 @@ defineExpose({
     gap: 4rem;
 }
 
-.game-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    align-items: center;
-}
-
-.game-content {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    align-items: center;
-}
-
 .header {
-    padding: 10px;
-    border-radius: 6px;
+    padding: 0.8rem 1.2rem;
+    border-radius: 8px;
     text-align: center;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 3rem;
     font-weight: bold;
-    font-size: 1rem;
+    font-size: 1.1rem;
+    color: var(--futurist-accent);
+    text-shadow: 0 0 8px var(--futurist-shadow);
+    position: relative;
 }
 
 .header > * {
-    background: var(--marron-fonce);
-    padding: 10px;
-    border-radius: 6px;
-    text-align: center;
+    background: var(--futurist-blur-bg);
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--futurist-border);
+    box-shadow: 0 0 12px var(--futurist-shadow);
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.header > *:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px var(--futurist-shadow-strong);
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 20rem;
+    border-radius: 1rem;
+    transition: all 0.3s ease;
 }
 </style>
