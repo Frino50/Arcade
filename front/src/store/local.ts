@@ -6,10 +6,12 @@ export const useLocalStore = defineStore(
     () => {
         const pseudo = ref("");
         const token = ref("");
+        const theme = ref("cyan");
 
         return {
             pseudo,
             token,
+            theme,
         };
     },
     {

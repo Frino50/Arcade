@@ -6,7 +6,6 @@
     >
         <div class="current-theme">{{ currentTheme }}</div>
 
-        <!-- Transition wrapper -->
         <transition name="dropdown">
             <ul v-if="dropdownOpen" class="options">
                 <li
@@ -23,13 +22,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import { useLocalStore } from "@/store/local";
+
+const store = useLocalStore();
 
 const themes = ["cyan", "yellow", "purple"] as const;
 type Theme = (typeof themes)[number];
 
-const currentTheme = ref<Theme>("cyan");
 const dropdownOpen = ref(false);
+const currentTheme = ref<Theme>(store.theme as Theme);
+
+onMounted(() => {
+    applyTheme(currentTheme.value);
+});
 
 function toggleDropdown() {
     dropdownOpen.value = !dropdownOpen.value;
@@ -41,8 +47,12 @@ function closeDropdown() {
 
 function selectTheme(theme: Theme) {
     currentTheme.value = theme;
+    store.theme = theme;
+    applyTheme(theme);
     closeDropdown();
+}
 
+function applyTheme(theme: Theme) {
     document.documentElement.classList.remove(
         ...themes.map((t) => `theme-${t}`)
     );
