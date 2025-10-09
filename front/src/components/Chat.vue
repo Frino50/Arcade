@@ -287,21 +287,6 @@ onBeforeUnmount(() => {
     z-index: 2;
 }
 
-input {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    border-radius: 30px;
-    border: 1px solid var(--futurist-border);
-    background-color: var(--futurist-blur-bg);
-    color: var(--futurist-accent);
-    outline: none;
-    transition: 0.3s;
-}
-
-input:focus {
-    box-shadow: 0 0 10px var(--futurist-accent);
-}
-
 .emoji-btn {
     cursor: pointer;
     width: 2rem;

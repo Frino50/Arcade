@@ -2,7 +2,7 @@
     <div class="app-container">
         <Toast />
         <Selecteur v-if="localStore.pseudo" />
-        <ThemeSwitcher class="theme-switcher" v-if="localStore.pseudo" />
+        <ThemeSwitcher class="theme-switcher" />
         <router-view />
     </div>
 </template>

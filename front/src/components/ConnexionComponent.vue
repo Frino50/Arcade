@@ -97,7 +97,6 @@ function redirection() {
     router.push(props.mode === "login" ? "/register" : "/login");
 }
 </script>
-
 <style scoped>
 .auth-page {
     display: flex;
@@ -105,47 +104,65 @@ function redirection() {
     align-items: center;
     height: 100vh;
     background: var(--futurist-bg-dark);
+    overflow: hidden;
 }
 
 .auth-card {
+    position: relative;
     background: var(--futurist-panel-bg);
     padding: 2rem 3rem;
-    border-radius: 10px;
+    border-radius: 1rem;
     box-shadow: 0 0 20px var(--futurist-shadow-strong);
     width: 100%;
     max-width: 400px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.auth-card::before {
+    content: "";
+    position: absolute;
+    inset: -50%;
+    background: linear-gradient(
+        120deg,
+        transparent 0%,
+        var(--futurist-accent) 30%,
+        var(--futurist-accent-light) 50%,
+        transparent 70%
+    );
+    opacity: 0.3;
+    animation: windFlow 6s linear infinite;
+    transform: translateX(-50%);
+    z-index: 0;
+    pointer-events: none;
+    filter: blur(40px);
+}
+
+@keyframes windFlow {
+    0% {
+        transform: translateX(-100%) skewX(-10deg);
+    }
+    50% {
+        transform: translateX(0%) skewX(-10deg);
+    }
+    100% {
+        transform: translateX(100%) skewX(-10deg);
+    }
 }
 
 h2 {
     margin-bottom: 1.5rem;
     color: var(--futurist-text-light);
+    z-index: 1;
 }
 
 .input-group {
     margin-bottom: 1rem;
     width: 100%;
-}
-
-input {
-    width: 92%;
-    padding: 0.75rem 1rem;
-    border-radius: 5px;
-    border: 1px solid var(--futurist-border);
-    outline: none;
-    font-size: 1rem;
-    transition:
-        border-color 0.3s,
-        box-shadow 0.3s;
-    background-color: var(--futurist-input-bg);
-    color: var(--futurist-text-light);
-}
-
-input:focus {
-    border-color: var(--futurist-accent);
-    box-shadow: 0 0 8px var(--futurist-accent);
+    z-index: 1;
 }
 
 .alt-button {
@@ -157,6 +174,7 @@ input:focus {
     color: var(--futurist-accent);
     font-size: 0.9rem;
     transition: color 0.2s;
+    z-index: 1;
 }
 
 .alt-button:hover {
@@ -171,11 +189,13 @@ input:focus {
     margin-top: 1.5rem;
     font-size: 0.9rem;
     color: var(--futurist-text-weak);
+    z-index: 1;
 }
 
 .error-text {
     margin-top: 1rem;
     color: var(--futurist-danger);
     font-size: 0.9rem;
+    z-index: 1;
 }
 </style>

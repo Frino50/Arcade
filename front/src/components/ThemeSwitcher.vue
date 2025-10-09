@@ -5,16 +5,20 @@
         @click="toggleDropdown"
     >
         <div class="current-theme">{{ currentTheme }}</div>
-        <ul v-if="dropdownOpen" class="options">
-            <li
-                v-for="theme in themes"
-                :key="theme"
-                @click="selectTheme(theme)"
-                :class="{ selected: theme === currentTheme }"
-            >
-                {{ theme }}
-            </li>
-        </ul>
+
+        <!-- Transition wrapper -->
+        <transition name="dropdown">
+            <ul v-if="dropdownOpen" class="options">
+                <li
+                    v-for="theme in themes"
+                    :key="theme"
+                    @click.stop="selectTheme(theme)"
+                    :class="{ selected: theme === currentTheme }"
+                >
+                    {{ theme }}
+                </li>
+            </ul>
+        </transition>
     </div>
 </template>
 
@@ -45,6 +49,7 @@ function selectTheme(theme: Theme) {
     document.documentElement.classList.add(`theme-${theme}`);
 }
 </script>
+
 <style scoped>
 .theme-switcher {
     position: relative;
@@ -82,9 +87,6 @@ function selectTheme(theme: Theme) {
     z-index: 10;
     border: 1px solid var(--futurist-border);
     box-shadow: 0 0 12px var(--futurist-shadow);
-    transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease;
 }
 
 .options li {
@@ -98,5 +100,38 @@ function selectTheme(theme: Theme) {
 
 .options li:hover {
     background: rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-enter-active,
+.dropdown-leave-active {
+    transition:
+        max-height 0.35s ease,
+        opacity 0.35s ease,
+        transform 0.35s ease;
+    overflow: hidden;
+}
+
+.dropdown-enter-from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+}
+
+.dropdown-enter-to {
+    opacity: 1;
+    max-height: 200px;
+    transform: translateY(0);
+}
+
+.dropdown-leave-from {
+    opacity: 1;
+    max-height: 200px;
+    transform: translateY(0);
+}
+
+.dropdown-leave-to {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
 }
 </style>
