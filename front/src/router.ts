@@ -72,6 +72,10 @@ const routes: Array<RouteRecordRaw> = [
         name: "Register",
         component: Register,
     },
+    {
+        path: "/:pathMatch(.*)*",
+        redirect: "/",
+    },
 ];
 
 const router = createRouter({
