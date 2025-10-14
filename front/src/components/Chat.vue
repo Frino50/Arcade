@@ -36,23 +36,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, nextTick } from "vue";
-import SockJS from "sockjs-client";
-import { Client, IMessage } from "@stomp/stompjs";
-import { useLocalStore } from "@/store/local.ts";
+import { ref, onMounted, nextTick, onBeforeUnmount } from "vue";
 import messageService from "@/services/messageService.ts";
 import { Emoji, emojiMap } from "@/models/enums/emoji.ts";
+import { connexionChat } from "@/sockets/websocket-client.ts";
+import Message from "@/models/message.ts";
 
 const text = ref("");
-const messages = ref<
-    { id: number; player: string; content: string; timestamp: string }[]
->([]);
+const messages = ref<Message[]>([]);
 const showEmojiMenu = ref(false);
 const isLoading = ref(false);
-
-let stompClient: Client;
-const localstore = useLocalStore();
 const messagesContainer = ref<HTMLDivElement | null>(null);
+const stompClient = connexionChat(messages.value, messagesContainer.value);
 
 const page = ref(0);
 const size = 20;
@@ -70,33 +65,6 @@ function parseEmojis(text: string): string {
 function selectEmoji(shortcut: string) {
     text.value += shortcut + " ";
     showEmojiMenu.value = false;
-}
-
-function connect() {
-    const socket = new SockJS("http://202.15.200.35:8085/ws");
-    stompClient = new Client({
-        webSocketFactory: () => socket,
-        reconnectDelay: 5000,
-        connectHeaders: localstore.token
-            ? { Authorization: `Bearer ${localstore.token}` }
-            : {},
-    });
-
-    stompClient.onConnect = () => {
-        console.log("Connecté au chat STOMP");
-
-        stompClient.subscribe("/topic/chat", (msg: IMessage) => {
-            const newMsg = JSON.parse(msg.body);
-            messages.value.push(newMsg);
-            scrollToBottom();
-        });
-    };
-
-    stompClient.activate();
-}
-
-function disconnect() {
-    stompClient?.deactivate();
 }
 
 async function loadMessages() {
@@ -128,13 +96,7 @@ async function loadMessages() {
 }
 
 async function sendMessage() {
-    if (
-        !text.value.trim() ||
-        !stompClient ||
-        !stompClient.connected ||
-        text.value.length > 50
-    )
-        return;
+    if (!text.value.trim() || text.value.length > 50) return;
     await messageService.sendMessage(text.value);
     text.value = "";
 }
@@ -149,15 +111,6 @@ function formatTime(ts: string) {
     });
 }
 
-function scrollToBottom() {
-    nextTick(() => {
-        if (messagesContainer.value) {
-            messagesContainer.value.scrollTop =
-                messagesContainer.value.scrollHeight;
-        }
-    });
-}
-
 function onScroll() {
     if (messagesContainer.value && messagesContainer.value.scrollTop === 0) {
         loadMessages();
@@ -168,15 +121,18 @@ onMounted(async () => {
     try {
         isLoading.value = true;
         await loadMessages();
-        connect();
-        scrollToBottom();
+        connexionChat(messages.value, messagesContainer.value);
     } finally {
         isLoading.value = false;
     }
 });
 
-onBeforeUnmount(() => {
-    disconnect();
+onBeforeUnmount(async () => {
+    try {
+        await stompClient.deactivate();
+    } catch (err) {
+        console.error("Erreur lors de la déconnexion STOMP :", err);
+    }
 });
 </script>
 
