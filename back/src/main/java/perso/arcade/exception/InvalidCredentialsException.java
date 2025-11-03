@@ -1,4 +1,4 @@
-package perso.arcade.Exception;
+package perso.arcade.exception;
 
 public class InvalidCredentialsException extends RuntimeException {
     public InvalidCredentialsException(String message) {

@@ -1,4 +1,4 @@
-package perso.arcade.Controller;
+package perso.arcade.controller;
 
 import org.springframework.web.bind.annotation.*;
 import perso.arcade.model.dto.ClassementDto;

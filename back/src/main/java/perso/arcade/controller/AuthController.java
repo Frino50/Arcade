@@ -1,4 +1,4 @@
-package perso.arcade.Controller;
+package perso.arcade.controller;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

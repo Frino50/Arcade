@@ -1,4 +1,4 @@
-package perso.arcade.Exception;
+package perso.arcade.exception;
 
 import org.springframework.security.core.AuthenticationException;
 
