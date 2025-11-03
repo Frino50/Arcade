@@ -36,7 +36,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 const hexagonItems = [
     { title: "Démineur", link: "Demineur" },
-    { title: "Vide", link: "Vide" },
+    { title: "Pièce", link: "Piece" },
     { title: "2048", link: "2048" },
     { title: "Boids", link: "Boids" },
     { title: "Bactérie", link: "Bacterie" },

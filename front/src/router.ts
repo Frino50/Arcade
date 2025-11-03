@@ -12,6 +12,7 @@ import Tetris from "@/views/Tetris.vue";
 
 import Login from "@/views/Login.vue";
 import Register from "@/views/Register.vue";
+import Piece from "@/views/Piece.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -71,6 +72,11 @@ const routes: Array<RouteRecordRaw> = [
         path: "/register",
         name: "Register",
         component: Register,
+    },
+    {
+        path: "/piece",
+        name: "Piece",
+        component: Piece,
     },
     {
         path: "/:pathMatch(.*)*",

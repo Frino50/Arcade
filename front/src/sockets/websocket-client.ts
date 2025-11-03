@@ -4,7 +4,7 @@ import SockJS from "sockjs-client";
 import { useLocalStore } from "@/store/local.ts";
 import Message from "@/models/message.ts";
 
-function initialisation() {
+export function initialisation(): Client {
     const localstore = useLocalStore();
     const socket = new SockJS("http://202.15.200.35:8085/ws");
 

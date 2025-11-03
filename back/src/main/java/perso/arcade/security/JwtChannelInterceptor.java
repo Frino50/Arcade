@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import perso.arcade.service.PlayerService;
 
 import java.security.Principal;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -93,5 +94,9 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
         if (user != null) {
             System.out.println("STOMP " + accessor.getCommand() + " de l'utilisateur : " + user.getName());
         }
+    }
+
+    public Map<String, Principal> getSessionUserMap() {
+        return Collections.unmodifiableMap(sessionUserMap);
     }
 }

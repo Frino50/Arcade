@@ -15,23 +15,6 @@ body {
     color: var(--text-color);
 }
 
-body::before {
-    content: "";
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: conic-gradient(
-            from 0deg,
-            transparent,
-            rgba(0, 255, 255, 0.15),
-            transparent
-    );
-    animation: rotate-bg 25s linear infinite;
-    z-index: 0;
-}
-
 @keyframes rotate-bg {
     100% {
         transform: rotate(360deg);
