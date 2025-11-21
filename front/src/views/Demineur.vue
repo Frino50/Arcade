@@ -4,7 +4,7 @@
             <div class="header-container">
                 <img
                     class="drapeau-container"
-                    src="../assets/drapeau.png"
+                    src="/assets/drapeau.png"
                     alt="drapeau.png"
                 />
                 {{ nombreDeBombes - nombreCasesCocherBombe }}
@@ -87,10 +87,10 @@ function formatSecondes(): string {
 
 function getImage(casee: Case) {
     if (casee.visible && casee.bombe) {
-        return "url(../src/assets/demineur.png)";
+        return "url(/assets/demineur.png)";
     }
     if (!casee.visible && casee.cocherBombe) {
-        return "url(../src/assets/drapeau.png)";
+        return "url(/assets/drapeau.png)";
     }
     return "none";
 }

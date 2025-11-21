@@ -31,7 +31,7 @@
 
             <div class="right-column">
                 <img
-                    src="../assets/adn.gif"
+                    src="/assets/adn.gif"
                     alt="ADN animation"
                     class="adn-gif"
                 />

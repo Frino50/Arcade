@@ -10,9 +10,7 @@
                     <img
                         class="image-container"
                         :src="
-                            'src/assets/' +
-                            page.link.toLocaleLowerCase() +
-                            '.png'
+                            '/assets/' + page.link.toLocaleLowerCase() + '.png'
                         "
                         :alt="page.link.toLocaleLowerCase() + '.png'"
                     />
