@@ -84,6 +84,7 @@
     </dependencies>
 
     <build>
+        <finalName>ARCADE</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -91,5 +92,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
