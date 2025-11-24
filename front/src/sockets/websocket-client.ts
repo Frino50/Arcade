@@ -12,8 +12,9 @@ export function getStompClient(): Client {
     }
 
     const localstore = useLocalStore();
+
     const socket = new SockJS(
-        "http://202.15.200.35:+" + import.meta.env.VITE_API_BASE_URL + "/ws"
+        "http://202.15.200.35:" + import.meta.env.VITE_BACK_URL + "/ws"
     );
 
     stompClient = new Client({

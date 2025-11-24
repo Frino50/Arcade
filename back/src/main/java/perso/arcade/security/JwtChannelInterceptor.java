@@ -92,7 +92,7 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
     private void logCommand(StompHeaderAccessor accessor) {
         Principal user = accessor.getUser();
         if (user != null) {
-            System.out.println("STOMP " + accessor.getCommand() + " de l'utilisateur : " + user.getName());
+            System.out.println("STOMP " + accessor.getCommand() + " de l'utilisateur : " + user.getName() + " sur " + accessor.getDestination());
         }
     }
 
