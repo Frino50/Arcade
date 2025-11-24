@@ -15,7 +15,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from "vue";
 import type { Coin } from "../models/Coin";
 
 const props = defineProps<{ coin: Coin }>();

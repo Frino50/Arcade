@@ -1,5 +1,6 @@
 package perso.arcade.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,6 +22,8 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthTokenFilter authTokenFilter;
+    @Value("${front.port}")
+    private String frontPort;
 
     public SecurityConfig(JwtAuthTokenFilter authTokenFilter) {
         this.authTokenFilter = authTokenFilter;
@@ -57,8 +60,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                "http://localhost:5555",
-                "http://202.15.200.35:5555"
+                "http://localhost:" + frontPort,
+                "http://202.15.200.35:" + frontPort
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
