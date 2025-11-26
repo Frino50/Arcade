@@ -183,7 +183,7 @@ onBeforeUnmount(async () => {
     overflow-y: auto;
     padding: 1rem;
     border-radius: 0.75rem;
-    background: var(--futurist-panel-bg);
+    background: var(--futurist-blur-bg);
     display: flex;
     flex-direction: column;
     gap: 0.8rem;

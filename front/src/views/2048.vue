@@ -36,6 +36,7 @@
                         height: cellSize + 'px',
                         fontSize: cellSize / 3 + 'px',
                         background: getTileGradient(tile.value),
+                        transition: `all ${animationSpeed}ms ease`,
                     }"
                 >
                     {{ tile.value }}
@@ -56,16 +57,20 @@ import { GameType } from "@/models/enums/gameType.ts";
 import scoreService from "@/services/scoreService.ts";
 import GameLayout from "@/components/GameLayout.vue";
 
-const boardSize = <number>4;
-const gap = <number>5;
-const MOVE_DURATION = 200;
+const boardSize = 4;
+const gap = 5;
 const GAME_NAME = GameType.DEUX_MILLE_QUARANTE_HUIT;
 const gameLayoutRef = ref<InstanceType<typeof GameLayout>>();
-const score = ref<number>(0);
+const score = ref(0);
 const tiles = ref<Tile[]>([]);
 const boardCells = Array.from({ length: boardSize * boardSize });
-let idCounter = <number>0;
-let cellSize = <number>150;
+let idCounter = 0;
+let cellSize = 150;
+
+let lastMoveTime = 0;
+const MIN_SPEED = 80;
+const MAX_SPEED = 250;
+const animationSpeed = ref(MAX_SPEED);
 
 function createTile(value: number, row: number, col: number): Tile {
     return { id: idCounter++, value, row, col, merged: false, isNew: true };
@@ -89,9 +94,7 @@ function placeRandomTiles(count: number) {
         const cell = emptyCells.splice(idx, 1)[0];
         const newTile = createTile(2, cell.row, cell.col);
         tiles.value.push(newTile);
-        setTimeout(() => {
-            newTile.isNew = false;
-        }, MOVE_DURATION);
+        setTimeout(() => (newTile.isNew = false), animationSpeed.value);
     }
 }
 
@@ -107,17 +110,22 @@ async function restartGame() {
 }
 
 async function saveCurrentRecord() {
-    if (score.value <= 0) {
-        return;
-    }
+    if (score.value <= 0) return;
     const recordData = new SaveRecordDto(GAME_NAME, score.value);
     try {
         await scoreService.saveRecord(recordData);
         gameLayoutRef.value?.refresh();
-    } catch (error) {}
+    } catch {}
 }
 
 function move(direction: string) {
+    const now = Date.now();
+    const delta = now - lastMoveTime;
+
+    animationSpeed.value =
+        delta < MAX_SPEED ? Math.max(MIN_SPEED, delta) : MAX_SPEED;
+    lastMoveTime = now;
+
     let moved = false;
     tiles.value.forEach((t) => (t.merged = false));
 
@@ -132,8 +140,8 @@ function move(direction: string) {
     for (const tile of sorted) {
         let { row, col } = tile;
         while (true) {
-            let nextRow = row;
-            let nextCol = col;
+            let nextRow = row,
+                nextCol = col;
 
             if (direction === "up") nextRow--;
             if (direction === "down") nextRow++;
@@ -151,7 +159,6 @@ function move(direction: string) {
             const other = tiles.value.find(
                 (t) => t.row === nextRow && t.col === nextCol
             );
-
             if (!other) {
                 row = nextRow;
                 col = nextCol;
@@ -163,26 +170,20 @@ function move(direction: string) {
             ) {
                 other.value *= 2;
                 score.value += other.value;
-
                 other.merged = true;
                 tiles.value = tiles.value.filter((t) => t.id !== tile.id);
                 moved = true;
                 break;
-            } else {
-                break;
-            }
+            } else break;
         }
-
         tile.row = row;
         tile.col = col;
     }
 
     if (moved) {
-        setTimeout(() => {
-            placeRandomTiles(1);
-            checkGameOver();
-        }, MOVE_DURATION);
+        placeRandomTiles(1);
     }
+    checkGameOver();
 }
 
 function checkGameOver() {
@@ -227,9 +228,8 @@ function updateCellSize() {
 onMounted(() => {
     updateCellSize();
     window.addEventListener("resize", updateCellSize);
-    initializeBoard();
     window.addEventListener("keydown", handleKeyPress);
-    updateCellSize();
+    initializeBoard();
 });
 
 onBeforeUnmount(() => {
@@ -237,7 +237,8 @@ onBeforeUnmount(() => {
     window.removeEventListener("keydown", handleKeyPress);
     window.removeEventListener("resize", updateCellSize);
 });
-function getTileGradient(value: number): string {
+
+function getTileGradient(value: number) {
     switch (value) {
         case 2:
             return "radial-gradient(circle at top left, rgba(0,255,255,0.6), rgba(0,102,204,0.5))";
@@ -291,7 +292,6 @@ function getTileGradient(value: number): string {
     justify-content: center;
     font-weight: bold;
     border-radius: 10px;
-    transition: all 0.25s ease;
     z-index: 10;
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
     animation: pulse-glow 4s ease-in-out infinite;
