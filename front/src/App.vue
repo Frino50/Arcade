@@ -2,7 +2,7 @@
     <div class="app-container">
         <Toast />
         <Selecteur v-if="localStore.pseudo" />
-        <ThemeSwitcher class="theme-switcher" />
+        <ThemeSwitcher />
         <Bubble />
         <router-view />
     </div>
@@ -18,14 +18,4 @@ import Bubble from "@/components/Bubble.vue";
 const localStore = useLocalStore();
 </script>
 
-<style scoped>
-.theme-switcher {
-    position: fixed;
-    top: 0.75rem;
-    right: 0.75rem;
-    z-index: 9999;
-    border-radius: 0.5rem;
-    backdrop-filter: blur(4px);
-    transition: opacity 0.3s ease;
-}
-</style>
+<style scoped></style>

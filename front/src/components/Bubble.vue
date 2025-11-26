@@ -1,18 +1,18 @@
 <template>
     <canvas ref="bubbleCanvas" class="bubble-canvas"></canvas>
 </template>
+
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 
 const bubbleCanvas = ref<HTMLCanvasElement | null>(null);
 
-// Convertit un hex en rgba
 function hexToRgba(hex: string, alpha = 1) {
     hex = hex.replace("#", "");
-    const bigint = parseInt(hex, 16);
-    const r = (bigint >> 16) & 255;
-    const g = (bigint >> 8) & 255;
-    const b = bigint & 255;
+    const big = parseInt(hex, 16);
+    const r = (big >> 16) & 255;
+    const g = (big >> 8) & 255;
+    const b = big & 255;
     return `rgba(${r},${g},${b},${alpha})`;
 }
 
@@ -22,51 +22,13 @@ class Bubble {
     vx: number;
     vy: number;
     radius: number;
-    color: string;
-    colorLight: string;
 
-    constructor(
-        x: number,
-        y: number,
-        vx: number,
-        vy: number,
-        radius: number,
-        color: string,
-        colorLight: string
-    ) {
+    constructor(x: number, y: number, vx: number, vy: number, radius: number) {
         this.x = x;
         this.y = y;
         this.vx = vx;
         this.vy = vy;
         this.radius = radius;
-        this.color = color;
-        this.colorLight = colorLight;
-    }
-
-    draw(ctx: CanvasRenderingContext2D) {
-        const gradient = ctx.createRadialGradient(
-            this.x - this.radius / 3,
-            this.y - this.radius / 3,
-            this.radius * 0.1,
-            this.x,
-            this.y,
-            this.radius
-        );
-        gradient.addColorStop(0, "rgba(255,255,255,0.8)"); // reflet
-        gradient.addColorStop(0.3, this.colorLight); // couleur semi-transparente
-        gradient.addColorStop(1, this.color); // bord transparent
-
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
-
-        // halo lumineux
-        ctx.shadowColor = this.color;
-        ctx.shadowBlur = this.radius / 2;
-        ctx.fill();
-
-        ctx.shadowBlur = 0; // reset shadow
     }
 
     update(width: number, height: number) {
@@ -89,7 +51,7 @@ class Grid {
         this.cells = new Map();
     }
 
-    _key(x: number, y: number) {
+    key(x: number, y: number) {
         return `${x},${y}`;
     }
 
@@ -97,26 +59,30 @@ class Grid {
         this.cells.clear();
     }
 
-    add(bubble: Bubble) {
-        const gx = Math.floor(bubble.x / this.size);
-        const gy = Math.floor(bubble.y / this.size);
-        const key = this._key(gx, gy);
-        if (!this.cells.has(key)) this.cells.set(key, []);
-        this.cells.get(key)!.push(bubble);
+    add(b: Bubble) {
+        const gx = Math.floor(b.x / this.size);
+        const gy = Math.floor(b.y / this.size);
+
+        const k = this.key(gx, gy);
+        if (!this.cells.has(k)) this.cells.set(k, []);
+        this.cells.get(k)!.push(b);
     }
 
-    getNeighbors(bubble: Bubble) {
-        const gx = Math.floor(bubble.x / this.size);
-        const gy = Math.floor(bubble.y / this.size);
-        const neighbors: Bubble[] = [];
+    neighbors(b: Bubble) {
+        const gx = Math.floor(b.x / this.size);
+        const gy = Math.floor(b.y / this.size);
+
+        const list: Bubble[] = [];
+
         for (let dx = -1; dx <= 1; dx++) {
             for (let dy = -1; dy <= 1; dy++) {
-                const key = this._key(gx + dx, gy + dy);
-                if (this.cells.has(key))
-                    neighbors.push(...this.cells.get(key)!);
+                const k = this.key(gx + dx, gy + dy);
+                if (this.cells.has(k)) {
+                    list.push(...this.cells.get(k)!);
+                }
             }
         }
-        return neighbors;
+        return list;
     }
 }
 
@@ -124,7 +90,9 @@ function resolveCollision(b1: Bubble, b2: Bubble) {
     const dx = b2.x - b1.x;
     const dy = b2.y - b1.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist === 0) return;
+    const minDist = b1.radius + b2.radius;
+
+    if (dist === 0 || dist >= minDist) return;
 
     const nx = dx / dist;
     const ny = dy / dist;
@@ -135,78 +103,132 @@ function resolveCollision(b1: Bubble, b2: Bubble) {
     const dpTan2 = b2.vx * tx + b2.vy * ty;
 
     const dpNorm1 = b1.vx * nx + b1.vy * ny;
-    const m1 = b2.vx * nx + b2.vy * ny;
-    const m2 = dpNorm1;
+    const dpNorm2 = b2.vx * nx + b2.vy * ny;
 
-    b1.vx = tx * dpTan1 + nx * m1;
-    b1.vy = ty * dpTan1 + ny * m1;
-    b2.vx = tx * dpTan2 + nx * m2;
-    b2.vy = ty * dpTan2 + ny * m2;
+    b1.vx = tx * dpTan1 + nx * dpNorm2;
+    b1.vy = ty * dpTan1 + ny * dpNorm2;
+    b2.vx = tx * dpTan2 + nx * dpNorm1;
+    b2.vy = ty * dpTan2 + ny * dpNorm1;
 
-    const overlap = 0.5 * (b1.radius + b2.radius - dist);
+    const overlap = 0.5 * (minDist - dist);
     b1.x -= nx * overlap;
     b1.y -= ny * overlap;
     b2.x += nx * overlap;
     b2.y += ny * overlap;
 }
 
+function createSprite(radius: number, color: string, colorLight: string) {
+    const shadow = radius / 2; // comme avant
+
+    const size = radius * 2 + shadow * 2;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+
+    const ctx = canvas.getContext("2d")!;
+
+    const cx = size / 2;
+    const cy = size / 2;
+
+    const gradient = ctx.createRadialGradient(
+        cx - radius / 3,
+        cy - radius / 3,
+        radius * 0.1,
+        cx,
+        cy,
+        radius
+    );
+
+    gradient.addColorStop(0, "rgba(255,255,255,0.8)");
+    gradient.addColorStop(0.3, colorLight);
+    gradient.addColorStop(1, color);
+
+    ctx.fillStyle = gradient;
+
+    ctx.shadowColor = color;
+    ctx.shadowBlur = shadow;
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    return canvas;
+}
+
 let bubbles: Bubble[] = [];
+let sprites: HTMLCanvasElement[] = [];
 let animationFrameId: number;
+let observer: MutationObserver | null = null;
 
 onMounted(() => {
     const canvas = bubbleCanvas.value!;
     const ctx = canvas.getContext("2d")!;
 
-    const resizeCanvas = () => {
+    const resize = () => {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
     };
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
+    window.addEventListener("resize", resize);
+    resize();
 
-    // récupération dynamique des couleurs du thème
-    const accentHex = getComputedStyle(document.documentElement)
-        .getPropertyValue("--futurist-accent")
-        .trim();
-    const accentLightHex = getComputedStyle(document.documentElement)
-        .getPropertyValue("--futurist-accent-light")
-        .trim();
+    function regenerateSprites() {
+        const accentHex = getComputedStyle(document.documentElement)
+            .getPropertyValue("--futurist-accent")
+            .trim();
 
-    const accent = hexToRgba(accentHex, 0.2);
-    const accentLight = hexToRgba(accentLightHex, 0.5);
+        const accentLightHex = getComputedStyle(document.documentElement)
+            .getPropertyValue("--futurist-accent-light")
+            .trim();
 
-    const numBubbles = 50;
-    for (let i = 0; i < numBubbles; i++) {
-        const radius = Math.random() * 20 + 10;
-        const x = Math.random() * (canvas.width - 2 * radius) + radius;
-        const y = Math.random() * (canvas.height - 2 * radius) + radius;
-        const vx = (Math.random() - 0.5) * 2;
-        const vy = (Math.random() - 0.5) * 2;
-        bubbles.push(new Bubble(x, y, vx, vy, radius, accent, accentLight));
+        const color = hexToRgba(accentHex, 0.2);
+        const colorLight = hexToRgba(accentLightHex, 0.5);
+
+        sprites = bubbles.map((b) => createSprite(b.radius, color, colorLight));
     }
 
-    const grid = new Grid(50);
+    const num = 50;
+    for (let i = 0; i < num; i++) {
+        const radius = Math.random() * 20 + 10;
+        const x = Math.random() * (canvas.width - radius * 2) + radius;
+        const y = Math.random() * (canvas.height - radius * 2) + radius;
+        const vx = (Math.random() - 0.5) * 2;
+        const vy = (Math.random() - 0.5) * 2;
+
+        bubbles.push(new Bubble(x, y, vx, vy, radius));
+    }
+
+    regenerateSprites();
+
+    observer = new MutationObserver(() => regenerateSprites());
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class"],
+    });
+
+    const grid = new Grid(60);
 
     const animate = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
         grid.clear();
+        for (const b of bubbles) grid.add(b);
 
-        for (const bubble of bubbles) {
-            bubble.update(canvas.width, canvas.height);
-            grid.add(bubble);
-        }
+        for (const b of bubbles) {
+            b.update(canvas.width, canvas.height);
 
-        for (const bubble of bubbles) {
-            const neighbors = grid.getNeighbors(bubble);
+            const neighbors = grid.neighbors(b);
             for (const other of neighbors) {
-                if (other === bubble) continue;
-                const dx = other.x - bubble.x;
-                const dy = other.y - bubble.y;
-                const dist = dx * dx + dy * dy;
-                const minDist = (bubble.radius + other.radius) ** 2;
-                if (dist < minDist) resolveCollision(bubble, other);
+                if (b !== other) resolveCollision(b, other);
             }
-            bubble.draw(ctx);
+
+            const sprite = sprites[bubbles.indexOf(b)];
+            ctx.drawImage(
+                sprite,
+                b.x - sprite.width / 2,
+                b.y - sprite.height / 2,
+                sprite.width,
+                sprite.height
+            );
         }
 
         animationFrameId = requestAnimationFrame(animate);
@@ -216,7 +238,8 @@ onMounted(() => {
 
     onBeforeUnmount(() => {
         cancelAnimationFrame(animationFrameId);
-        window.removeEventListener("resize", resizeCanvas);
+        window.removeEventListener("resize", resize);
+        observer?.disconnect();
     });
 });
 </script>
@@ -224,8 +247,7 @@ onMounted(() => {
 <style scoped>
 .bubble-canvas {
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;

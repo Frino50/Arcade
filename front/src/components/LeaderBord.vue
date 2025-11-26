@@ -110,7 +110,7 @@ li {
     padding: 0.6rem 0.5rem;
     margin: 0.3rem 0;
     border-radius: 10px;
-    background: var(--futurist-list-bg);
+    background: var(--futurist-blur-bg);
     border: 1px solid var(--futurist-border);
     box-shadow: 0 0 8px var(--futurist-shadow);
     transition:

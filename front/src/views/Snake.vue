@@ -35,6 +35,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import Message from "@/components/Message.vue";
+import Dropdown from "@/components/Dropdown.vue";
 
 const loose = ref(false);
 const animationId = ref<number | null>(null);

@@ -51,7 +51,7 @@ function switchPage(chemin: string) {
     flex-direction: column;
     justify-content: center;
     align-items: flex-end;
-    z-index: 1000;
+    z-index: 1;
 }
 
 .custom-style {

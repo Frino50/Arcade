@@ -29,7 +29,6 @@ body {
     min-height: 100vh;
     gap: 1.5rem;
     position: relative;
-    z-index: 2;
 }
 
 button {
@@ -45,7 +44,6 @@ button {
     letter-spacing: 0.05em;
     transition: all 0.25s ease;
     position: relative;
-    z-index: 2;
 }
 
 button:hover {
