@@ -30,11 +30,8 @@ const router = useRouter();
 const pages = [
     { title: "Démineur", link: "Demineur" },
     { title: "2048", link: "2048" },
-    { title: "Snake", link: "Snake" },
-    { title: "Tetris", link: "Tetris" },
     { title: "Boids", link: "Boids" },
     { title: "Bactérie", link: "Bacterie" },
-    { title: "Ball", link: "Ball" },
 ];
 
 function switchPage(chemin: string) {

@@ -36,12 +36,9 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 const hexagonItems = [
     { title: "Démineur", link: "Demineur" },
-    { title: "Pièce", link: "Piece" },
     { title: "2048", link: "2048" },
     { title: "Boids", link: "Boids" },
     { title: "Bactérie", link: "Bacterie" },
-    { title: "Ball", link: "Ball" },
-    { title: "Snake", link: "Snake" },
 ];
 
 function link(link: string) {

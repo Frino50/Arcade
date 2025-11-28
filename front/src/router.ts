@@ -6,13 +6,9 @@ import Demineur from "@/views/Demineur.vue";
 import DeuxMilleQuaranteHuit from "@/views/2048.vue";
 import Boids from "@/views/Boids.vue";
 import Bacterie from "@/views/Bacterie.vue";
-import Ball from "@/views/Ball.vue";
-import Snake from "@/views/Snake.vue";
-import Tetris from "@/views/Tetris.vue";
 
 import Login from "@/views/Login.vue";
 import Register from "@/views/Register.vue";
-import Piece from "@/views/Piece.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -46,24 +42,6 @@ const routes: Array<RouteRecordRaw> = [
         meta: { requiresAuth: true },
     },
     {
-        path: "/ball",
-        name: "Ball",
-        component: Ball,
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/snake",
-        name: "Snake",
-        component: Snake,
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/tetris",
-        name: "Tetris",
-        component: Tetris,
-        meta: { requiresAuth: true },
-    },
-    {
         path: "/login",
         name: "Login",
         component: Login,
@@ -72,11 +50,6 @@ const routes: Array<RouteRecordRaw> = [
         path: "/register",
         name: "Register",
         component: Register,
-    },
-    {
-        path: "/piece",
-        name: "Piece",
-        component: Piece,
     },
     {
         path: "/:pathMatch(.*)*",
