@@ -17,5 +17,3 @@ import Bubble from "@/components/Bubble.vue";
 
 const localStore = useLocalStore();
 </script>
-
-<style scoped></style>

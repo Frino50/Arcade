@@ -1,197 +1,428 @@
 <template>
-    <div class="page-home">
-        <div class="col-lg-8">
-            <div
-                @click="link(hexagon.link)"
-                class="hexagon-item"
-                v-for="hexagon in hexagonItems"
-                :key="hexagon.title"
+    <div
+        class="theme-cyan futurist-layout"
+        @mousemove="onMouseMove"
+        @mouseleave="onResetTilt"
+        :class="{ 'layout-exit': exiting }"
+    >
+        <div class="ambient-grid"></div>
+        <div class="ambient-particles"></div>
+
+        <header class="futurist-header" ref="headerRef">
+            <h1 class="main-title glitch" data-text="ARCADE">ARCADE</h1>
+        </header>
+
+        <main class="menu-container">
+            <TransitionGroup
+                tag="div"
+                class="menu-grid"
+                appear
+                name="card-stagger"
             >
-                <div class="hex-item">
-                    <div></div>
-                    <div></div>
-                    <div></div>
+                <div
+                    v-for="(item, index) in hexagonItems"
+                    :key="item.title"
+                    class="menu-card"
+                    :data-index="index"
+                    @click="navigateTo(item.link)"
+                    :style="{ 'animation-delay': index * 0.15 + 's' }"
+                >
+                    <div class="card-content-3d">
+                        <span class="card-title">{{ item.title }}</span>
+                        <div class="scanline"></div>
+                    </div>
+                    <div class="card-glow-border"></div>
                 </div>
-                <div class="hex-item">
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                </div>
-                <a class="hex-content">
-                    <span class="hex-content-inner">
-                        <span class="title">{{ hexagon.title }}</span>
-                    </span>
-                    <svg viewBox="0 0 173.20508075688772 200" height="200">
-                        <path
-                            d="M86.60254037844386 0L173.20508075688772 50L173.20508075688772 150L86.60254037844386 200L0 150L0 50Z"
-                        ></path>
-                    </svg>
-                </a>
-            </div>
-        </div>
+            </TransitionGroup>
+        </main>
+
+        <footer class="futurist-footer" ref="footerRef">
+            <p class="typing-effect">V.0.0.1</p>
+        </footer>
     </div>
 </template>
+
 <script setup lang="ts">
+import { ref } from "vue";
 import { useRouter } from "vue-router";
-const router = useRouter();
-const hexagonItems = [
+
+const exiting = ref(false);
+
+interface MenuItem {
+    title: string;
+    link: string;
+}
+
+const hexagonItems: MenuItem[] = [
     { title: "Démineur", link: "Demineur" },
     { title: "2048", link: "2048" },
     { title: "Boids", link: "Boids" },
     { title: "Bactérie", link: "Bacterie" },
 ];
 
-function link(link: string) {
-    router.push({ name: link });
-}
+const router = useRouter();
+const navigateTo = (link: string) => {
+    exiting.value = true;
+
+    setTimeout(() => {
+        router.push({ name: link });
+    }, 200);
+};
+
+const TILT_AMOUNT = 12;
+
+const onMouseMove = (event: MouseEvent) => {
+    const { clientX, clientY } = event;
+    const { innerWidth, innerHeight } = window;
+
+    const centerX = innerWidth / 2;
+    const centerY = innerHeight / 2;
+
+    const mouseX = (clientX - centerX) / (innerWidth / 2);
+    const mouseY = (clientY - centerY) / (innerHeight / 2);
+
+    const cards = document.querySelectorAll<HTMLElement>(".menu-card");
+
+    cards.forEach((card) => {
+        const rotY = mouseX * TILT_AMOUNT;
+        const rotX = -mouseY * TILT_AMOUNT;
+
+        card.style.transform = `perspective(1000px) rotateY(${rotY}deg) rotateX(${rotX}deg) translateZ(20px)`;
+        card.style.boxShadow = `${-mouseX * 15}px ${-mouseY * 15}px 30px var(--futurist-shadow-strong)`;
+    });
+};
+
+const onResetTilt = () => {
+    const cards = document.querySelectorAll<HTMLElement>(".menu-card");
+    cards.forEach((card) => {
+        // Réinitialisation des styles. La transition CSS gère le retour smooth.
+        card.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg) translateZ(0px)`;
+        card.style.boxShadow = `0 0 10px var(--futurist-shadow)`;
+    });
+};
 </script>
+
 <style scoped>
-.hexagon-item {
-    cursor: pointer;
-    width: 200px;
-    height: 173px;
-    float: left;
-    margin-left: -29px;
-    z-index: 0;
-    position: relative;
-    transform: rotate(30deg);
-    transition: all 0.3s ease;
-}
-
-.hexagon-item:hover {
-    z-index: 1;
-}
-
-.hexagon-item:hover .hex-item:first-child {
-    opacity: 1;
-    transform: scale(1.2);
-}
-
-.hexagon-item:hover .hex-item div::before,
-.hexagon-item:hover .hex-item div::after {
-    background-color: var(--futurist-accent-light);
-}
-
-.hex-item {
-    position: absolute;
-    top: 0;
-    left: 50px;
-    width: 100px;
-    height: 173px;
-}
-
-.hex-item:first-child {
-    z-index: 0;
-    transform: scale(0.9);
-    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-
-.hex-item div {
+.futurist-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: radial-gradient(
+        circle at center,
+        var(--futurist-bg-mid) 0%,
+        var(--futurist-bg-dark) 100%
+    );
+    color: var(--futurist-text-light);
+    font-family: "Droid Sans Mono", "Consolas", monospace;
+    padding: 30px;
     box-sizing: border-box;
-    position: absolute;
-    top: 0;
-    width: 100px;
-    height: 173px;
-    transform-origin: center center;
+    overflow: hidden;
+    position: relative;
+    perspective: 1500px;
+
+    transition:
+        opacity 0.2s ease-in,
+        transform 0.2s ease-in;
 }
 
-.hex-item div::before,
-.hex-item div::after {
-    background-color: var(--futurist-bg-mid);
-    content: "";
+.futurist-layout.layout-exit {
+    opacity: 0;
+    transform: scale(1.05);
+}
+
+.ambient-grid {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background-image:
+        linear-gradient(var(--futurist-border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--futurist-border) 1px, transparent 1px);
+    background-size: 50px 50px;
+    opacity: 0.08;
+    transform: perspective(500px) rotateX(60deg) translateY(0);
+    will-change: transform, background-position;
+    backface-visibility: hidden;
+    animation: grid-scroll 20s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes grid-scroll {
+    0% {
+        transform: perspective(500px) rotateX(60deg) translateY(0);
+    }
+    100% {
+        transform: perspective(500px) rotateX(60deg) translateY(50px);
+    }
+}
+
+.ambient-particles {
     position: absolute;
     width: 100%;
-    height: 3px;
-    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    height: 100%;
+    background: radial-gradient(
+        circle,
+        var(--futurist-accent) 1px,
+        transparent 1px
+    );
+    background-size: 60px 60px;
+    opacity: 0.1;
+    animation: particle-pulse 8s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+    will-change: opacity, transform;
 }
 
-.hex-item div:after {
-    bottom: 0;
+@keyframes particle-pulse {
+    0% {
+        opacity: 0.05;
+        transform: scale(0.95);
+    }
+    100% {
+        opacity: 0.15;
+        transform: scale(1.05);
+    }
 }
 
-.hex-item div:nth-child(2) {
-    transform: rotate(60deg);
-}
-.hex-item div:nth-child(3) {
-    transform: rotate(120deg);
-}
-
-.hex-content {
-    color: var(--futurist-text-light);
-    display: block;
-    height: 180px;
-    margin: 0 auto;
-    position: relative;
+.futurist-header {
     text-align: center;
-    transform: rotate(-30deg);
-    width: 156px;
+    margin-bottom: 60px;
+    position: relative;
+    z-index: 10;
+    opacity: 0;
+    transform: translateY(-50px);
+    animation: header-boot 1s ease-out forwards;
 }
 
-.hex-content .hex-content-inner {
-    left: 50%;
-    margin: -3px 0 0 2px;
+.futurist-footer {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: footer-boot 0.8s ease-out 0.5s forwards;
+
+    text-align: center;
+    padding-top: 30px;
+    color: var(--futurist-text-weak);
+    font-size: 0.9em;
+    z-index: 10;
+}
+
+@keyframes header-boot {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+@keyframes footer-boot {
+    to {
+        opacity: 0.7;
+        transform: translateY(0);
+    }
+}
+/* Styles Glitch... inchangés */
+.main-title.glitch {
+    font-size: 4em;
+    color: var(--futurist-accent-light);
+    letter-spacing: 8px;
+    position: relative;
+    text-shadow: 0 0 20px var(--futurist-accent);
+}
+.main-title.glitch::before,
+.main-title.glitch::after {
+    content: attr(data-text);
     position: absolute;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+}
+.main-title.glitch::before {
+    left: 2px;
+    text-shadow: -2px 0 var(--futurist-danger);
+    clip-path: inset(44% 0 61% 0);
+    animation: glitch-anim-1 3s infinite linear alternate-reverse;
+}
+.main-title.glitch::after {
+    left: -2px;
+    text-shadow: -2px 0 var(--piece-j-light);
+    clip-path: inset(20% 0 50% 0);
+    animation: glitch-anim-2 2.5s infinite linear alternate-reverse;
+}
+@keyframes glitch-anim-1 {
+    0% {
+        clip-path: inset(20% 0 80% 0);
+    }
+    20% {
+        clip-path: inset(60% 0 10% 0);
+    }
+    40% {
+        clip-path: inset(10% 0 60% 0);
+    }
+    60% {
+        clip-path: inset(80% 0 5% 0);
+    }
+    80% {
+        clip-path: inset(0% 0 90% 0);
+    }
+    100% {
+        clip-path: inset(50% 0 30% 0);
+    }
+}
+@keyframes glitch-anim-2 {
+    0% {
+        clip-path: inset(10% 0 60% 0);
+    }
+    100% {
+        clip-path: inset(80% 0 5% 0);
+    }
 }
 
-.hex-content .title {
-    font-family: "Open Sans", sans-serif;
-    font-size: 14px;
-    letter-spacing: 1px;
-    line-height: 24px;
-    text-transform: uppercase;
-}
-
-.hex-content svg {
-    left: -7px;
-    position: absolute;
-    top: -13px;
-    transform: scale(0.87);
-    z-index: -1;
-    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-
-.hex-content svg path {
-    fill: var(--futurist-bg-dark);
-}
-
-.page-home {
+.menu-container {
+    flex-grow: 1;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    padding: 20px 0;
+    z-index: 10;
+    perspective: 1000px;
 }
 
-.page-home .hexagon-item:nth-last-child(1),
-.page-home .hexagon-item:nth-last-child(2),
-.page-home .hexagon-item:nth-last-child(3) {
-    transform: rotate(30deg) translate(87px, -80px);
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 50px;
+    max-width: 1300px;
+    width: 100%;
+    transform-style: preserve-3d;
 }
 
-@media (min-width: 1200px) {
-    .col-lg-8 {
-        width: 40%;
-    }
-}
-
-.hexagon-item:first-child {
-    margin-left: 0;
-}
-
-.hexagon-item:hover .title {
-    animation: focus-in-contract 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-}
-
-@keyframes focus-in-contract {
+@keyframes card-stagger-in {
     0% {
-        letter-spacing: 1em;
-        filter: blur(12px);
         opacity: 0;
+        transform: perspective(1000px) rotateY(0deg) rotateX(-45deg)
+            translateZ(0px) scale(0.5) translateY(60px);
     }
     100% {
-        filter: blur(0px);
         opacity: 1;
+        transform: perspective(1000px) rotateY(0deg) rotateX(0deg)
+            translateZ(0px) scale(1) translateY(0);
+    }
+}
+
+.menu-card {
+    position: relative;
+    height: 200px;
+    background-color: rgba(var(--futurist-bg-mid), 0.6);
+    backdrop-filter: blur(5px);
+    border-radius: 12px;
+    cursor: pointer;
+
+    transform-style: preserve-3d;
+    will-change: transform, box-shadow;
+    transform-origin: center center;
+    border: 1px solid transparent;
+
+    transition:
+        transform 0.6s cubic-bezier(0.25, 1, 0.5, 1),
+        box-shadow 0.6s cubic-bezier(0.25, 1, 0.5, 1),
+        border-color 0.3s;
+
+    transform: perspective(1000px) rotateY(0deg) rotateX(0deg) translateZ(0px)
+        scale(1);
+    box-shadow: 0 0 10px var(--futurist-shadow);
+
+    animation: card-stagger-in 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+        forwards;
+    opacity: 0;
+}
+
+.card-content-3d {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: translateZ(40px);
+    overflow: hidden;
+    border-radius: 12px;
+}
+.card-title {
+    font-size: 1.8em;
+    font-weight: 800;
+    color: var(--futurist-text-light);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px var(--futurist-accent);
+}
+.card-glow-border {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid var(--futurist-border);
+    border-radius: 14px;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+    transform: translateZ(5px);
+    pointer-events: none;
+}
+.menu-card:hover .card-glow-border {
+    border-color: var(--futurist-accent-light);
+    opacity: 1;
+    box-shadow: 0 0 10px var(--futurist-accent);
+}
+.menu-card:hover .card-title {
+    color: var(--futurist-accent-light);
+}
+.scanline {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+        to right,
+        transparent,
+        rgba(0, 255, 255, 0.4),
+        transparent
+    );
+    transform: skewX(-25deg);
+    pointer-events: none;
+    transition: left 0.5s ease-in-out;
+}
+.menu-card:hover .scanline {
+    left: 150%;
+    transition: left 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.typing-effect {
+    border-right: 2px solid var(--futurist-accent);
+    white-space: nowrap;
+    overflow: hidden;
+    display: inline-block;
+    animation: blink-caret 0.75s step-end infinite;
+}
+@keyframes typing {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
+}
+@keyframes blink-caret {
+    from,
+    to {
+        border-color: transparent;
+    }
+    50% {
+        border-color: var(--futurist-accent);
     }
 }
 </style>
