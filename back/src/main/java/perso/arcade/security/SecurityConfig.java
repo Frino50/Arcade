@@ -21,12 +21,12 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
-    private final JwtAuthTokenFilter authTokenFilter;
+    private final FilterInternal filterInternal;
     @Value("${front.port}")
     private String frontPort;
 
-    public SecurityConfig(JwtAuthTokenFilter authTokenFilter) {
-        this.authTokenFilter = authTokenFilter;
+    public SecurityConfig(FilterInternal filterInternal) {
+        this.filterInternal = filterInternal;
     }
 
     @Bean
@@ -51,7 +51,7 @@ public class SecurityConfig {
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(filterInternal, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

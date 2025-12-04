@@ -3,13 +3,14 @@ package perso.arcade.security;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import perso.arcade.exception.JwtAuthenticationException;
 import perso.arcade.model.CustomUserDetails;
+import perso.arcade.service.PlayerService;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -19,13 +20,17 @@ import java.util.Date;
 @Service
 public class JwtUtils {
 
-    private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
+    private final PlayerService playerService;
 
     @Value("${app.jwtSecret}")
     private String jwtSecret;
 
     @Value("${app.jwtExpirationMs}")
     private int jwtExpirationMs;
+
+    public JwtUtils(PlayerService playerService) {
+        this.playerService = playerService;
+    }
 
     public String generateJwtToken(Authentication authentication) {
         CustomUserDetails userPrincipal = (CustomUserDetails) authentication.getPrincipal();
@@ -63,8 +68,23 @@ public class JwtUtils {
 
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            logger.error("JWT validation error: {}", e.getMessage());
             throw new JwtAuthenticationException("INVALID_OR_EXPIRED_TOKEN");
         }
+    }
+
+    public String extractToken(String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        return null;
+    }
+
+    public UsernamePasswordAuthenticationToken getAuthenticationFromToken(String token) {
+        if (token == null || !validateJwtToken(token)) {
+            throw new JwtAuthenticationException("INVALID_OR_EXPIRED_TOKEN");
+        }
+        String username = getUserNameFromJwtToken(token);
+        UserDetails userDetails = playerService.loadUserByUsername(username);
+        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 }
