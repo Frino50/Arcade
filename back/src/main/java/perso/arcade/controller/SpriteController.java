@@ -30,4 +30,10 @@ public class SpriteController {
         List<SpriteSummaryDTO> sprites = spriteService.getAllSpriteSummaries();
         return ResponseEntity.ok(sprites);
     }
+
+    @DeleteMapping("/delete/{idSprite}")
+    public ResponseEntity<Void> deleteSpriteById(@PathVariable Long idSprite) {
+        spriteService.deleteSpriteById(idSprite);
+        return ResponseEntity.noContent().build();
+    }
 }

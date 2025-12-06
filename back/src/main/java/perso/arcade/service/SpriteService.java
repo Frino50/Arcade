@@ -354,4 +354,8 @@ public class SpriteService {
                 AnimationType.IDLE.name()
         );
     }
+
+    public void deleteSpriteById(Long idSprite) {
+        spriteRepository.deleteById(idSprite);
+    }
 }
