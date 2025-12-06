@@ -29,19 +29,10 @@ public class Message {
         this.timestamp = LocalDateTime.now();
     }
 
-    public Message(Player player, String content) {
-        this();
-        this.player = player;
-        this.content = content;
-    }
-
     public Long getId() {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public Player getPlayer() {
         return player;

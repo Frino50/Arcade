@@ -6,6 +6,7 @@ import Demineur from "@/views/Demineur.vue";
 import DeuxMilleQuaranteHuit from "@/views/2048.vue";
 import Boids from "@/views/Boids.vue";
 import Bacterie from "@/views/Bacterie.vue";
+import Territory from "@/views/Territory.vue";
 
 import Login from "@/views/Login.vue";
 import Register from "@/views/Register.vue";
@@ -39,6 +40,12 @@ const routes: Array<RouteRecordRaw> = [
         path: "/bacterie",
         name: "Bacterie",
         component: Bacterie,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/territory",
+        name: "Territory",
+        component: Territory,
         meta: { requiresAuth: true },
     },
     {

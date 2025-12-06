@@ -58,6 +58,7 @@ const hexagonItems: MenuItem[] = [
     { title: "2048", link: "2048" },
     { title: "Boids", link: "Boids" },
     { title: "Bactérie", link: "Bacterie" },
+    { title: "Territory", link: "Territory" },
 ];
 
 const router = useRouter();

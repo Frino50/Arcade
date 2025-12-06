@@ -24,14 +24,6 @@ public class Game {
     @JsonManagedReference
     private Set<Record> records;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public String getName() {
         return name;
     }
@@ -40,20 +32,8 @@ public class Game {
         this.name = name;
     }
 
-    public Set<Record> getRecords() {
-        return records;
-    }
-
-    public void setRecords(Set<Record> records) {
-        this.records = records;
-    }
-
     public boolean isLowerIsBetter() {
         return lowerIsBetter;
-    }
-
-    public void setLowerIsBetter(boolean lowerIsBetter) {
-        this.lowerIsBetter = lowerIsBetter;
     }
 
     @Override
