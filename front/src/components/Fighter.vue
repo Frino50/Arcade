@@ -75,5 +75,6 @@ onBeforeUnmount(() => {
     height: 10rem;
     display: flex;
     align-items: flex-end;
+    margin-bottom: 0.5rem;
 }
 </style>

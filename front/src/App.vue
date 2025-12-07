@@ -1,7 +1,7 @@
 <template>
     <div class="app-container">
         <Toast />
-        <Selecteur v-if="localStore.pseudo" />
+        <!-- <Selecteur v-if="localStore.pseudo" /> -->
         <ThemeSwitcher />
         <Bubble />
         <router-view />
