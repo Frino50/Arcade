@@ -28,6 +28,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
 
+    @ExceptionHandler(SpriteNameAlreadyExist.class)
+    public ResponseEntity<Map<String, String>> handleSpriteNameAlreadyExist(SpriteNameAlreadyExist ex) {
+        Map<String, String> body = new HashMap<>();
+        body.put("error", "SPRITE_NAME_ALREADY_EXIST");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleAllExceptions(Exception ex) {
         Map<String, String> body = new HashMap<>();
@@ -36,5 +44,4 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
-
 }
