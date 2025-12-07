@@ -47,6 +47,11 @@ defineExpose({
 });
 </script>
 <style scoped>
+.body-container {
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
 .main-container {
     display: flex;
     justify-content: center;

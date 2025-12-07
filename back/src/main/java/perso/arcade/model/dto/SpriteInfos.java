@@ -1,6 +1,6 @@
 package perso.arcade.model.dto;
 
-public class SpriteSummaryDTO {
+public class SpriteInfos {
     private final Long id;
     private String name;
     private String idleImageUrl;
@@ -8,7 +8,7 @@ public class SpriteSummaryDTO {
     private int height;
     private int frames;
 
-    public SpriteSummaryDTO(Long id, String name, String idleImageUrl, int width, int height, int frames) {
+    public SpriteInfos(Long id, String name, String idleImageUrl, int width, int height, int frames) {
         this.id = id;
         this.name = name;
         this.idleImageUrl = idleImageUrl;

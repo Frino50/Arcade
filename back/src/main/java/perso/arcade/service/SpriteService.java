@@ -1,9 +1,10 @@
 package perso.arcade.service;
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import perso.arcade.model.dto.SpriteSummaryDTO;
+import perso.arcade.model.dto.SpriteInfos;
 import perso.arcade.model.entities.Animation;
 import perso.arcade.model.entities.Sprite;
 import perso.arcade.model.enumeration.AnimationType;
@@ -15,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
 import java.util.List;
@@ -38,20 +40,9 @@ public class SpriteService {
             AnimationType.ATTACK
     );
 
-    /**
-     * Racine où les sprites seront stockés de manière permanente (e.g., dans /static/sprites).
-     * Injectée depuis application.properties ou variables d'environnement.
-     */
     private final Path staticStorageRoot;
-
     private final SpriteRepository spriteRepository;
 
-    /**
-     * Constructeur pour l'injection des dépendances et de la valeur de configuration.
-     *
-     * @param spriteRepository Repository pour la persistance des sprites.
-     * @param storageRoot      Chemin absolu ou relatif où les fichiers doivent être stockés.
-     */
     public SpriteService(
             SpriteRepository spriteRepository,
             @Value("${sprite.storage.root:/tmp/sprites}") String storageRoot) {
@@ -67,7 +58,7 @@ public class SpriteService {
      * @throws IllegalArgumentException Si le fichier ZIP est nul ou vide.
      * @throws RuntimeException         Si une erreur survient lors du traitement, du dézippage ou du stockage.
      */
-    public void processSpriteZip(MultipartFile zipFile) {
+    public Sprite processSpriteZip(MultipartFile zipFile) {
         if (zipFile == null || zipFile.isEmpty()) {
             throw new IllegalArgumentException("Le fichier ZIP ne peut pas être vide.");
         }
@@ -88,7 +79,7 @@ public class SpriteService {
             storeSpriteFiles(spriteRoot);
 
             // 3. Sauvegarde de l'entité en base
-            spriteRepository.save(sprite);
+            return spriteRepository.save(sprite);
 
         } catch (Exception e) {
             System.err.println("Erreur fatale lors du traitement du ZIP : " + e.getMessage());
@@ -172,7 +163,6 @@ public class SpriteService {
             Files.createDirectories(staticStorageRoot);
         }
 
-        // 1. Supprimer l'ancien dossier s'il existe
         if (Files.exists(targetDir)) {
             try (Stream<Path> paths = Files.walk(targetDir)) {
                 paths
@@ -187,12 +177,6 @@ public class SpriteService {
             }
         }
 
-        // 2. Initialiser le compteur d'index pour le renommage
-        // Le renommage nécessite de connaître si on est dans un sous-dossier d'animation
-        // La copie récursive simple ne permet pas un renommage par sous-dossier facilement.
-        // On va copier d'abord les dossiers, puis copier/renommer les fichiers image un par un.
-
-        // Créer d'abord la structure de dossiers cible
         try (Stream<Path> paths = Files.walk(spriteRoot.toPath())) {
             paths
                     .forEach(source -> {
@@ -209,7 +193,6 @@ public class SpriteService {
                     });
         }
 
-        // Copier et renommer les fichiers image
         for (AnimationType type : ANIMATION_TYPES) {
             File sourceDir = new File(spriteRoot, type.name());
             File destinationDir = new File(targetDir.toFile(), type.name());
@@ -220,7 +203,6 @@ public class SpriteService {
                 );
 
                 if (imageFiles != null) {
-                    // Trier par nom original pour assurer un ordre (ex: "idle_01.png" avant "idle_02.png")
                     java.util.Arrays.sort(imageFiles, Comparator.comparing(File::getName));
 
                     AtomicInteger index = new AtomicInteger(1);
@@ -233,8 +215,6 @@ public class SpriteService {
             }
         }
     }
-
-    // --- Fonctions Privées d'Analyse des Sprites (inchangées) ---
 
     /**
      * Valide et retourne le dossier racine unique du sprite à partir du répertoire dézippé.
@@ -268,8 +248,6 @@ public class SpriteService {
 
             if (imageFiles != null) {
                 for (File imgFile : imageFiles) {
-                    // On garde le principe d'une seule image (sprite strip) par dossier d'animation
-                    // mais si plusieurs existent, on les analyse toutes.
                     processImageFile(imgFile, type, sprite);
                 }
             }
@@ -301,10 +279,6 @@ public class SpriteService {
         int height = img.getHeight();
         int frames = detectFrames(img, width, height);
 
-        // NOTE: Votre logique actuelle est optimisée pour des *sprite strips* (une seule image = une animation).
-        // Si vous passez à des *frames individuelles* (plusieurs images = une animation), la détection de 'frames'
-        // dans cette méthode devrait toujours retourner 1, et le 'frames' de l'Animation devrait être le *compte* total des fichiers.
-        // Pour l'instant, je garde la logique d'analyse existante.
         Animation anim = new Animation(frames, width, height, type);
         sprite.addAnimation(anim);
     }
@@ -348,14 +322,69 @@ public class SpriteService {
         return frames;
     }
 
-    public List<SpriteSummaryDTO> getAllSpriteSummaries() {
-        return spriteRepository.findAllSpriteSummariesWithIdleAnimation(
+    public List<SpriteInfos> getAllSpritesInfos() {
+        return spriteRepository.getAllSpritesInfos(
                 AnimationType.IDLE,
                 AnimationType.IDLE.name()
         );
     }
 
-    public void deleteSpriteById(Long idSprite) {
-        spriteRepository.deleteById(idSprite);
+    @Transactional
+    public void deleteSpriteByName(String spriteName) {
+        spriteRepository.deleteByName(spriteName);
+        deleteSpriteFolder(spriteName);
     }
+
+    private void deleteSpriteFolder(String name) {
+        Path folderPath = Paths.get("src/main/resources/static/sprites/", name);
+
+        if (!Files.exists(folderPath)) {
+            System.out.println("Dossier introuvable : " + folderPath);
+            return;
+        }
+
+        try (Stream<Path> walk = Files.walk(folderPath)) {
+            walk.sorted(Comparator.reverseOrder())
+                    .forEach(path -> {
+                        try {
+                            Files.delete(path);
+                        } catch (IOException e) {
+                            throw new RuntimeException("Erreur lors de la suppression : " + path, e);
+                        }
+                    });
+
+            System.out.println("Dossier supprimé : " + folderPath);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Erreur lors de la suppression du dossier " + name, e);
+        }
+    }
+
+    @Transactional
+    public Sprite renameSprite(Long id, String newName) {
+        Sprite sprite = spriteRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Sprite introuvable pour l'id : " + id));
+
+        String oldName = sprite.getName();
+
+        sprite.setName(newName);
+        spriteRepository.save(sprite);
+
+        Path oldPath = staticStorageRoot.resolve(oldName);
+        Path newPath = staticStorageRoot.resolve(newName);
+
+        if (Files.exists(oldPath)) {
+            try {
+                Files.move(oldPath, newPath); // renomme le dossier
+                System.out.println("Dossier renommé : " + oldPath + " -> " + newPath);
+            } catch (IOException e) {
+                throw new RuntimeException("Erreur lors du renommage du dossier : " + oldPath, e);
+            }
+        } else {
+            System.out.println("Le dossier à renommer n'existe pas : " + oldPath);
+        }
+
+        return sprite;
+    }
+
 }

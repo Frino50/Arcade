@@ -6,4 +6,5 @@ import perso.arcade.model.entities.Sprite;
 
 @Repository
 public interface SpriteRepository extends JpaRepository<Sprite, Long>, SpriteRepositoryCustom {
+    void deleteByName(String name);
 }

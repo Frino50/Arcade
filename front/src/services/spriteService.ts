@@ -1,16 +1,22 @@
-import apiService from "@/services/apiService.ts";
-import SaveRecordDto from "@/models/dtos/saveRecordDto.ts";
+import apiService from "@/services/apiService";
+import SpriteInfo from "@/models/SpriteInfos.ts";
 
 export default {
-    async saveRecord(saveRecordDto: SaveRecordDto) {
-        return await apiService.post("/record", saveRecordDto);
+    async uploadSprite(formData: FormData) {
+        return await apiService.post("/sprite", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
     },
 
-    async getLeaderboard(gameName: string) {
-        return await apiService.get(`/record/leaderboard/${gameName}`);
+    async getAllSpritesInfos() {
+        return await apiService.get<SpriteInfo[]>("/sprite/summary");
     },
 
-    async getBestScore(gameName: string) {
-        return await apiService.get(`/record/bestScore/${gameName}`);
+    async deleteSprite(name: string) {
+        return await apiService.delete(`/sprite/delete/${name}`);
+    },
+
+    async renameSprite(id: number, name: string) {
+        return await apiService.put(`/sprite/rename/${id}/${name}`);
     },
 };

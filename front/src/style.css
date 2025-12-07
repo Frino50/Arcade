@@ -7,28 +7,9 @@
 
 body {
     margin: 0;
-    padding: 0;
     height: 100vh;
     background: radial-gradient(circle , var(--background-gradient-start), var(--background-gradient-mid), var(--background-gradient-end));
-    overflow: hidden;
-    position: relative;
     color: var(--text-color);
-}
-
-@keyframes rotate-bg {
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-.body-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    gap: 1.5rem;
-    position: relative;
 }
 
 button {
@@ -49,19 +30,6 @@ button {
 button:hover {
     transform: scale(1.08);
     box-shadow: 0 0 25px var(--button-shadow);
-}
-
-@keyframes pulse {
-    0%, 100% {
-        box-shadow: 0 0 15px var(--button-shadow);
-    }
-    50% {
-        box-shadow: 0 0 25px var(--button-shadow);
-    }
-}
-
-button:active {
-    animation: pulse 0.5s ease;
 }
 
 input {
