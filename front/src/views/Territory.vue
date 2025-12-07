@@ -125,64 +125,41 @@ function onFileSelected(event: Event) {
 async function sendToBackend() {
     if (!selectedFile.value) return;
 
-    try {
-        const formData = new FormData();
-        formData.append("file", selectedFile.value);
+    const formData = new FormData();
+    formData.append("file", selectedFile.value);
 
-        const newSprite = await spriteService.uploadSprite(formData);
-        // On s'assure d'initialiser newName pour l'édition
-        const addedSprite = { ...newSprite.data, newName: newSprite.data.name };
-        sprites.value.push(addedSprite);
+    const newSprite = await spriteService.uploadSprite(formData);
+    const addedSprite = { ...newSprite.data, newName: newSprite.data.name };
+    sprites.value.push(addedSprite);
 
-        // Reset après succès
-        selectedFile.value = null;
-        serverResponse.value = "Upload réussi !";
-        setTimeout(() => (serverResponse.value = null), 3000);
-    } catch (err) {
-        serverResponse.value = "Erreur lors de l’envoi";
-        console.error(err);
-    }
+    selectedFile.value = null;
+    serverResponse.value = "Upload réussi !";
+    setTimeout(() => (serverResponse.value = null), 3000);
 }
 
 async function deleteSprite(name: string) {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer ce sprite ?")) return;
-
-    try {
-        await spriteService.deleteSprite(name);
-        sprites.value = sprites.value.filter((sprite) => sprite.name !== name);
-    } catch (err) {
-        console.error(err);
-    }
+    await spriteService.deleteSprite(name);
+    sprites.value = sprites.value.filter((sprite) => sprite.name !== name);
 }
 
 async function getAllSpritesInfos() {
-    try {
-        const response = await spriteService.getAllSpritesInfos();
-        // On map pour pré-remplir le champ d'édition avec le nom actuel
-        sprites.value = response.data.map((s) => ({ ...s, newName: s.name }));
-    } catch (err) {
-        console.error(err);
-    }
+    const response = await spriteService.getAllSpritesInfos();
+    sprites.value = response.data.map((s) => ({ ...s, newName: s.name }));
 }
 
 async function renameSprite(sprite: SpriteInfo) {
     if (!sprite.newName) return;
 
-    try {
-        const response = await spriteService.renameSprite(
-            sprite.id,
-            sprite.newName
-        );
-        const updatedSprite: SpriteInfo = response.data;
-        // Maintient la logique locale
-        updatedSprite.newName = updatedSprite.name;
+    const response = await spriteService.renameSprite(
+        sprite.id,
+        sprite.newName
+    );
+    const updatedSprite: SpriteInfo = response.data;
+    updatedSprite.newName = updatedSprite.name;
 
-        const index = sprites.value.findIndex((s) => s.id === sprite.id);
-        if (index !== -1) {
-            sprites.value[index] = updatedSprite;
-        }
-    } catch (err) {
-        console.error("Erreur renommage", err);
+    const index = sprites.value.findIndex((s) => s.id === sprite.id);
+    if (index !== -1) {
+        sprites.value[index] = updatedSprite;
     }
 }
 
@@ -190,10 +167,9 @@ onMounted(getAllSpritesInfos);
 </script>
 
 <style scoped>
-/* --- Layout Global --- */
 .page-container {
     min-height: 100vh;
-    background-color: #0f172a; /* Bleu très sombre */
+    background-color: #0f172a;
     background-image: radial-gradient(
         circle at 10% 20%,
         rgba(37, 99, 235, 0.1) 0%,
@@ -203,7 +179,6 @@ onMounted(getAllSpritesInfos);
     font-family: "Inter", sans-serif;
 }
 
-/* --- Header --- */
 .library-header {
     background: rgba(30, 41, 59, 0.8);
     backdrop-filter: blur(10px);
@@ -272,7 +247,6 @@ h1 {
     margin: 0;
 }
 
-/* --- Main Content --- */
 .sprite-library {
     padding: 2rem;
     max-width: 1400px;
@@ -285,7 +259,6 @@ h1 {
     gap: 2rem;
 }
 
-/* --- Empty State --- */
 .empty-state {
     text-align: center;
     padding: 4rem;
@@ -297,7 +270,6 @@ h1 {
     opacity: 0.5;
 }
 
-/* --- Card Design --- */
 .sprite-card {
     background: #1e293b;
     border: 1px solid #334155;
@@ -332,7 +304,7 @@ h1 {
 }
 
 .visual-stage {
-    background: #0f172a; /* Fond noir derrière le sprite pour contraste */
+    background: #0f172a;
     min-height: 150px;
     display: flex;
     align-items: center;
@@ -344,7 +316,6 @@ h1 {
     overflow: hidden;
 }
 
-/* Petit effet de sol pour le sprite */
 .visual-stage::after {
     content: "";
     position: absolute;
@@ -403,7 +374,6 @@ h1 {
     margin-top: 1rem;
 }
 
-/* --- Buttons --- */
 .btn {
     padding: 0.6rem 1.2rem;
     border-radius: 8px;
