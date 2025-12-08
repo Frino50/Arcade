@@ -16,13 +16,11 @@
 
         <div class="card-body">
             <div class="info-group">
-                <!-- Scale -->
                 <div class="input-row">
                     <label>Scale:</label>
                     <input v-model.number="sprite.scale" class="dark-input" />
                 </div>
 
-                <!-- Name -->
                 <div class="input-row">
                     <label>Nom:</label>
                     <input
@@ -60,7 +58,7 @@ import type SpriteInfo from "@/models/SpriteInfos.ts";
 import ModifSpriteDto from "@/models/dtos/modifSpriteDto.ts";
 import spriteService from "@/services/spriteService.ts";
 
-defineEmits(["rename", "delete"]);
+defineEmits(["delete"]);
 
 const sprite = defineModel<SpriteInfo>({
     required: true,
@@ -121,7 +119,6 @@ async function renameSprite() {
     gap: 0.8rem;
 }
 
-/* Row avec label et input */
 .input-row {
     display: flex;
     align-items: center;
