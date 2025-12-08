@@ -56,7 +56,7 @@
                             :width="sprite.width"
                             :height="sprite.height"
                             :frames="sprite.frames"
-                            :scale="3.5"
+                            :scale="2"
                         />
                     </div>
 

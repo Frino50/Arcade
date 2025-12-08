@@ -14,6 +14,7 @@ const props = defineProps({
     height: { type: Number, default: 120 },
     frames: { type: Number, default: 8 },
     frameRate: { type: Number, default: 8 },
+    scale: { type: Number, default: 1 },
 });
 
 const animFrameId = ref<number | null>(null);
@@ -29,6 +30,8 @@ const playerAnimStyle = computed(() => {
         backgroundImage: `url(${props.spriteSrc})`,
         backgroundPosition: `-${(frameIndex.value * props.width) / props.frames}px`,
         backgroundRepeat: "no-repeat",
+        transform: `scale(${props.scale})`,
+        transformOrigin: "bottom",
     };
 });
 
