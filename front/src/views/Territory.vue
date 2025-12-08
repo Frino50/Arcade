@@ -56,14 +56,18 @@
                             :width="sprite.width"
                             :height="sprite.height"
                             :frames="sprite.frames"
-                            :scale="2"
+                            :scale="Number(sprite.scale)"
                         />
                     </div>
 
                     <div class="card-body">
                         <div class="info-group">
-                            <label>Nom de l'unité</label>
-                            <h3 v-if="!sprite.newName">{{ sprite.name }}</h3>
+                            <input
+                                type="text"
+                                v-model.number="sprite.scale"
+                                class="dark-input"
+                            />
+
                             <input
                                 type="text"
                                 v-model="sprite.newName"
@@ -77,11 +81,7 @@
                         <button
                             class="btn-icon btn-save"
                             @click="renameSprite(sprite)"
-                            title="Sauvegarder le nom"
-                            :disabled="
-                                !sprite.newName ||
-                                sprite.newName === sprite.name
-                            "
+                            :disabled="!sprite.scale"
                         >
                             💾
                         </button>
@@ -104,6 +104,7 @@ import { onMounted, ref } from "vue";
 import Fighter from "@/components/Fighter.vue";
 import SpriteInfo from "@/models/SpriteInfos.ts";
 import spriteService from "@/services/spriteService.ts";
+import ModifSpriteDto from "@/models/dtos/modifSpriteDto.ts";
 
 const sprites = ref<SpriteInfo[]>([]);
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -148,15 +149,15 @@ async function getAllSpritesInfos() {
 }
 
 async function renameSprite(sprite: SpriteInfo) {
-    if (!sprite.newName) return;
-
-    const response = await spriteService.renameSprite(
+    const modifSpriteDto: ModifSpriteDto = new ModifSpriteDto(
         sprite.id,
-        sprite.newName
+        sprite.name,
+        sprite.scale
     );
+    const response = await spriteService.renameSprite(modifSpriteDto);
+
     const updatedSprite: SpriteInfo = response.data;
     updatedSprite.newName = updatedSprite.name;
-
     const index = sprites.value.findIndex((s) => s.id === sprite.id);
     if (index !== -1) {
         sprites.value[index] = updatedSprite;

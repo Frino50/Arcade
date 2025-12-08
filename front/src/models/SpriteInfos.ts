@@ -5,5 +5,6 @@ export default interface SpriteInfo {
     width: number;
     height: number;
     frames: number;
+    scale: number;
     newName?: string;
 }

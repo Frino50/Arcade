@@ -7,14 +7,16 @@ public class SpriteInfos {
     private int width;
     private int height;
     private int frames;
+    private float scale;
 
-    public SpriteInfos(Long id, String name, String idleImageUrl, int width, int height, int frames) {
+    public SpriteInfos(Long id, String name, String idleImageUrl, int width, int height, int frames, float scale) {
         this.id = id;
         this.name = name;
         this.idleImageUrl = idleImageUrl;
         this.width = width;
         this.height = height;
         this.frames = frames;
+        this.scale = scale;
     }
 
     public Long getId() {
@@ -59,5 +61,13 @@ public class SpriteInfos {
 
     public void setFrames(int frames) {
         this.frames = frames;
+    }
+
+    public float getScale() {
+        return scale;
+    }
+
+    public void setScale(float scale) {
+        this.scale = scale;
     }
 }

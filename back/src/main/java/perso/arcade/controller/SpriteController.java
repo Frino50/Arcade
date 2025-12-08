@@ -4,6 +4,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import perso.arcade.model.dto.ModifSpriteDto;
 import perso.arcade.model.dto.SpriteInfos;
 import perso.arcade.model.entities.Sprite;
 import perso.arcade.service.SpriteService;
@@ -37,8 +38,8 @@ public class SpriteController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/rename/{idSprite}/{spriteName}")
-    public Sprite renameSprite(@PathVariable Long idSprite, @PathVariable String spriteName) {
-        return spriteService.renameSprite(idSprite, spriteName);
+    @PutMapping("/rename")
+    public SpriteInfos renameSprite(@RequestBody ModifSpriteDto modifSpriteDto) {
+        return spriteService.renameSprite(modifSpriteDto);
     }
 }

@@ -16,6 +16,9 @@ public class Sprite {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Column(nullable = false)
+    private float scale;
+
     @OneToMany(mappedBy = "sprite", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Animation> animations = new ArrayList<>();
 
@@ -46,6 +49,14 @@ public class Sprite {
         this.name = name;
     }
 
+    public float getScale() {
+        return scale;
+    }
+
+    public void setScale(float scale) {
+        this.scale = scale;
+    }
+
     public void addAnimation(Animation animation) {
         animation.setSprite(this);
         animations.add(animation);
@@ -55,11 +66,11 @@ public class Sprite {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Sprite sprite = (Sprite) o;
-        return Objects.equals(id, sprite.id) && Objects.equals(name, sprite.name) && Objects.equals(animations, sprite.animations);
+        return scale == sprite.scale && Objects.equals(id, sprite.id) && Objects.equals(name, sprite.name) && Objects.equals(animations, sprite.animations);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, animations);
+        return Objects.hash(id, name, scale, animations);
     }
 }

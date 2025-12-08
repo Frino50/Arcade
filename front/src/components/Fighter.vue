@@ -19,38 +19,43 @@ const props = defineProps({
 
 const animFrameId = ref<number | null>(null);
 const lastTimestamp = ref<number | null>(null);
-
 const frameIndex = ref(0);
 const frameTimer = ref(0);
 
-const playerAnimStyle = computed(() => {
-    return {
-        width: `${props.width / props.frames}px`,
-        height: `${props.height}px`,
-        backgroundImage: `url(${props.spriteSrc})`,
-        backgroundPosition: `-${(frameIndex.value * props.width) / props.frames}px`,
-        backgroundRepeat: "no-repeat",
-        transform: `scale(${props.scale})`,
-        transformOrigin: "bottom",
-    };
-});
+const frameWidth = props.width / props.frames;
 
-function animFrame(timestamp?: number) {
-    if (timestamp == null) {
-        animFrameId.value = requestAnimationFrame(animFrame);
-        return;
+const baseStyle = {
+    width: `${frameWidth}px`,
+    height: `${props.height}px`,
+    backgroundImage: `url(${props.spriteSrc})`,
+    transformOrigin: "bottom",
+};
+
+const playerAnimStyle = computed(() => ({
+    ...baseStyle,
+    transform: `scale(${props.scale})`,
+    backgroundPosition: `-${frameIndex.value * frameWidth}px`,
+}));
+
+function animFrame() {
+    const now = performance.now();
+
+    if (lastTimestamp.value == null) {
+        lastTimestamp.value = now;
     }
 
-    if (lastTimestamp.value == null) lastTimestamp.value = timestamp;
-    const dt = (timestamp - lastTimestamp.value) / 1000;
-    lastTimestamp.value = timestamp;
+    const dt = (now - lastTimestamp.value) / 1000;
+    lastTimestamp.value = now;
 
     frameTimer.value += dt;
-    const frameDuration = 1 / props.frameRate;
-    if (frameTimer.value >= frameDuration) {
+
+    if (frameTimer.value >= 1 / props.frameRate) {
         frameTimer.value = 0;
+
         frameIndex.value++;
-        frameIndex.value %= props.frames;
+        if (frameIndex.value === props.frames) {
+            frameIndex.value = 0;
+        }
     }
 
     animFrameId.value = requestAnimationFrame(animFrame);
@@ -73,6 +78,7 @@ onBeforeUnmount(() => {
     if (animFrameId.value !== null) cancelAnimationFrame(animFrameId.value);
 });
 </script>
+
 <style scoped>
 .fighter-wrapper {
     height: 10rem;

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
 import perso.arcade.exception.SpriteNameAlreadyExist;
+import perso.arcade.model.dto.ModifSpriteDto;
 import perso.arcade.model.dto.SpriteInfos;
 import perso.arcade.model.entities.Animation;
 import perso.arcade.model.entities.Sprite;
@@ -24,6 +25,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -90,7 +92,7 @@ public class SpriteService {
 
             // 3. Stockage définitif et propre (Renommage 1.png, 2.png...)
             storeSpriteFilesCleanly(tempSpriteRoot, spriteName);
-
+            sprite.setScale(1);
             // 4. Sauvegarde DB
             log.info("Sprite '{}' importé avec succès.", spriteName);
             return spriteRepository.save(sprite);
@@ -262,10 +264,7 @@ public class SpriteService {
     // --- CRUD ---
 
     public List<SpriteInfos> getAllSpritesInfos() {
-        return spriteRepository.getAllSpritesInfos(
-                AnimationType.IDLE,
-                AnimationType.IDLE.name()
-        );
+        return spriteRepository.getAllSpritesInfos(AnimationType.IDLE);
     }
 
     @Transactional
@@ -289,32 +288,42 @@ public class SpriteService {
     }
 
     @Transactional
-    public Sprite renameSprite(Long id, String newName) {
-        Sprite sprite = spriteRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Sprite introuvable ID: " + id));
+    public SpriteInfos renameSprite(ModifSpriteDto modifSpriteDto) {
+        Sprite sprite = spriteRepository.findById(modifSpriteDto.getId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Sprite introuvable ID: " + modifSpriteDto.getId()));
 
-        String oldName = sprite.getName();
-        if (oldName.equals(newName)) return sprite;
+        boolean nameChanged = modifSpriteDto.getNewName() != null && !sprite.getName().equals(modifSpriteDto.getNewName());
+        boolean scaleChanged = !Objects.equals(sprite.getScale(), modifSpriteDto.getScale());
 
-        // 1. Mise à jour DB
-        sprite.setName(newName);
-        spriteRepository.save(sprite);
+        if (scaleChanged) {
+            sprite.setScale(modifSpriteDto.getScale());
+        }
+        if (nameChanged) {
+            String oldName = sprite.getName();
+            sprite.setName(modifSpriteDto.getNewName());
+            spriteRepository.save(sprite);
 
-        // 2. Renommage Dossier
-        Path oldPath = staticStorageRoot.resolve(oldName);
-        Path newPath = staticStorageRoot.resolve(newName);
+            Path oldPath = staticStorageRoot.resolve(oldName);
+            Path newPath = staticStorageRoot.resolve(modifSpriteDto.getNewName());
 
-        try {
-            if (Files.exists(oldPath)) {
-                Files.move(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
-                log.info("Dossier renommé de {} vers {}", oldName, newName);
-            } else {
-                log.warn("Tentative de renommage d'un dossier inexistant : {}", oldPath);
+            try {
+                if (Files.exists(oldPath)) {
+                    // ATOMIC_MOVE si possible
+                    Files.move(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                    log.info("Dossier renommé de '{}' vers '{}'", oldName, modifSpriteDto.getNewName());
+                } else {
+                    log.warn("Tentative de renommage d'un dossier inexistant : {}", oldPath);
+                }
+            } catch (IOException e) {
+                log.error("Erreur lors du renommage du dossier '{}' vers '{}'", oldPath, newPath, e);
+                throw new RuntimeException("Erreur I/O lors du renommage du dossier sprite", e);
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Erreur I/O lors du renommage du dossier sprite", e);
+        } else if (scaleChanged) {
+            spriteRepository.save(sprite);
         }
 
-        return sprite;
+        return spriteRepository.getSpritesInfosById(AnimationType.IDLE, sprite.getId());
     }
+
 }

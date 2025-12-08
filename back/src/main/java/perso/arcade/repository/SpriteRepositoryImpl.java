@@ -16,23 +16,50 @@ public class SpriteRepositoryImpl implements SpriteRepositoryCustom {
     private EntityManager entityManager;
 
     @Override
-    public List<SpriteInfos> getAllSpritesInfos(AnimationType idleType, String spriteName) {
+    public List<SpriteInfos> getAllSpritesInfos(AnimationType idleType) {
 
         String req = """
                 SELECT new perso.arcade.model.dto.SpriteInfos(
                                 s.id,
                                 s.name,
-                                'http://localhost:8085/sprites/' || s.name || '/' || :spriteName || '/1.png',
+                                'http://localhost:8085/sprites/' || s.name || '/' || :idleType || '/1.png',
                                 a.width,
                                 a.height,
-                                a.frames
+                                a.frames,
+                                s.scale
                             )
                             FROM Sprite s JOIN s.animations a
                             WHERE a.type = :idleType
                 """;
         TypedQuery<SpriteInfos> query = entityManager.createQuery(req, SpriteInfos.class);
-        query.setParameter("spriteName", spriteName);
         query.setParameter("idleType", idleType);
         return query.getResultList();
     }
+
+    @Override
+    public SpriteInfos getSpritesInfosById(AnimationType idleType, Long spriteId) {
+
+        String req = """
+                SELECT new perso.arcade.model.dto.SpriteInfos(
+                                s.id,
+                                s.name,
+                                'http://localhost:8085/sprites/' || s.name || '/' || :idleType || '/1.png',
+                                a.width,
+                                a.height,
+                                a.frames,
+                                s.scale
+                            )
+                        FROM Sprite s
+                        JOIN s.animations a
+                        WHERE a.type = :idleType
+                          AND s.id = :spriteId
+                """;
+
+        TypedQuery<SpriteInfos> query = entityManager.createQuery(req, SpriteInfos.class);
+        query.setParameter("idleType", idleType);
+        query.setParameter("spriteId", spriteId);
+
+        return query.getSingleResult();
+    }
+
 }

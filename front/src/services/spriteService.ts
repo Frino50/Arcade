@@ -1,5 +1,6 @@
 import apiService from "@/services/apiService";
 import SpriteInfo from "@/models/SpriteInfos.ts";
+import ModifSpriteDto from "@/models/dtos/modifSpriteDto.ts";
 
 export default {
     async uploadSprite(formData: FormData) {
@@ -16,7 +17,7 @@ export default {
         return await apiService.delete(`/sprite/delete/${name}`);
     },
 
-    async renameSprite(id: number, name: string) {
-        return await apiService.put(`/sprite/rename/${id}/${name}`);
+    async renameSprite(modifSpriteDto: ModifSpriteDto) {
+        return await apiService.put(`/sprite/rename`, modifSpriteDto);
     },
 };

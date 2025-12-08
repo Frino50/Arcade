@@ -6,6 +6,7 @@ import perso.arcade.model.enumeration.AnimationType;
 import java.util.List;
 
 public interface SpriteRepositoryCustom {
-    List<SpriteInfos> getAllSpritesInfos(AnimationType idleType, String spriteName);
+    List<SpriteInfos> getAllSpritesInfos(AnimationType idleType);
 
+    SpriteInfos getSpritesInfosById(AnimationType idleType, Long id);
 }
