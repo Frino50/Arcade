@@ -67,7 +67,7 @@ public class SpriteService {
      * Traite un fichier ZIP uploadé.
      */
     @Transactional
-    public Sprite processSpriteZip(MultipartFile zipFile) {
+    public SpriteInfos processSpriteZip(MultipartFile zipFile) {
         if (zipFile == null || zipFile.isEmpty()) {
             throw new IllegalArgumentException("Le fichier ZIP est vide.");
         }
@@ -95,7 +95,9 @@ public class SpriteService {
             sprite.setScale(1);
             // 4. Sauvegarde DB
             log.info("Sprite '{}' importé avec succès.", spriteName);
-            return spriteRepository.save(sprite);
+            spriteRepository.save(sprite);
+
+            return spriteRepository.getSpritesInfosById(AnimationType.IDLE, sprite.getId());
         } catch (SpriteNameAlreadyExist e) {
             throw e;
         } catch (Exception e) {

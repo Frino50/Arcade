@@ -21,4 +21,14 @@ export default {
         console.log(modifSpriteDto);
         return await apiService.put(`/sprite/rename`, modifSpriteDto);
     },
+
+    async getImage(spritePath: string) {
+        const response = await apiService.get(
+            `/sprite/sprite-storage/${spritePath}`,
+            {
+                responseType: "blob",
+            }
+        );
+        return URL.createObjectURL(response.data);
+    },
 };

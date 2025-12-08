@@ -6,6 +6,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import spriteService from "@/services/spriteService.ts";
 
 const props = defineProps({
     spriteSrc: { type: String, default: "/assets/Mushroom-Idle.png" },
@@ -21,19 +22,18 @@ const animFrameId = ref<number | null>(null);
 const lastTimestamp = ref<number | null>(null);
 const frameIndex = ref(0);
 const frameTimer = ref(0);
-
+const spriteBlobUrl = ref<string>("");
 const frameWidth = props.width / props.frames;
 
 const baseStyle = {
     width: `${frameWidth}px`,
     height: `${props.height}px`,
-    backgroundImage: `url(${props.spriteSrc})`,
     transformOrigin: "bottom",
 };
-
 const playerAnimStyle = computed(() => ({
     ...baseStyle,
     transform: `scale(${props.scale})`,
+    backgroundImage: spriteBlobUrl.value ? `url(${spriteBlobUrl.value})` : "",
     backgroundPosition: `-${frameIndex.value * frameWidth}px`,
 }));
 
@@ -68,7 +68,8 @@ function onVisibilityChange() {
     }
 }
 
-onMounted(() => {
+onMounted(async () => {
+    spriteBlobUrl.value = await spriteService.getImage(props.spriteSrc);
     document.addEventListener("visibilitychange", onVisibilityChange);
     animFrame();
 });

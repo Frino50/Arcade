@@ -22,7 +22,7 @@ public class SpriteRepositoryImpl implements SpriteRepositoryCustom {
                 SELECT new perso.arcade.model.dto.SpriteInfos(
                                 s.id,
                                 s.name,
-                                'http://localhost:8085/sprites/' || s.name || '/' || :idleType || '/1.png',
+                                s.name || '/' || :idleType || '/1.png',
                                 a.width,
                                 a.height,
                                 a.frames,
@@ -43,7 +43,7 @@ public class SpriteRepositoryImpl implements SpriteRepositoryCustom {
                 SELECT new perso.arcade.model.dto.SpriteInfos(
                                 s.id,
                                 s.name,
-                                'http://localhost:8085/sprites/' || s.name || '/' || :idleType || '/1.png',
+                                s.name || '/' || :idleType || '/1.png',
                                 a.width,
                                 a.height,
                                 a.frames,

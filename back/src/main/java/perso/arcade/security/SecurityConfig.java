@@ -25,6 +25,9 @@ public class SecurityConfig {
     @Value("${front.port}")
     private String frontPort;
 
+    @Value("${server.port}")
+    private String backPort;
+
     public SecurityConfig(FilterInternal filterInternal) {
         this.filterInternal = filterInternal;
     }
@@ -46,7 +49,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/ws/**", "/sprites/**").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/ws/**", "/sprite-storage/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
@@ -61,7 +64,9 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:" + frontPort,
-                "http://202.15.200.35:" + frontPort
+                "http://202.15.200.35:" + frontPort,
+                "http://202.15.200.35:" + backPort,
+                "http://202.15.200.35"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));

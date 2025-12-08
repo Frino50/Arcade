@@ -58,8 +58,7 @@ async function sendToBackend() {
     formData.append("file", selectedFile.value);
 
     const newSprite = await spriteService.uploadSprite(formData);
-    const addedSprite = { ...newSprite.data, newName: newSprite.data.name };
-    emit("add-to-list", addedSprite);
+    emit("add-to-list", newSprite.data);
 
     selectedFile.value = undefined;
     serverResponse.value = "Upload réussi !";
