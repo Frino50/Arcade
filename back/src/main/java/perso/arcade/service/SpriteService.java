@@ -293,7 +293,7 @@ public class SpriteService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Sprite introuvable ID: " + modifSpriteDto.getId()));
 
-        boolean nameChanged = modifSpriteDto.getNewName() != null && !sprite.getName().equals(modifSpriteDto.getNewName());
+        boolean nameChanged = !sprite.getName().equals(modifSpriteDto.getNewName());
         boolean scaleChanged = !Objects.equals(sprite.getScale(), modifSpriteDto.getScale());
 
         if (scaleChanged) {

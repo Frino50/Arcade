@@ -1,11 +1,11 @@
 export default class ModifSpriteDto {
     id: number;
-    name: string;
+    newName: string;
     scale: number;
 
-    constructor(id: number, name: string, scale: number) {
+    constructor(id: number, newName: string, scale: number) {
         this.id = id;
-        this.name = name;
+        this.newName = newName;
         this.scale = scale;
     }
 }

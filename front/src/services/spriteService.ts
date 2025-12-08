@@ -18,6 +18,7 @@ export default {
     },
 
     async renameSprite(modifSpriteDto: ModifSpriteDto) {
+        console.log(modifSpriteDto);
         return await apiService.put(`/sprite/rename`, modifSpriteDto);
     },
 };
