@@ -1,13 +1,12 @@
 import { Client, IMessage } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { useLocalStore } from "@/store/local";
-import { nextTick } from "vue";
-import Message from "@/models/message";
 
 let stompClient: Client | null = null;
 
 function createClient(): Client {
     const localstore = useLocalStore();
+    // Attention : Assure-toi que l'URL est correcte (http vs ws)
     const socket = new SockJS(
         "http://202.15.200.35:" + import.meta.env.VITE_BACK_URL + "/ws"
     );
@@ -28,22 +27,16 @@ export function getStompClient(): Client {
     return stompClient;
 }
 
-export function connexionChat(
-    messages: Message[],
-    messagesContainer: HTMLDivElement | null
-): Client {
+export function connexionChat(onMessageReceived: (msg: any) => void): Client {
     const client = getStompClient();
     const localstore = useLocalStore();
 
-    if (client.connected) return client;
-
-    client.onConnect = () => {
+    const subscribeToTopic = () => {
         client.subscribe(
             "/topic/chat",
-            async (msg: IMessage) => {
+            (msg: IMessage) => {
                 const newMsg = JSON.parse(msg.body);
-                messages.push(newMsg);
-                await scrollToBottom(messagesContainer);
+                onMessageReceived(newMsg);
             },
             {
                 Authorization: `Bearer ${localstore.token}`,
@@ -51,13 +44,14 @@ export function connexionChat(
         );
     };
 
-    client.activate();
-    return client;
-}
-
-async function scrollToBottom(messagesContainer: HTMLDivElement | null) {
-    await nextTick();
-    if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    if (client.connected) {
+        subscribeToTopic();
+    } else {
+        client.onConnect = () => {
+            subscribeToTopic();
+        };
+        client.activate();
     }
+
+    return client;
 }

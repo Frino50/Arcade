@@ -41,13 +41,15 @@ import messageService from "@/services/messageService.ts";
 import { Emoji, emojiMap } from "@/models/enums/emoji.ts";
 import { connexionChat } from "@/sockets/websocket-client.ts";
 import Message from "@/models/message.ts";
+import { Client } from "@stomp/stompjs";
 
 const text = ref("");
 const messages = ref<Message[]>([]);
 const showEmojiMenu = ref(false);
 const isLoading = ref(false);
 const messagesContainer = ref<HTMLDivElement | null>(null);
-const stompClient = connexionChat(messages.value, messagesContainer.value);
+
+let stompClient: Client | null = null;
 
 const page = ref(0);
 const size = 20;
@@ -86,8 +88,12 @@ async function loadMessages() {
 
         await nextTick();
 
-        const scrollHeightAfter = container.scrollHeight;
-        container.scrollTop = scrollHeightAfter - scrollHeightBefore;
+        if (page.value === 0) {
+            container.scrollTop = container.scrollHeight;
+        } else {
+            const scrollHeightAfter = container.scrollHeight;
+            container.scrollTop = scrollHeightAfter - scrollHeightBefore;
+        }
 
         page.value++;
     }
@@ -116,12 +122,23 @@ function onScroll() {
         loadMessages();
     }
 }
+async function handleNewMessage(newMsg: Message) {
+    messages.value.push(newMsg);
+    await scrollToBottom();
+}
 
+async function scrollToBottom() {
+    await nextTick();
+    if (messagesContainer.value) {
+        messagesContainer.value.scrollTop =
+            messagesContainer.value.scrollHeight;
+    }
+}
 onMounted(async () => {
     try {
         isLoading.value = true;
         await loadMessages();
-        connexionChat(messages.value, messagesContainer.value);
+        stompClient = connexionChat(handleNewMessage);
     } finally {
         isLoading.value = false;
     }
@@ -129,7 +146,9 @@ onMounted(async () => {
 
 onBeforeUnmount(async () => {
     try {
-        await stompClient.deactivate();
+        if (stompClient) {
+            await stompClient.deactivate();
+        }
     } catch (err) {
         console.error("Erreur lors de la déconnexion STOMP :", err);
     }
