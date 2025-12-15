@@ -239,32 +239,7 @@ onBeforeUnmount(() => {
 });
 
 function getTileGradient(value: number) {
-    switch (value) {
-        case 2:
-            return "radial-gradient(circle at top left, rgba(0,255,255,0.6), rgba(0,102,204,0.5))";
-        case 4:
-            return "radial-gradient(circle at top left, rgba(0,188,212,0.6), rgba(0,102,153,0.5))";
-        case 8:
-            return "radial-gradient(circle at top left, rgba(123,47,247,0.6), rgba(102,51,204,0.5))";
-        case 16:
-            return "radial-gradient(circle at top left, rgba(213,0,249,0.6), rgba(138,0,255,0.5))";
-        case 32:
-            return "radial-gradient(circle at top left, rgba(255,64,129,0.6), rgba(220,30,100,0.5))";
-        case 64:
-            return "radial-gradient(circle at top left, rgba(255,23,68,0.6), rgba(200,50,50,0.5))";
-        case 128:
-            return "radial-gradient(circle at top left, rgba(255,175,50,0.6), rgba(255,120,0,0.5))";
-        case 256:
-            return "radial-gradient(circle at top left, rgba(255,214,0,0.6), rgba(255,140,0,0.5))";
-        case 512:
-            return "radial-gradient(circle at top left, rgba(255,234,0,0.6), rgba(255,160,0,0.5))";
-        case 1024:
-            return "radial-gradient(circle at top left, rgba(255,241,118,0.6), rgba(255,205,80,0.5))";
-        case 2048:
-            return "radial-gradient(circle at top left, rgba(255,255,255,0.7), rgba(240,210,80,0.5))";
-        default:
-            return "radial-gradient(circle at top left, rgba(50,70,80,0.5), rgba(10,10,10,0.4))";
-    }
+    return `var(--tile-${value}-color)`;
 }
 </script>
 
