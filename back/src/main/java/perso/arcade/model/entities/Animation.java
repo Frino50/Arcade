@@ -12,9 +12,18 @@ public class Animation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "frames", nullable = false)
     private int frames;
+
+    @Column(name = "width", nullable = false)
     private int width;
+
+    @Column(name = "height", nullable = false)
     private int height;
+
+    @Column(name = "indice", nullable = false)
+    private int indice;
+
 
     @Enumerated(EnumType.STRING)
     private AnimationType type;
@@ -26,11 +35,12 @@ public class Animation {
     public Animation() {
     }
 
-    public Animation(int frames, int width, int height, AnimationType type) {
+    public Animation(int frames, int width, int height, AnimationType type, int indice) {
         this.frames = frames;
         this.width = width;
         this.height = height;
         this.type = type;
+        this.indice = indice;
     }
 
     public Long getId() {
@@ -77,15 +87,23 @@ public class Animation {
         this.sprite = sprite;
     }
 
+    public int getIndice() {
+        return indice;
+    }
+
+    public void setIndice(int indice) {
+        this.indice = indice;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Animation animation = (Animation) o;
-        return frames == animation.frames && width == animation.width && height == animation.height && Objects.equals(id, animation.id) && Objects.equals(type, animation.type) && Objects.equals(sprite, animation.sprite);
+        return frames == animation.frames && width == animation.width && height == animation.height && indice == animation.indice && Objects.equals(id, animation.id) && type == animation.type && Objects.equals(sprite, animation.sprite);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, frames, width, height, type, sprite);
+        return Objects.hash(id, frames, width, height, indice, type, sprite);
     }
 }

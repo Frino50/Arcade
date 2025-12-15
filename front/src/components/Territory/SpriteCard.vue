@@ -1,9 +1,11 @@
 <template>
     <div class="sprite-card">
+        <!-- Header -->
         <div class="card-header">
             <span class="badge">ID: {{ sprite.id }}</span>
         </div>
 
+        <!-- Visual stage -->
         <div class="visual-stage">
             <Fighter
                 :sprite-src="sprite.idleImageUrl"
@@ -14,6 +16,7 @@
             />
         </div>
 
+        <!-- Card body -->
         <div class="card-body">
             <div class="info-group">
                 <div class="input-row">
@@ -26,25 +29,17 @@
                     <input
                         type="text"
                         v-model="sprite.name"
-                        :placeholder="sprite.name"
                         class="dark-input"
                     />
                 </div>
-                <button @click="searchAllSprites" />
-                <div v-if="listSpriteInfo.length > 0">
-                    <Fighter
-                        v-for="(spriteInfo, id) in listSpriteInfo"
-                        :key="id"
-                        :sprite-src="spriteInfo.idleImageUrl"
-                        :width="spriteInfo.width"
-                        :height="spriteInfo.height"
-                        :frames="spriteInfo.frames"
-                        :scale="Number(spriteInfo.scale)"
-                    />
-                </div>
+
+                <button class="btn-view" @click="searchAllSprites">
+                    Voir tous les sprites
+                </button>
             </div>
         </div>
 
+        <!-- Card footer -->
         <div class="card-footer">
             <button
                 class="btn-icon btn-save"
@@ -61,6 +56,13 @@
                 🗑️
             </button>
         </div>
+
+        <!-- Popup pour afficher tous les sprites -->
+        <SpriteListModal
+            :sprites="listSpriteInfo"
+            :visible="showModal"
+            @close="showModal = false"
+        />
     </div>
 </template>
 
@@ -70,17 +72,25 @@ import type SpriteInfo from "@/models/SpriteInfos.ts";
 import ModifSpriteDto from "@/models/dtos/modifSpriteDto.ts";
 import spriteService from "@/services/spriteService.ts";
 import { ref } from "vue";
+import SpriteListModal from "@/components/Territory/SpriteListModal.vue";
 
 defineEmits(["delete"]);
-const listSpriteInfo = ref<SpriteInfo[]>([]);
-const sprite = defineModel<SpriteInfo>({
-    required: true,
-});
 
+const sprite = defineModel<SpriteInfo>({ required: true });
+const listSpriteInfo = ref<SpriteInfo[]>([]);
+const showModal = ref(false);
+
+/**
+ * Récupère tous les sprites liés et ouvre la popup
+ */
 async function searchAllSprites() {
     listSpriteInfo.value = await spriteService.getAllSprites(sprite.value.id);
+    showModal.value = true;
 }
 
+/**
+ * Renomme le sprite et met à jour l'échelle
+ */
 async function renameSprite() {
     const modifSpriteDto: ModifSpriteDto = new ModifSpriteDto(
         sprite.value.id,
@@ -232,5 +242,19 @@ async function renameSprite() {
         rgba(0, 0, 0, 0.5) 0%,
         transparent 70%
     );
+}
+
+.btn-view {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-view:hover {
+    background: #2563eb;
 }
 </style>

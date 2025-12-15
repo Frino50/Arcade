@@ -201,16 +201,18 @@ public class SpriteService {
             if (images != null && images.length > 0) {
                 Arrays.sort(images, Comparator.comparing(File::getName));
 
-                // Créer une Animation pour chaque image
-                for (File imgFile : images) {
-                    processSingleImageMetaData(imgFile, type, sprite);
+                // Créer une Animation pour chaque image avec indice commençant à 1
+                for (int i = 0; i < images.length; i++) {
+                    File imgFile = images[i];
+                    int indice = i + 1; // commence à 1
+                    processSingleImageMetaData(imgFile, type, sprite, indice);
                 }
             }
         }
     }
 
 
-    private void processSingleImageMetaData(File imgFile, AnimationType type, Sprite sprite) {
+    private void processSingleImageMetaData(File imgFile, AnimationType type, Sprite sprite, int indice) {
         try {
             BufferedImage img = ImageIO.read(imgFile);
             if (img == null) return;
@@ -219,12 +221,14 @@ public class SpriteService {
             int height = img.getHeight();
             int frames = detectFrames(img, width, height);
 
-            sprite.addAnimation(new Animation(frames, width, height, type));
+            // Crée l'animation avec l'indice correct
+            sprite.addAnimation(new Animation(frames, width, height, type, indice));
 
         } catch (IOException e) {
             log.error("Erreur lecture image pour métadonnées : {}", imgFile.getName(), e);
         }
     }
+
 
     /**
      * Algorithme de détection de frames basé sur les colonnes vides.
