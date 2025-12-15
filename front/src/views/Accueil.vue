@@ -1,6 +1,6 @@
 <template>
     <div
-        class="theme-cyan futurist-layout"
+        class="futurist-layout"
         @mousemove="onMouseMove"
         @mouseleave="onResetTilt"
         :class="{ 'layout-exit': exiting }"

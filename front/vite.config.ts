@@ -4,7 +4,6 @@ import vue from "@vitejs/plugin-vue";
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), "");
-    console.log(env.VITE_FRONT_PORT);
     return {
         server: {
             port: Number(env.VITE_FRONT_PORT) || 5173,

@@ -1,5 +1,9 @@
 <template>
-    <div class="main-container" @click="toggleDropdown">
+    <div
+        class="main-container"
+        @click="toggleDropdown"
+        v-click-outside="clickOutside"
+    >
         <div class="dropdown-header">
             <span
                 :class="['current-option', { 'is-placeholder': !modelValue }]"
@@ -57,6 +61,11 @@ function selectItem(suggestion: any) {
 
 function toggleDropdown() {
     isOpen.value = !isOpen.value;
+}
+
+function clickOutside() {
+    isOpen.value = false;
+    emit("change");
 }
 </script>
 
