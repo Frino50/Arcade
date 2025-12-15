@@ -25,7 +25,7 @@
                     class="menu-card"
                     :data-index="index"
                     @click="navigateTo(item.link)"
-                    :style="{ 'animation-delay': index * 0.15 + 's' }"
+                    :style="cardStyle"
                 >
                     <div class="card-content-3d">
                         <span class="card-title">{{ item.title }}</span>
@@ -41,9 +41,8 @@
         </footer>
     </div>
 </template>
-
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 
 const exiting = ref(false);
@@ -64,7 +63,6 @@ const hexagonItems: MenuItem[] = [
 const router = useRouter();
 const navigateTo = (link: string) => {
     exiting.value = true;
-
     setTimeout(() => {
         router.push({ name: link });
     }, 200);
@@ -72,35 +70,39 @@ const navigateTo = (link: string) => {
 
 const TILT_AMOUNT = 12;
 
+const tiltX = ref(0);
+const tiltY = ref(0);
+
 const onMouseMove = (event: MouseEvent) => {
     const { clientX, clientY } = event;
     const { innerWidth, innerHeight } = window;
 
-    const centerX = innerWidth / 2;
-    const centerY = innerHeight / 2;
+    const mouseX = (clientX - innerWidth / 2) / (innerWidth / 2);
+    const mouseY = (clientY - innerHeight / 2) / (innerHeight / 2);
 
-    const mouseX = (clientX - centerX) / (innerWidth / 2);
-    const mouseY = (clientY - centerY) / (innerHeight / 2);
-
-    const cards = document.querySelectorAll<HTMLElement>(".menu-card");
-
-    cards.forEach((card) => {
-        const rotY = mouseX * TILT_AMOUNT;
-        const rotX = -mouseY * TILT_AMOUNT;
-
-        card.style.transform = `perspective(1000px) rotateY(${rotY}deg) rotateX(${rotX}deg) translateZ(20px)`;
-        card.style.boxShadow = `${-mouseX * 15}px ${-mouseY * 15}px 30px var(--futurist-shadow-strong)`;
-    });
+    tiltY.value = mouseX * TILT_AMOUNT;
+    tiltX.value = -mouseY * TILT_AMOUNT;
 };
 
 const onResetTilt = () => {
-    const cards = document.querySelectorAll<HTMLElement>(".menu-card");
-    cards.forEach((card) => {
-        // Réinitialisation des styles. La transition CSS gère le retour smooth.
-        card.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg) translateZ(0px)`;
-        card.style.boxShadow = `0 0 10px var(--futurist-shadow)`;
-    });
+    tiltX.value = 0;
+    tiltY.value = 0;
 };
+
+const cardStyle = computed(() => ({
+    transform: `
+        perspective(1000px)
+        rotateY(${tiltY.value}deg)
+        rotateX(${tiltX.value}deg)
+        translateZ(20px)
+    `,
+    boxShadow: `
+        ${-tiltY.value}px
+        ${-tiltX.value}px
+        30px
+        var(--futurist-shadow-strong)
+    `,
+}));
 </script>
 
 <style scoped>
@@ -221,7 +223,7 @@ const onResetTilt = () => {
         transform: translateY(0);
     }
 }
-/* Styles Glitch... inchangés */
+
 .main-title.glitch {
     font-size: 4em;
     color: var(--futurist-accent-light);
@@ -390,7 +392,7 @@ const onResetTilt = () => {
     background: linear-gradient(
         to right,
         transparent,
-        rgba(0, 255, 255, 0.4),
+        var(--futurist-shadow-strong),
         transparent
     );
     transform: skewX(-25deg);
