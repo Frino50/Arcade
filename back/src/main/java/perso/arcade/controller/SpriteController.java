@@ -76,5 +76,8 @@ public class SpriteController {
         }
     }
 
-
+    @GetMapping("/all-sprites/{spriteId}")
+    public List<SpriteInfos> getAllSprites(@PathVariable int spriteId) {
+        return spriteService.getAllSprites(spriteId);
+    }
 }

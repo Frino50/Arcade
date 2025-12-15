@@ -197,16 +197,18 @@ public class SpriteService {
             File typeDir = new File(spriteRoot, type.name());
             if (!typeDir.exists()) continue;
 
-            // On prend juste la première image pour analyser les dimensions et frames
-            File[] images = typeDir.listFiles(f -> f.getName().toLowerCase().endsWith(".png"));
-
+            File[] images = typeDir.listFiles(f -> f.isFile() && f.getName().toLowerCase().endsWith(".png"));
             if (images != null && images.length > 0) {
-                // On trie pour s'assurer de prendre la première frame logique
                 Arrays.sort(images, Comparator.comparing(File::getName));
-                processSingleImageMetaData(images[0], type, sprite);
+
+                // Créer une Animation pour chaque image
+                for (File imgFile : images) {
+                    processSingleImageMetaData(imgFile, type, sprite);
+                }
             }
         }
     }
+
 
     private void processSingleImageMetaData(File imgFile, AnimationType type, Sprite sprite) {
         try {
@@ -328,4 +330,7 @@ public class SpriteService {
         return spriteRepository.getSpritesInfosById(AnimationType.IDLE, sprite.getId());
     }
 
+    public List<SpriteInfos> getAllSprites(int spriteId) {
+        return spriteRepository.getAllSprites(spriteId);
+    }
 }

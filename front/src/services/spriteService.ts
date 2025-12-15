@@ -18,7 +18,6 @@ export default {
     },
 
     async renameSprite(modifSpriteDto: ModifSpriteDto) {
-        console.log(modifSpriteDto);
         return await apiService.put(`/sprite/rename`, modifSpriteDto);
     },
 
@@ -30,5 +29,12 @@ export default {
             }
         );
         return URL.createObjectURL(response.data);
+    },
+
+    async getAllSprites(spriteId: number) {
+        const response = await apiService.get(
+            `/sprite/all-sprites/${spriteId}`
+        );
+        return response.data;
     },
 };

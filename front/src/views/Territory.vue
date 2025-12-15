@@ -30,7 +30,7 @@ const sprites = ref<SpriteInfo[]>([]);
 
 async function getAllSpritesInfos() {
     const response = await spriteService.getAllSpritesInfos();
-    sprites.value = response.data.map((s) => ({ ...s, newName: s.name }));
+    sprites.value = response.data;
 }
 
 async function deleteSprite(name: string) {

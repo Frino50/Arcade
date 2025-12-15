@@ -30,6 +30,18 @@
                         class="dark-input"
                     />
                 </div>
+                <button @click="searchAllSprites" />
+                <div v-if="listSpriteInfo.length > 0">
+                    <Fighter
+                        v-for="(spriteInfo, id) in listSpriteInfo"
+                        :key="id"
+                        :sprite-src="spriteInfo.idleImageUrl"
+                        :width="spriteInfo.width"
+                        :height="spriteInfo.height"
+                        :frames="spriteInfo.frames"
+                        :scale="Number(spriteInfo.scale)"
+                    />
+                </div>
             </div>
         </div>
 
@@ -57,12 +69,17 @@ import Fighter from "@/components/Fighter.vue";
 import type SpriteInfo from "@/models/SpriteInfos.ts";
 import ModifSpriteDto from "@/models/dtos/modifSpriteDto.ts";
 import spriteService from "@/services/spriteService.ts";
+import { ref } from "vue";
 
 defineEmits(["delete"]);
-
+const listSpriteInfo = ref<SpriteInfo[]>([]);
 const sprite = defineModel<SpriteInfo>({
     required: true,
 });
+
+async function searchAllSprites() {
+    listSpriteInfo.value = await spriteService.getAllSprites(sprite.value.id);
+}
 
 async function renameSprite() {
     const modifSpriteDto: ModifSpriteDto = new ModifSpriteDto(

@@ -17,7 +17,6 @@ public class SpriteRepositoryImpl implements SpriteRepositoryCustom {
 
     @Override
     public List<SpriteInfos> getAllSpritesInfos(AnimationType idleType) {
-
         String req = """
                 SELECT new perso.arcade.model.dto.SpriteInfos(
                                 s.id,
@@ -60,6 +59,29 @@ public class SpriteRepositoryImpl implements SpriteRepositoryCustom {
         query.setParameter("spriteId", spriteId);
 
         return query.getSingleResult();
+    }
+
+    @Override
+    public List<SpriteInfos> getAllSprites(int spriteId) {
+        String req = """
+                    SELECT new perso.arcade.model.dto.SpriteInfos(
+                                s.id,
+                                s.name,
+                                s.name || '/' || a.type || '/1.png',
+                                a.width,
+                                a.height,
+                                a.frames,
+                                s.scale
+                            )
+                    FROM Sprite s
+                    JOIN s.animations a
+                    WHERE s.id = :spriteId
+                """;
+
+        TypedQuery<SpriteInfos> query = entityManager.createQuery(req, SpriteInfos.class);
+        query.setParameter("spriteId", spriteId);
+
+        return query.getResultList();
     }
 
 }

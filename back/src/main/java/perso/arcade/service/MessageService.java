@@ -12,6 +12,7 @@ import perso.arcade.model.entities.Player;
 import perso.arcade.repository.MessageRepository;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Service
 public class MessageService {
@@ -36,7 +37,8 @@ public class MessageService {
         Message msg = new Message();
         msg.setPlayer(player);
         msg.setContent(message);
-        msg.setTimestamp(LocalDateTime.now());
+        ZoneId parisZone = ZoneId.of("Europe/Paris");
+        msg.setTimestamp(LocalDateTime.now(parisZone));
         msg = messageRepository.save(msg);
 
         messagingTemplate.convertAndSend("/topic/chat",

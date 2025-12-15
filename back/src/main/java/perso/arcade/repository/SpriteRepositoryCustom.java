@@ -9,4 +9,6 @@ public interface SpriteRepositoryCustom {
     List<SpriteInfos> getAllSpritesInfos(AnimationType idleType);
 
     SpriteInfos getSpritesInfosById(AnimationType idleType, Long id);
+
+    List<SpriteInfos> getAllSprites(int spriteId);
 }
