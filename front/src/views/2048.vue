@@ -239,7 +239,7 @@ onBeforeUnmount(() => {
 });
 
 function getTileGradient(value: number) {
-    return `var(--tile-${value}-color)`;
+    return `radial-gradient(circle at top left, var(--tile-${value}-color), var(--tile-${value}-color))`;
 }
 </script>
 

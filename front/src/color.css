@@ -54,17 +54,17 @@
     --scrollbar-track: rgba(255, 255, 255, 0.05);
     --selection-color: #011;
 
-    --tile-2-color: rgba(59, 236, 236, 0.8);
-    --tile-4-color: rgba(0,188,212,0.8);
-    --tile-8-color: rgba(123,47,247,0.8);
-    --tile-16-color: rgba(213,0,249,0.8);
-    --tile-32-color: rgba(255,64,129,0.8);
-    --tile-64-color: rgba(255,23,68,0.8);
-    --tile-128-color: rgba(255,175,50,0.8);
-    --tile-256-color: rgba(255,214,0,0.8);
-    --tile-512-color: rgba(255,234,0,0.8);
-    --tile-1024-color: rgba(255,241,118,0.8);
-    --tile-2048-color: rgba(255,255,255,0.8);
+    --tile-2-color:    rgba(0, 90, 120, 0.55);
+    --tile-4-color:    rgba(0, 110, 150, 0.55);
+    --tile-8-color:    rgba(0, 135, 175, 0.55);
+    --tile-16-color:   rgba(0, 160, 200, 0.55);
+    --tile-32-color:   rgba(0, 180, 215, 0.55);
+    --tile-64-color:   rgba(0, 200, 225, 0.55);
+    --tile-128-color:  rgba(40, 220, 235, 0.55);
+    --tile-256-color:  rgba(80, 235, 245, 0.55);
+    --tile-512-color:  rgba(120, 245, 255, 0.55);
+    --tile-1024-color: rgba(170, 250, 255, 0.6);
+    --tile-2048-color: rgba(210, 255, 255, 0.65);
 }
 
 .theme-yellow {
@@ -123,17 +123,17 @@
     --scrollbar-track: rgba(255, 255, 255, 0.05);
     --selection-color: #011;
 
-    --tile-2-color: rgba(234, 215, 50, 0.8);
-    --tile-4-color: rgba(255,241,118,0.8);
-    --tile-8-color: rgba(255,193,7,0.8);
-    --tile-16-color: rgba(255,138,0,0.8);
-    --tile-32-color: rgba(255,87,34,0.8);
-    --tile-64-color: rgba(255,64,129,0.8);
-    --tile-128-color: rgba(255,176,5,0.8);
-    --tile-256-color: rgba(255,255,0,0.8);
-    --tile-512-color: rgba(255,211,0,0.8);
-    --tile-1024-color: rgba(255,168,38,0.8);
-    --tile-2048-color: rgba(255,255,255,0.8);
+    --tile-2-color:    rgba(180, 150, 0, 0.55);
+    --tile-4-color:    rgba(200, 170, 0, 0.55);
+    --tile-8-color:    rgba(220, 190, 0, 0.55);
+    --tile-16-color:   rgba(230, 210, 0, 0.55);
+    --tile-32-color:   rgba(240, 220, 30, 0.55);
+    --tile-64-color:   rgba(245, 230, 60, 0.55);
+    --tile-128-color:  rgba(250, 240, 100, 0.55);
+    --tile-256-color:  rgba(255, 245, 140, 0.55);
+    --tile-512-color:  rgba(255, 250, 180, 0.55);
+    --tile-1024-color: rgba(255, 255, 210, 0.6);
+    --tile-2048-color: rgba(255, 255, 235, 0.65);
 }
 
 .theme-purple {
@@ -192,15 +192,15 @@
     --scrollbar-track: rgba(255, 255, 255, 0.05);
     --selection-color: #011;
 
-    --tile-2-color: rgba(213,0,249,0.8);
-    --tile-4-color: rgba(234,128,252,0.8);
-    --tile-8-color: rgba(186,104,200,0.8);
-    --tile-16-color: rgba(125,0,215,0.8);
-    --tile-32-color: rgba(82,0,170,0.8);
-    --tile-64-color: rgba(160,0,255,0.8);
-    --tile-128-color: rgba(232,0,255,0.8);
-    --tile-256-color: rgba(204,0,255,0.8);
-    --tile-512-color: rgba(148,0,255,0.8);
-    --tile-1024-color: rgba(103,0,255,0.8);
-    --tile-2048-color: rgba(255,255,255,0.8);
+    --tile-2-color:    rgba(80, 0, 120, 0.55);
+    --tile-4-color:    rgba(100, 0, 140, 0.55);
+    --tile-8-color:    rgba(120, 0, 170, 0.55);
+    --tile-16-color:   rgba(140, 0, 200, 0.55);
+    --tile-32-color:   rgba(160, 20, 220, 0.55);
+    --tile-64-color:   rgba(180, 40, 235, 0.55);
+    --tile-128-color:  rgba(200, 80, 245, 0.55);
+    --tile-256-color:  rgba(220, 130, 250, 0.55);
+    --tile-512-color:  rgba(230, 170, 255, 0.55);
+    --tile-1024-color: rgba(240, 200, 255, 0.6);
+    --tile-2048-color: rgba(250, 230, 255, 0.65);
 }
