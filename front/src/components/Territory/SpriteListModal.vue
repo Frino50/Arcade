@@ -13,6 +13,13 @@
                         :frames="spriteInfo.frames"
                         :scale="Number(spriteInfo.scale)"
                     />
+                    <test
+                        v-for="spriteInfo in sprites"
+                        :key="spriteInfo.id"
+                        :sprite-src="spriteInfo.idleImageUrl"
+                        :width="spriteInfo.width"
+                        :height="spriteInfo.height"
+                    />
                 </div>
             </div>
         </div>
@@ -22,6 +29,7 @@
 <script setup lang="ts">
 import Fighter from "@/components/Fighter.vue";
 import type SpriteInfo from "@/models/SpriteInfos.ts";
+import Test from "@/components/Territory/test.vue";
 
 defineProps<{
     sprites: SpriteInfo[];
@@ -65,7 +73,7 @@ defineEmits(["close"]);
 }
 .sprite-list {
     display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 0.3rem;
 }
 </style>

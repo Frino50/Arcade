@@ -33,7 +33,7 @@
                     />
                 </div>
 
-                <button class="btn-view" @click="searchAllSprites">
+                <button class="btn-icon btn-view" @click="searchAllSprites">
                     Voir tous les sprites
                 </button>
             </div>
@@ -190,7 +190,6 @@ async function renameSprite() {
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 1.1rem;
     transition: all 0.2s;
 }
 
@@ -222,7 +221,7 @@ async function renameSprite() {
     background: #0f172a;
     min-height: 150px;
     display: flex;
-    align-items: center;
+    align-items: end;
     justify-content: center;
     margin: 0 1rem;
     border-radius: 8px;
@@ -237,6 +236,7 @@ async function renameSprite() {
     bottom: 0;
     width: 80%;
     height: 10px;
+
     background: radial-gradient(
         ellipse at center,
         rgba(0, 0, 0, 0.5) 0%,
@@ -246,12 +246,6 @@ async function renameSprite() {
 
 .btn-view {
     background: #3b82f6;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.2s;
 }
 
 .btn-view:hover {
