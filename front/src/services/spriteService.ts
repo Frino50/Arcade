@@ -10,7 +10,7 @@ export default {
     },
 
     async getAllSpritesInfos() {
-        return await apiService.get<SpriteInfo[]>("/sprite/summary");
+        return await apiService.get<SpriteInfo[]>("/sprite/all");
     },
 
     async deleteSprite(name: string) {
@@ -31,9 +31,16 @@ export default {
         return URL.createObjectURL(response.data);
     },
 
-    async getAllSprites(spriteId: number) {
+    async getAllAnimationsBySpriteName(spriteName: string) {
         const response = await apiService.get(
-            `/sprite/all-sprites/${spriteId}`
+            `/sprite/animations/${spriteName}`
+        );
+        return response.data;
+    },
+
+    async reBuildImage(animationId: number) {
+        const response = await apiService.get(
+            `/sprite/re-build-image/${animationId}`
         );
         return response.data;
     },

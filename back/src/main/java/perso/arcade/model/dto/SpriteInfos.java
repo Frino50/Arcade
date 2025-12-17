@@ -1,26 +1,26 @@
 package perso.arcade.model.dto;
 
 public class SpriteInfos {
-    private final Long id;
+    private final Long animationId;
     private String name;
-    private String idleImageUrl;
+    private String imageUrl;
     private int width;
     private int height;
     private int frames;
     private float scale;
 
-    public SpriteInfos(Long id, String name, String idleImageUrl, int width, int height, int frames, float scale) {
-        this.id = id;
+    public SpriteInfos(Long animationId, String name, String imageUrl, int width, int height, int frames, float scale) {
+        this.animationId = animationId;
         this.name = name;
-        this.idleImageUrl = idleImageUrl;
+        this.imageUrl = imageUrl;
         this.width = width;
         this.height = height;
         this.frames = frames;
         this.scale = scale;
     }
 
-    public Long getId() {
-        return id;
+    public Long getAnimationId() {
+        return animationId;
     }
 
     public String getName() {
@@ -31,12 +31,12 @@ public class SpriteInfos {
         this.name = name;
     }
 
-    public String getIdleImageUrl() {
-        return idleImageUrl;
+    public String getImageUrl() {
+        return imageUrl;
     }
 
-    public void setIdleImageUrl(String idleImageUrl) {
-        this.idleImageUrl = idleImageUrl;
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public int getWidth() {

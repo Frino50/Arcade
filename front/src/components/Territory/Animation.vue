@@ -1,7 +1,5 @@
 <template>
-    <div class="fighter-wrapper">
-        <div style="image-rendering: pixelated" :style="playerAnimStyle" />
-    </div>
+    <div style="image-rendering: pixelated" :style="playerAnimStyle" />
 </template>
 
 <script setup lang="ts">
@@ -79,11 +77,3 @@ onBeforeUnmount(() => {
     if (animFrameId.value !== null) cancelAnimationFrame(animFrameId.value);
 });
 </script>
-
-<style scoped>
-.fighter-wrapper {
-    display: flex;
-    align-items: flex-end;
-    margin-bottom: 0.5rem;
-}
-</style>

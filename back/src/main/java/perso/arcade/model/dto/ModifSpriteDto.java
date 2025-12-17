@@ -2,7 +2,7 @@ package perso.arcade.model.dto;
 
 public class ModifSpriteDto {
 
-    private Long id;
+    private String oldName;
     private String newName;
     private float scale;
 
@@ -22,11 +22,11 @@ public class ModifSpriteDto {
         this.newName = newName;
     }
 
-    public Long getId() {
-        return id;
+    public String getOldName() {
+        return oldName;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setOldName(String oldName) {
+        this.oldName = oldName;
     }
 }

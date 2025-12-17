@@ -9,7 +9,7 @@
             <div v-else class="sprite-grid">
                 <SpriteCard
                     v-for="(sprite, index) in sprites"
-                    :key="sprite.id"
+                    :key="index"
                     v-model="sprites[index]"
                     @delete="deleteSprite(sprite.name)"
                 />

@@ -134,7 +134,6 @@ h1 {
     margin: 0;
 }
 
-/* Boutons globaux */
 .btn {
     padding: 0.6rem 1.2rem;
     border-radius: 8px;

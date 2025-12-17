@@ -1,10 +1,7 @@
 package perso.arcade.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +11,6 @@ import perso.arcade.model.dto.SpriteInfos;
 import perso.arcade.service.SpriteService;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
@@ -25,8 +19,6 @@ public class SpriteController {
 
     private final SpriteService spriteService;
 
-    @Value("${sprite.storage.root}")
-    private String spriteStorage;
 
     public SpriteController(SpriteService spriteService) {
         this.spriteService = spriteService;
@@ -37,14 +29,14 @@ public class SpriteController {
         return spriteService.processSpriteZip(zipFile);
     }
 
-    @GetMapping("/summary")
+    @GetMapping("/all")
     public ResponseEntity<List<SpriteInfos>> getAllSpritesInfos() {
         List<SpriteInfos> spriteInfos = spriteService.getAllSpritesInfos();
         return ResponseEntity.ok(spriteInfos);
     }
 
     @DeleteMapping("/delete/{spriteName}")
-    public ResponseEntity<Void> deleteSpriteById(@PathVariable String spriteName) {
+    public ResponseEntity<Void> deleteSpriteByName(@PathVariable String spriteName) {
         spriteService.deleteSpriteByName(spriteName);
         return ResponseEntity.noContent().build();
     }
@@ -56,28 +48,16 @@ public class SpriteController {
 
     @GetMapping("/sprite-storage/**")
     public ResponseEntity<Resource> getSprite(HttpServletRequest request) throws IOException {
-        String relativePath = request.getRequestURI().replace("/api/sprite/sprite-storage/", "");
-        Path filePath = Paths.get(spriteStorage, relativePath);
-
-        if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
-            Resource resource = new UrlResource(filePath.toUri());
-
-            String contentType = Files.probeContentType(filePath);
-            if (contentType == null) {
-                contentType = "application/octet-stream";
-            }
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filePath.getFileName() + "\"")
-                    .body(resource);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        return spriteService.getSprite(request);
     }
 
-    @GetMapping("/all-sprites/{spriteId}")
-    public List<SpriteInfos> getAllSprites(@PathVariable int spriteId) {
-        return spriteService.getAllSprites(spriteId);
+    @GetMapping("/animations/{spriteName}")
+    public List<SpriteInfos> getAllAnimationsBySpriteName(@PathVariable String spriteName) {
+        return spriteService.getAllAnimationsBySpriteName(spriteName);
+    }
+
+    @GetMapping("/re-build-image/{animationId}")
+    public SpriteInfos reBuildImage(@PathVariable Long animationId) throws IOException {
+        return spriteService.reBuildImage(animationId);
     }
 }

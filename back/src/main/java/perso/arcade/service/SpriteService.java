@@ -1,9 +1,15 @@
 package perso.arcade.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,6 +19,7 @@ import perso.arcade.model.dto.SpriteInfos;
 import perso.arcade.model.entities.Animation;
 import perso.arcade.model.entities.Sprite;
 import perso.arcade.model.enumeration.AnimationType;
+import perso.arcade.repository.AnimationRepository;
 import perso.arcade.repository.SpriteRepository;
 
 import javax.imageio.ImageIO;
@@ -21,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,6 +40,12 @@ public class SpriteService {
 
     private static final Logger log = LoggerFactory.getLogger(SpriteService.class);
 
+    // Constantes de détection de frames
+    private static final int ALPHA_THRESHOLD = 10;
+    private static final int MIN_ABSOLUTE_WIDTH = 5;
+    private static final double RESIDUAL_THRESHOLD = 0.3;
+    private static final double LARGE_BLOCK_FACTOR = 1.9;
+
     private static final List<AnimationType> ANIMATION_TYPES = List.of(
             AnimationType.IDLE,
             AnimationType.WALK,
@@ -40,11 +54,17 @@ public class SpriteService {
 
     private final Path staticStorageRoot;
     private final SpriteRepository spriteRepository;
+    private final AnimationRepository animationRepository;
+
+    @Value("${sprite.storage.root}")
+    private String spriteStorage;
 
     public SpriteService(
             SpriteRepository spriteRepository,
+            AnimationRepository animationRepository,
             @Value("${sprite.storage.root}") String storageRoot) {
         this.spriteRepository = spriteRepository;
+        this.animationRepository = animationRepository;
         this.staticStorageRoot = Path.of(storageRoot).toAbsolutePath().normalize();
         initStorage();
     }
@@ -60,41 +80,30 @@ public class SpriteService {
         }
     }
 
-    /**
-     * Traite un fichier ZIP uploadé.
-     */
+    // ==================== IMPORT SPRITE ====================
+
     @Transactional
     public SpriteInfos processSpriteZip(MultipartFile zipFile) {
-        if (zipFile == null || zipFile.isEmpty()) {
-            throw new IllegalArgumentException("Le fichier ZIP est vide.");
-        }
+        validateZipFile(zipFile);
 
         Path tempDir = null;
-
         try {
-            // 1. Dézippage temporaire
             tempDir = unzipToTempDirectory(zipFile);
-
             File tempSpriteRoot = findSpriteRoot(tempDir);
-
             String spriteName = tempSpriteRoot.getName();
-            if (spriteRepository.findByName(spriteName).isPresent()) {
-                throw new SpriteNameAlreadyExist("Un sprite avec le nom '" + spriteName + "' existe déjà.");
-            }
+
+            validateSpriteNotExists(spriteName);
 
             Sprite sprite = new Sprite(spriteName);
-
-            // 2. Analyse des images (Frames, Dimensions) et Rognage Vertical Global
             processAnimationsMetaData(tempSpriteRoot, sprite);
-
-            // 3. Stockage définitif et propre (utilise les images temporaires rognées)
             storeSpriteFilesCleanly(tempSpriteRoot, spriteName);
             sprite.setScale(1);
-            // 4. Sauvegarde DB
-            log.info("Sprite '{}' importé avec succès.", spriteName);
-            spriteRepository.save(sprite);
 
-            return spriteRepository.getSpritesInfosById(AnimationType.IDLE, sprite.getId());
+            spriteRepository.save(sprite);
+            log.info("Sprite '{}' importé avec succès.", spriteName);
+            log.info("--------------------------------------------");
+
+            return spriteRepository.getSpritesInfosByTypeAndName(AnimationType.IDLE, sprite.getName());
         } catch (SpriteNameAlreadyExist e) {
             throw e;
         } catch (Exception e) {
@@ -105,123 +114,338 @@ public class SpriteService {
         }
     }
 
-    /**
-     * Calcule le cadre englobant (bounding box) des pixels non transparents.
-     *
-     * @return Un tableau d'entiers [xMin, yMin, xMax, yMax].
-     */
-    private int[] calculateBoundingBox(BufferedImage img) {
-        int width = img.getWidth();
-        int height = img.getHeight();
-        int xMin = width, yMin = height;
-        int xMax = 0, yMax = 0;
-        final int ALPHA_THRESHOLD = 10;
+    // ==================== VALIDATION ====================
 
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int alpha = (img.getRGB(x, y) >> 24) & 0xff;
-                if (alpha > ALPHA_THRESHOLD) {
-                    xMin = Math.min(xMin, x);
-                    yMin = Math.min(yMin, y);
-                    xMax = Math.max(xMax, x);
-                    yMax = Math.max(yMax, y);
-                }
-            }
+    private void validateZipFile(MultipartFile zipFile) {
+        if (zipFile == null || zipFile.isEmpty()) {
+            throw new IllegalArgumentException("Le fichier ZIP est vide.");
         }
+    }
 
-        if (xMin > xMax || yMin > yMax) {
-            return null;
+    private void validateSpriteNotExists(String spriteName) {
+        if (spriteRepository.findByName(spriteName).isPresent()) {
+            throw new SpriteNameAlreadyExist("Un sprite avec le nom '" + spriteName + "' existe déjà.");
         }
-        return new int[]{xMin, yMin, xMax, yMax};
+    }
+
+    // ==================== ANALYSE ET NORMALISATION ====================
+
+    private void processAnimationsMetaData(File spriteRoot, Sprite sprite) {
+        for (AnimationType type : ANIMATION_TYPES) {
+            File typeDir = new File(spriteRoot, type.name());
+            if (!typeDir.exists()) continue;
+
+            File[] images = getImageFiles(typeDir);
+            if (images.length == 0) continue;
+
+            Map<File, Integer> frameCountByImage = analyzeAnimationFrames(images);
+            createAnimations(images, frameCountByImage, type, sprite);
+        }
+    }
+
+    private File[] getImageFiles(File directory) {
+        File[] images = directory.listFiles(f -> f.isFile() && f.getName().toLowerCase().endsWith(".png"));
+        if (images == null || images.length == 0) {
+            return new File[0];
+        }
+        Arrays.sort(images, Comparator.comparing(File::getName));
+        return images;
     }
 
     /**
-     * Calcule la limite verticale la plus extrême (YMin et YMax) pour toutes les images d'une animation.
-     *
-     * @return Un tableau d'entiers [YMin global, YMax global, Largeur de l'image].
+     * Analyse les frames de chaque image sans les modifier
      */
-    private int[] calculateGlobalVerticalBoundingBox(File[] images) {
-        int globalYMin = Integer.MAX_VALUE;
-        int globalYMax = Integer.MIN_VALUE;
-        int width = 0;
-        boolean foundPixels = false;
-
-        for (File imgFile : images) {
-            try {
-                BufferedImage img = ImageIO.read(imgFile);
-                if (img == null) continue;
-
-                if (width == 0) {
-                    width = img.getWidth();
-                }
-
-                int[] localBox = calculateBoundingBox(img);
-
-                if (localBox != null) {
-                    globalYMin = Math.min(globalYMin, localBox[1]);
-                    globalYMax = Math.max(globalYMax, localBox[3]);
-                    foundPixels = true;
-                }
-            } catch (IOException e) {
-                log.error("Erreur lecture image pour global box verticale : {}", imgFile.getName(), e);
-            }
-        }
-
-        if (!foundPixels) return null;
-
-        // [YMin global, YMax global, Largeur originale]
-        return new int[]{globalYMin, globalYMax, width};
-    }
-
-
-    private BufferedImage cropImage(BufferedImage img, int x, int y, int w, int h) {
-        if (x < 0 || y < 0 || w <= 0 || h <= 0 || x + w > img.getWidth() || y + h > img.getHeight()) {
-            log.warn("Tentative de rognage invalide. Retour de l'image originale.");
-            return img;
-        }
-        return img.getSubimage(x, y, w, h);
-    }
-
-    /**
-     * Applique le rognage vertical (coupe le vide au-dessus de YMin et en dessous de YMax)
-     * et remplace les fichiers temporaires.
-     */
-    private void cropAndReplaceAnimationFramesVertical(File[] images, int[] globalVerticalBox) {
-        // globalVerticalBox contient [YMin, YMax, Largeur]
-        int yStart = globalVerticalBox[0]; // Point de départ en haut (coupe le vide au-dessus)
-        int yEnd = globalVerticalBox[1];   // Point de fin en bas (coupe le vide en dessous)
-
-        // La hauteur à conserver, incluant les pixels YMin et YMax
-        int heightCropped = yEnd - yStart + 1;
-
-        int widthOriginal = globalVerticalBox[2]; // Largeur inchangée
-        int xStart = 0; // Point de départ horizontal inchangé
+    private Map<File, Integer> analyzeAnimationFrames(File[] images) {
+        Map<File, Integer> frameCountByImage = new HashMap<>();
 
         for (File file : images) {
             try {
-                BufferedImage originalImg = ImageIO.read(file);
-                if (originalImg == null) continue;
+                BufferedImage img = ImageIO.read(file);
+                if (img == null) {
+                    frameCountByImage.put(file, 1);
+                    continue;
+                }
 
-                // Rogner en utilisant la largeur originale, mais la nouvelle hauteur calculée.
-                BufferedImage croppedImg = cropImage(originalImg, xStart, yStart, widthOriginal, heightCropped);
-
-                // Écraser le fichier temporaire avec l'image rognée
-                ImageIO.write(croppedImg, "png", file);
-                log.debug("Image rognée verticalement : {} (Nouvelle hauteur : {})", file.getName(), heightCropped);
+                int frameCount = detectFrames(img);
+                frameCountByImage.put(file, frameCount);
             } catch (IOException e) {
-                log.error("Erreur de rognage verticale pour le fichier temporaire : {}", file.getName(), e);
+                log.error("Erreur lors de l'analyse de l'image {}", file.getName(), e);
+                frameCountByImage.put(file, 1);
+            }
+        }
+
+        return frameCountByImage;
+    }
+
+    private void createAnimations(File[] images, Map<File, Integer> frameCountByImage,
+                                  AnimationType type, Sprite sprite) {
+        for (int i = 0; i < images.length; i++) {
+            File imgFile = images[i];
+            int indice = i + 1;
+            int frameCount = frameCountByImage.getOrDefault(imgFile, 1);
+
+            try {
+                BufferedImage img = ImageIO.read(imgFile);
+                if (img != null) {
+                    sprite.addAnimation(new Animation(
+                            frameCount,
+                            img.getWidth(),
+                            img.getHeight(),
+                            type,
+                            indice
+                    ));
+                }
+            } catch (IOException e) {
+                log.error("Erreur lecture métadonnées image : {}", imgFile.getName(), e);
             }
         }
     }
-    // --- GESTION FICHIERS ---
+
+    // ==================== DÉTECTION DE FRAMES ====================
+
+    /**
+     * Détecte automatiquement le nombre de frames dans une spritesheet
+     */
+    private int detectFrames(BufferedImage img) {
+        int width = img.getWidth();
+        int height = img.getHeight();
+
+        boolean[] columnHasPixels = scanColumns(img, width, height);
+        List<Integer> frameWidths = extractFrameWidths(columnHasPixels);
+
+        if (frameWidths.isEmpty()) {
+            log.info("Aucun pixel détecté, 1 frame par défaut");
+            return 1;
+        }
+
+        double averageWidth = calculateRobustAverageWidth(frameWidths);
+        if (averageWidth == 0) {
+            log.info("Largeur moyenne nulle, 1 frame par défaut");
+            return 1;
+        }
+
+        int totalFrames = countFrames(frameWidths, averageWidth);
+        log.info("Détection terminée: {} frames (blocs: {}, largeur moyenne: {}px)",
+                totalFrames, frameWidths, averageWidth);
+        log.info("--------------------------------------------");
+
+        return totalFrames;
+    }
+
+    /**
+     * Scanne chaque colonne pour détecter la présence de pixels
+     */
+    private boolean[] scanColumns(BufferedImage img, int width, int height) {
+        boolean[] columnHasPixels = new boolean[width];
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int alpha = (img.getRGB(x, y) >>> 24) & 0xff;
+                if (alpha > ALPHA_THRESHOLD) {
+                    columnHasPixels[x] = true;
+                    break;
+                }
+            }
+        }
+
+        return columnHasPixels;
+    }
+
+    /**
+     * Extrait les largeurs des blocs continus de pixels
+     */
+    private List<Integer> extractFrameWidths(boolean[] columnHasPixels) {
+        List<Integer> frameWidths = new ArrayList<>();
+        int currentWidth = 0;
+        boolean insideFrame = false;
+
+        for (boolean hasPixel : columnHasPixels) {
+            if (hasPixel) {
+                currentWidth++;
+                insideFrame = true;
+            } else if (insideFrame) {
+                frameWidths.add(currentWidth);
+                currentWidth = 0;
+                insideFrame = false;
+            }
+        }
+
+        if (insideFrame) {
+            frameWidths.add(currentWidth);
+        }
+
+        return frameWidths;
+    }
+
+    /**
+     * Calcule une largeur moyenne robuste en éliminant les outliers
+     */
+    private double calculateRobustAverageWidth(List<Integer> frameWidths) {
+        List<Integer> filteredWidths = frameWidths.stream()
+                .filter(w -> w >= MIN_ABSOLUTE_WIDTH)
+                .toList();
+
+        if (filteredWidths.isEmpty()) return 0;
+
+        double mean = filteredWidths.stream()
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(0);
+
+        double stdDev = Math.sqrt(filteredWidths.stream()
+                .mapToDouble(w -> (w - mean) * (w - mean))
+                .average()
+                .orElse(0));
+
+        return filteredWidths.stream()
+                .filter(w -> Math.abs(w - mean) <= 2 * stdDev)
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(mean);
+    }
+
+    /**
+     * Compte le nombre total de frames en fonction des largeurs de blocs
+     */
+    private int countFrames(List<Integer> frameWidths, double averageWidth) {
+        int totalFrames = 0;
+
+        for (int w : frameWidths) {
+            // Ignorer les résidus trop petits
+            if (w < MIN_ABSOLUTE_WIDTH || w < averageWidth * RESIDUAL_THRESHOLD) {
+                log.info("Bloc ignoré (trop petit): {} px", w);
+                continue;
+            }
+
+            // Diviser les blocs anormalement larges
+            if (w > averageWidth * LARGE_BLOCK_FACTOR) {
+                int estimatedFrames = (int) Math.floor(w / averageWidth);
+                totalFrames += Math.max(1, estimatedFrames);
+                log.info("Bloc large divisé: {} px → {} frames", w, estimatedFrames);
+            } else {
+                totalFrames++;
+                log.info("Bloc standard: {} px → 1 frame", w);
+            }
+        }
+
+        return Math.max(1, totalFrames);
+    }
+
+    // ==================== RECONSTRUCTION DE SPRITE ====================
+
+    /**
+     * Reconstruit un sprite avec normalisation des frames
+     * (alignement à gauche, largeurs égales)
+     */
+    private BufferedImage rebuildFinalSprite(BufferedImage original, int frameCount) {
+        List<BufferedImage> rawFrames = splitByFrameCount(original, frameCount);
+        int height = original.getHeight();
+
+        int maxContentWidth = calculateMaxContentWidth(rawFrames);
+
+        int totalWidth = frameCount * maxContentWidth;
+        BufferedImage output = new BufferedImage(totalWidth, height, BufferedImage.TYPE_INT_ARGB);
+
+        log.info("Reconstruction: {} frames × {}px = {}px (original: {}px)",
+                frameCount, maxContentWidth, totalWidth, original.getWidth());
+
+        composeFrames(rawFrames, output, maxContentWidth, height);
+
+        return output;
+    }
+
+    /**
+     * Calcule la largeur maximale du contenu parmi toutes les frames
+     */
+    private int calculateMaxContentWidth(List<BufferedImage> frames) {
+        int maxWidth = 1;
+
+        for (BufferedImage frame : frames) {
+            int[] bounds = computeHorizontalBounds(frame);
+            if (bounds != null) {
+                int contentWidth = bounds[1] - bounds[0] + 1;
+                maxWidth = Math.max(maxWidth, contentWidth);
+            }
+        }
+
+        return maxWidth;
+    }
+
+    /**
+     * Compose les frames dans l'image de sortie avec alignement à gauche
+     */
+    private void composeFrames(List<BufferedImage> frames, BufferedImage output,
+                               int maxContentWidth, int height) {
+        int xCursor = 0;
+
+        for (BufferedImage frame : frames) {
+            int[] bounds = computeHorizontalBounds(frame);
+
+            if (bounds != null) {
+                int contentWidth = bounds[1] - bounds[0] + 1;
+
+                // Copier le contenu aligné à gauche
+                for (int x = 0; x < contentWidth; x++) {
+                    for (int y = 0; y < height; y++) {
+                        output.setRGB(xCursor + x, y, frame.getRGB(bounds[0] + x, y));
+                    }
+                }
+            }
+
+            // Avancer de maxContentWidth pour garantir des frames de largeur égale
+            xCursor += maxContentWidth;
+        }
+    }
+
+    /**
+     * Calcule les bornes horizontales du contenu visible d'une image
+     */
+    private int[] computeHorizontalBounds(BufferedImage img) {
+        int width = img.getWidth();
+        int height = img.getHeight();
+        int minX = width;
+        int maxX = 0;
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int alpha = (img.getRGB(x, y) >>> 24) & 0xff;
+                if (alpha > ALPHA_THRESHOLD) {
+                    minX = Math.min(minX, x);
+                    maxX = Math.max(maxX, x);
+                }
+            }
+        }
+
+        return (minX > maxX) ? null : new int[]{minX, maxX};
+    }
+
+    /**
+     * Divise une image en frames égales
+     */
+    private List<BufferedImage> splitByFrameCount(BufferedImage img, int frameCount) {
+        int width = img.getWidth();
+        int height = img.getHeight();
+        int frameWidth = width / frameCount;
+
+        List<BufferedImage> frames = new ArrayList<>();
+        for (int i = 0; i < frameCount; i++) {
+            int x = i * frameWidth;
+            frames.add(img.getSubimage(x, 0, frameWidth, height));
+        }
+
+        return frames;
+    }
+
+    // ==================== GESTION ZIP ====================
 
     private Path unzipToTempDirectory(MultipartFile zipFile) throws IOException {
         Path destDir = Files.createTempDirectory("sprite_upload_");
+
         try (ZipInputStream zis = new ZipInputStream(zipFile.getInputStream())) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
-                // Protection contre le Zip Slip vulnerability
                 Path newPath = destDir.resolve(entry.getName()).normalize();
+
                 if (!newPath.startsWith(destDir)) {
                     throw new IOException("Entrée ZIP invalide : " + entry.getName());
                 }
@@ -234,37 +458,8 @@ public class SpriteService {
                 }
             }
         }
+
         return destDir;
-    }
-
-    private void storeSpriteFilesCleanly(File tempSpriteRoot, String spriteName) throws IOException {
-        Path targetSpriteDir = staticStorageRoot.resolve(spriteName);
-
-        if (Files.exists(targetSpriteDir)) {
-            FileSystemUtils.deleteRecursively(targetSpriteDir);
-        }
-        Files.createDirectories(targetSpriteDir);
-
-        for (AnimationType type : ANIMATION_TYPES) {
-            File sourceAnimDir = new File(tempSpriteRoot, type.name());
-
-            if (sourceAnimDir.exists() && sourceAnimDir.isDirectory()) {
-                Path targetAnimDir = targetSpriteDir.resolve(type.name());
-                Files.createDirectories(targetAnimDir);
-
-                File[] images = sourceAnimDir.listFiles(f -> f.isFile() && f.getName().toLowerCase().endsWith(".png"));
-
-                if (images != null && images.length > 0) {
-                    Arrays.sort(images, Comparator.comparing(File::getName));
-
-                    AtomicInteger counter = new AtomicInteger(1);
-                    for (File img : images) {
-                        String cleanName = counter.getAndIncrement() + ".png";
-                        Files.copy(img.toPath(), targetAnimDir.resolve(cleanName), StandardCopyOption.REPLACE_EXISTING);
-                    }
-                }
-            }
-        }
     }
 
     private File findSpriteRoot(Path tempDir) {
@@ -274,8 +469,9 @@ public class SpriteService {
                 .toList();
 
         if (validFolders.size() != 1) {
-            throw new RuntimeException("La structure du ZIP est incorrecte. Il doit contenir un seul dossier racine (ex: 'Monstre1/IDLE/...')");
+            throw new RuntimeException("La structure du ZIP est incorrecte. Il doit contenir un seul dossier racine.");
         }
+
         return validFolders.getFirst();
     }
 
@@ -289,134 +485,125 @@ public class SpriteService {
         }
     }
 
-    // --- ANALYSE D'IMAGES ---
+    // ==================== STOCKAGE FICHIERS ====================
 
-    private void processAnimationsMetaData(File spriteRoot, Sprite sprite) {
+    private void storeSpriteFilesCleanly(File tempSpriteRoot, String spriteName) throws IOException {
+        Path targetSpriteDir = staticStorageRoot.resolve(spriteName);
+
+        if (Files.exists(targetSpriteDir)) {
+            FileSystemUtils.deleteRecursively(targetSpriteDir);
+        }
+
+        Files.createDirectories(targetSpriteDir);
+
         for (AnimationType type : ANIMATION_TYPES) {
-            File typeDir = new File(spriteRoot, type.name());
-            if (!typeDir.exists()) continue;
-
-            File[] images = typeDir.listFiles(f -> f.isFile() && f.getName().toLowerCase().endsWith(".png"));
-            if (images == null || images.length == 0) continue;
-
-            Arrays.sort(images, Comparator.comparing(File::getName));
-
-            // ÉTAPE CLÉ : 1. Calcule de la Bounding Box Verticale Globale
-            int[] globalVerticalBox = calculateGlobalVerticalBoundingBox(images);
-
-            if (globalVerticalBox != null) {
-                // Étape 2 : Rogner et remplacer les fichiers temporaires
-                cropAndReplaceAnimationFramesVertical(images, globalVerticalBox);
-            }
-
-            // Créer une Animation pour chaque image avec indice commençant à 1
-            for (int i = 0; i < images.length; i++) {
-                File imgFile = images[i];
-                int indice = i + 1; // commence à 1
-                processSingleImageMetaData(imgFile, type, sprite, indice);
-            }
+            copyAnimationFiles(tempSpriteRoot, targetSpriteDir, type);
         }
     }
 
+    private void copyAnimationFiles(File sourceRoot, Path targetRoot, AnimationType type) throws IOException {
+        File sourceAnimDir = new File(sourceRoot, type.name());
+        if (!sourceAnimDir.exists() || !sourceAnimDir.isDirectory()) return;
 
-    private void processSingleImageMetaData(File imgFile, AnimationType type, Sprite sprite, int indice) {
-        try {
-            BufferedImage img = ImageIO.read(imgFile);
-            if (img == null) return;
+        Path targetAnimDir = targetRoot.resolve(type.name());
+        Files.createDirectories(targetAnimDir);
 
-            int width = img.getWidth();
-            int height = img.getHeight();
-            int frames = detectFrames(img, width, height);
+        File[] images = getImageFiles(sourceAnimDir);
+        if (images.length == 0) return;
 
-            sprite.addAnimation(new Animation(frames, width, height, type, indice));
-
-        } catch (IOException e) {
-            log.error("Erreur lecture image pour métadonnées : {}", imgFile.getName(), e);
+        AtomicInteger counter = new AtomicInteger(1);
+        for (File img : images) {
+            String cleanName = counter.getAndIncrement() + ".png";
+            Files.copy(img.toPath(), targetAnimDir.resolve(cleanName), StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
+    // ==================== RECONSTRUCTION À LA DEMANDE ====================
 
     /**
-     * Algorithme de détection de frames basé sur les colonnes vides.
+     * Reconstruit une animation spécifique avec normalisation des frames
+     * et met à jour le fichier et la base de données
      */
-    private int detectFrames(BufferedImage img, int width, int height) {
-        final int ALPHA_THRESHOLD = 10;       // tolérance transparence
-        final int MIN_ABSOLUTE_WIDTH = 5;    // résidus trop petits
-        final double RESIDUAL_THRESHOLD = 0.3; // résidus relatifs
-        final double LARGE_BLOCK_FACTOR = 1.9; // seuil pour blocs larges
-
-        boolean[] columnHasPixels = new boolean[width];
-
-        // 1. Scan vertical pour détecter les colonnes non vides
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                int alpha = (img.getRGB(x, y) >>> 24) & 0xff;
-                if (alpha > ALPHA_THRESHOLD) {
-                    columnHasPixels[x] = true;
-                    break;
-                }
-            }
+    @Transactional
+    public SpriteInfos reBuildImage(Long animationId) throws IOException {
+        SpriteInfos spriteInfos = spriteRepository.getSpriteInfosByAnimationId(animationId);
+        if (spriteInfos == null) {
+            throw new IllegalArgumentException("Animation introuvable ID: " + animationId);
         }
 
-        // 2. Identifier les blocs continus
-        List<Integer> frameWidths = new ArrayList<>();
-        int currentWidth = 0;
-        boolean insideFrame = false;
-        for (boolean hasPixel : columnHasPixels) {
-            if (hasPixel) {
-                currentWidth++;
-                insideFrame = true;
-            } else if (insideFrame) {
-                frameWidths.add(currentWidth);
-                currentWidth = 0;
-                insideFrame = false;
-            }
-        }
-        if (insideFrame) frameWidths.add(currentWidth);
+        Path filePath = Paths.get(spriteStorage, spriteInfos.getImageUrl());
 
-        if (frameWidths.isEmpty()) return 1;
-
-        // 3. Calcul largeur moyenne robuste (exclure blocs trop petits)
-        List<Integer> filteredWidths = frameWidths.stream()
-                .filter(w -> w >= MIN_ABSOLUTE_WIDTH)
-                .toList();
-
-        double mean = filteredWidths.stream().mapToInt(Integer::intValue).average().orElse(0);
-        double stdDev = Math.sqrt(filteredWidths.stream()
-                .mapToDouble(w -> (w - mean) * (w - mean))
-                .average()
-                .orElse(0));
-        double averageWidth = filteredWidths.stream()
-                .filter(w -> Math.abs(w - mean) <= 2 * stdDev)
-                .mapToInt(Integer::intValue)
-                .average()
-                .orElse(mean);
-
-        if (averageWidth == 0) return 1;
-
-        // 4. Compter les frames
-        int totalFrames = 0;
-        for (int w : frameWidths) {
-            if (w < MIN_ABSOLUTE_WIDTH || w < averageWidth * RESIDUAL_THRESHOLD) continue;
-
-            if (w > averageWidth * LARGE_BLOCK_FACTOR) {
-                int estimatedFrames = (int) Math.floor(w / averageWidth);
-                totalFrames += Math.max(1, estimatedFrames);
-            } else {
-                totalFrames++;
-            }
+        if (!Files.exists(filePath) || Files.isDirectory(filePath)) {
+            throw new IOException("Fichier sprite introuvable: " + filePath);
         }
 
-        // Debug
-        System.out.println("Blocs: " + frameWidths + " | Moyenne robuste: " + averageWidth + " | Frames: " + totalFrames);
+        try {
+            // Charger l'image originale
+            BufferedImage originalImg = ImageIO.read(filePath.toFile());
+            if (originalImg == null) {
+                throw new IOException("Impossible de lire l'image: " + filePath);
+            }
 
-        return Math.max(1, totalFrames);
+            log.info("Reconstruction de l'image {} ({}x{}, {} frames attendues)",
+                    filePath.getFileName(), originalImg.getWidth(),
+                    originalImg.getHeight(), spriteInfos.getFrames());
+
+            // Reconstruire avec normalisation
+            BufferedImage normalizedImg = rebuildFinalSprite(originalImg, spriteInfos.getFrames());
+
+            // Sauvegarder l'image normalisée
+            ImageIO.write(normalizedImg, "png", filePath.toFile());
+
+            // Mettre à jour la largeur en base de données
+            Animation animation = animationRepository.findById(animationId)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Animation introuvable ID: " + animationId));
+
+            animation.setWidth(normalizedImg.getWidth());
+            animationRepository.save(animation);
+
+            log.info("✓ Image reconstruite: {} ({}x{}, {} frames)",
+                    filePath.getFileName(), normalizedImg.getWidth(),
+                    normalizedImg.getHeight(), spriteInfos.getFrames());
+
+            return spriteRepository.getSpriteInfosByAnimationId(animationId);
+        } catch (IOException e) {
+            log.error("Erreur lors de la reconstruction de l'image {}", filePath, e);
+            throw new RuntimeException("Erreur lors de la reconstruction de l'image: " + e.getMessage(), e);
+        }
     }
 
-    // --- CRUD ---
+    // ==================== RÉCUPÉRATION DE SPRITES ====================
+
+    public ResponseEntity<Resource> getSprite(HttpServletRequest request) throws IOException {
+        String relativePath = request.getRequestURI().replace("/api/sprite/sprite-storage/", "");
+        Path filePath = Paths.get(spriteStorage, relativePath);
+
+        if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
+            Resource resource = new UrlResource(filePath.toUri());
+
+            String contentType = Files.probeContentType(filePath);
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filePath.getFileName() + "\"")
+                    .body(resource);
+        }
+
+        return ResponseEntity.notFound().build();
+    }
+
+    // ==================== CRUD OPERATIONS ====================
 
     public List<SpriteInfos> getAllSpritesInfos() {
         return spriteRepository.getAllSpritesInfos(AnimationType.IDLE);
+    }
+
+    public List<SpriteInfos> getAllAnimationsBySpriteName(String spriteName) {
+        return spriteRepository.getAllAnimationsBySpriteName(spriteName);
     }
 
     @Transactional
@@ -436,9 +623,9 @@ public class SpriteService {
 
     @Transactional
     public SpriteInfos renameSprite(ModifSpriteDto modifSpriteDto) {
-        Sprite sprite = spriteRepository.findById(modifSpriteDto.getId())
+        Sprite sprite = spriteRepository.findByName(modifSpriteDto.getOldName())
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Sprite introuvable ID: " + modifSpriteDto.getId()));
+                        "Sprite introuvable NOM: " + modifSpriteDto.getOldName()));
 
         boolean nameChanged = !sprite.getName().equals(modifSpriteDto.getNewName());
         boolean scaleChanged = !Objects.equals(sprite.getScale(), modifSpriteDto.getScale());
@@ -446,33 +633,37 @@ public class SpriteService {
         if (scaleChanged) {
             sprite.setScale(modifSpriteDto.getScale());
         }
+
         if (nameChanged) {
-            String oldName = sprite.getName();
-            sprite.setName(modifSpriteDto.getNewName());
-            spriteRepository.save(sprite);
-
-            Path oldPath = staticStorageRoot.resolve(oldName);
-            Path newPath = staticStorageRoot.resolve(modifSpriteDto.getNewName());
-
-            try {
-                if (Files.exists(oldPath)) {
-                    Files.move(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-                    log.info("Dossier renommé de '{}' vers '{}'", oldName, modifSpriteDto.getNewName());
-                } else {
-                    log.warn("Tentative de renommage d'un dossier inexistant : {}", oldPath);
-                }
-            } catch (IOException e) {
-                log.error("Erreur lors du renommage du dossier '{}' vers '{}'", oldPath, newPath, e);
-                throw new RuntimeException("Erreur I/O lors du renommage du dossier sprite", e);
-            }
-        } else if (scaleChanged) {
-            spriteRepository.save(sprite);
+            renameSpriteFolderAndEntity(sprite, modifSpriteDto.getNewName());
         }
 
-        return spriteRepository.getSpritesInfosById(AnimationType.IDLE, sprite.getId());
+        if (nameChanged || scaleChanged) {
+            sprite = spriteRepository.save(sprite);
+        }
+
+        return spriteRepository.getSpritesInfosByTypeAndName(AnimationType.IDLE, sprite.getName());
     }
 
-    public List<SpriteInfos> getAllSprites(int spriteId) {
-        return spriteRepository.getAllSprites(spriteId);
+    private void renameSpriteFolderAndEntity(Sprite sprite, String newName) {
+        String oldName = sprite.getName();
+        sprite.setName(newName);
+
+        Path oldPath = staticStorageRoot.resolve(oldName);
+        Path newPath = staticStorageRoot.resolve(newName);
+
+        try {
+            if (Files.exists(oldPath)) {
+                Files.move(oldPath, newPath,
+                        StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.ATOMIC_MOVE);
+                log.info("Dossier renommé de '{}' vers '{}'", oldName, newName);
+            } else {
+                log.warn("Tentative de renommage d'un dossier inexistant : {}", oldPath);
+            }
+        } catch (IOException e) {
+            log.error("Erreur lors du renommage du dossier '{}' vers '{}'", oldPath, newPath, e);
+            throw new RuntimeException("Erreur I/O lors du renommage du dossier sprite", e);
+        }
     }
 }

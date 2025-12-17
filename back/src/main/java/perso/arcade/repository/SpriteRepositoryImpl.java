@@ -12,76 +12,57 @@ import java.util.List;
 @Repository
 public class SpriteRepositoryImpl implements SpriteRepositoryCustom {
 
+    private static final String BASE_SELECT = """
+            SELECT new perso.arcade.model.dto.SpriteInfos(
+                    a.id,
+                    s.name,
+                    s.name || '/' || a.type || '/' || a.indice || '.png',
+                    a.width,
+                    a.height,
+                    a.frames,
+                    s.scale
+            )
+            FROM Sprite s
+            JOIN s.animations a
+            """;
     @PersistenceContext
     private EntityManager entityManager;
 
     @Override
-    public List<SpriteInfos> getAllSpritesInfos(AnimationType idleType) {
-        String req = """
-                SELECT new perso.arcade.model.dto.SpriteInfos(
-                                s.id,
-                                s.name,
-                                s.name || '/' || :idleType || '/' || a.indice || '.png',
-                                a.width,
-                                a.height,
-                                a.frames,
-                                s.scale
-                            )
-                            FROM Sprite s JOIN s.animations a
-                            WHERE a.type = :idleType
-                """;
-        TypedQuery<SpriteInfos> query = entityManager.createQuery(req, SpriteInfos.class);
+    public SpriteInfos getSpritesInfosByTypeAndName(AnimationType idleType, String spriteName) {
+        TypedQuery<SpriteInfos> query = entityManager.createQuery(
+                BASE_SELECT + "WHERE a.type = :idleType AND s.name = :spriteName", SpriteInfos.class);
         query.setParameter("idleType", idleType);
-        return query.getResultList();
-    }
-
-    @Override
-    public SpriteInfos getSpritesInfosById(AnimationType idleType, Long spriteId) {
-
-        String req = """
-                SELECT new perso.arcade.model.dto.SpriteInfos(
-                                s.id,
-                                s.name,
-                                s.name || '/' || :idleType || '/' || a.indice || '.png',
-                                a.width,
-                                a.height,
-                                a.frames,
-                                s.scale
-                            )
-                        FROM Sprite s
-                        JOIN s.animations a
-                        WHERE a.type = :idleType
-                          AND s.id = :spriteId
-                """;
-
-        TypedQuery<SpriteInfos> query = entityManager.createQuery(req, SpriteInfos.class);
-        query.setParameter("idleType", idleType);
-        query.setParameter("spriteId", spriteId);
-
+        query.setParameter("spriteName", spriteName);
         return query.getSingleResult();
     }
 
     @Override
-    public List<SpriteInfos> getAllSprites(int spriteId) {
-        String req = """
-                    SELECT new perso.arcade.model.dto.SpriteInfos(
-                                s.id,
-                                s.name,
-                                s.name || '/' || a.type || '/' || a.indice || '.png',
-                                a.width,
-                                a.height,
-                                a.frames,
-                                s.scale
-                            )
-                    FROM Sprite s
-                    JOIN s.animations a
-                    WHERE s.id = :spriteId
-                """;
+    public List<SpriteInfos> getAllSpritesInfos(AnimationType idleType) {
+        return getList("WHERE a.type = :idleType", "idleType", idleType);
+    }
 
-        TypedQuery<SpriteInfos> query = entityManager.createQuery(req, SpriteInfos.class);
-        query.setParameter("spriteId", spriteId);
+    @Override
+    public List<SpriteInfos> getAllAnimationsBySpriteName(String spriteName) {
+        return getList("WHERE s.name = :spriteName", "spriteName", spriteName);
+    }
 
+    @Override
+    public SpriteInfos getSpriteInfosByAnimationId(Long animationId) {
+        return getSingle("WHERE a.id = :animationId", "animationId", animationId);
+    }
+
+    private List<SpriteInfos> getList(String whereClause, String paramName, Object paramValue) {
+        TypedQuery<SpriteInfos> query = entityManager.createQuery(BASE_SELECT + whereClause, SpriteInfos.class);
+        query.setParameter(paramName, paramValue);
         return query.getResultList();
     }
+
+    private SpriteInfos getSingle(String whereClause, String paramName, Object paramValue) {
+        TypedQuery<SpriteInfos> query = entityManager.createQuery(BASE_SELECT + whereClause, SpriteInfos.class);
+        query.setParameter(paramName, paramValue);
+        return query.getSingleResult();
+    }
+
 
 }

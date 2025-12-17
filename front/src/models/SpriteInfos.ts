@@ -1,7 +1,8 @@
 export default interface SpriteInfo {
-    id: number;
+    animationId: number;
     name: string;
-    idleImageUrl: string;
+    newName: string;
+    imageUrl: string;
     width: number;
     height: number;
     frames: number;

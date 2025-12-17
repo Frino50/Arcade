@@ -1,14 +1,8 @@
 <template>
     <div class="sprite-card">
-        <!-- Header -->
-        <div class="card-header">
-            <span class="badge">ID: {{ sprite.id }}</span>
-        </div>
-
-        <!-- Visual stage -->
         <div class="visual-stage">
-            <Fighter
-                :sprite-src="sprite.idleImageUrl"
+            <Animation
+                :sprite-src="sprite.imageUrl"
                 :width="sprite.width"
                 :height="sprite.height"
                 :frames="sprite.frames"
@@ -16,7 +10,6 @@
             />
         </div>
 
-        <!-- Card body -->
         <div class="card-body">
             <div class="info-group">
                 <div class="input-row">
@@ -28,7 +21,7 @@
                     <label>Nom:</label>
                     <input
                         type="text"
-                        v-model="sprite.name"
+                        v-model="sprite.newName"
                         class="dark-input"
                     />
                 </div>
@@ -39,7 +32,6 @@
             </div>
         </div>
 
-        <!-- Card footer -->
         <div class="card-footer">
             <button
                 class="btn-icon btn-save"
@@ -57,9 +49,8 @@
             </button>
         </div>
 
-        <!-- Popup pour afficher tous les sprites -->
-        <SpriteListModal
-            :sprites="listSpriteInfo"
+        <SpriteModal
+            v-model="listSpriteInfo"
             :visible="showModal"
             @close="showModal = false"
         />
@@ -67,37 +58,54 @@
 </template>
 
 <script setup lang="ts">
-import Fighter from "@/components/Fighter.vue";
+import Animation from "@/components/Territory/Animation.vue";
 import type SpriteInfo from "@/models/SpriteInfos.ts";
 import ModifSpriteDto from "@/models/dtos/modifSpriteDto.ts";
 import spriteService from "@/services/spriteService.ts";
-import { ref } from "vue";
-import SpriteListModal from "@/components/Territory/SpriteListModal.vue";
+import { ref, computed, onMounted } from "vue";
+import SpriteModal from "@/components/Territory/SpriteModal.vue";
 
 defineEmits(["delete"]);
 
 const sprite = defineModel<SpriteInfo>({ required: true });
+
 const listSpriteInfo = ref<SpriteInfo[]>([]);
 const showModal = ref(false);
 
-/**
- * Récupère tous les sprites liés et ouvre la popup
- */
+onMounted(() => {
+    if (!sprite.value.newName) {
+        sprite.value.newName = sprite.value.name;
+    }
+});
+
+const hasChanges = computed(() => {
+    return (
+        sprite.value.newName?.trim() !== sprite.value.name ||
+        sprite.value.scale !== undefined
+    );
+});
+
 async function searchAllSprites() {
-    listSpriteInfo.value = await spriteService.getAllSprites(sprite.value.id);
+    listSpriteInfo.value = await spriteService.getAllAnimationsBySpriteName(
+        sprite.value.name
+    );
     showModal.value = true;
 }
 
-/**
- * Renomme le sprite et met à jour l'échelle
- */
 async function renameSprite() {
-    const modifSpriteDto: ModifSpriteDto = new ModifSpriteDto(
-        sprite.value.id,
+    if (!hasChanges.value) return;
+
+    const newName = sprite.value.newName.trim();
+
+    const dto = new ModifSpriteDto(
         sprite.value.name,
+        newName,
         sprite.value.scale
     );
-    await spriteService.renameSprite(modifSpriteDto);
+
+    await spriteService.renameSprite(dto);
+
+    sprite.value.name = newName;
 }
 </script>
 
@@ -118,21 +126,6 @@ async function renameSprite() {
     transform: translateY(-5px);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     border-color: #3b82f6;
-}
-
-.card-header {
-    padding: 0.75rem 1rem;
-    display: flex;
-    justify-content: flex-end;
-}
-
-.badge {
-    font-size: 0.7rem;
-    background: #0f172a;
-    padding: 2px 8px;
-    border-radius: 4px;
-    color: #64748b;
-    font-family: monospace;
 }
 
 .card-body {
@@ -228,20 +221,6 @@ async function renameSprite() {
     border: 1px dashed #334155;
     position: relative;
     overflow: hidden;
-}
-
-.visual-stage::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    width: 80%;
-    height: 10px;
-
-    background: radial-gradient(
-        ellipse at center,
-        rgba(0, 0, 0, 0.5) 0%,
-        transparent 70%
-    );
 }
 
 .btn-view {

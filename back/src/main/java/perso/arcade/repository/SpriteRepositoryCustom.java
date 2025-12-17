@@ -8,7 +8,9 @@ import java.util.List;
 public interface SpriteRepositoryCustom {
     List<SpriteInfos> getAllSpritesInfos(AnimationType idleType);
 
-    SpriteInfos getSpritesInfosById(AnimationType idleType, Long id);
+    SpriteInfos getSpritesInfosByTypeAndName(AnimationType idleType, String spriteName);
 
-    List<SpriteInfos> getAllSprites(int spriteId);
+    SpriteInfos getSpriteInfosByAnimationId(Long animationId);
+
+    List<SpriteInfos> getAllAnimationsBySpriteName(String spriteName);
 }
