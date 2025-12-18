@@ -62,6 +62,18 @@ class SpriteCache {
 
         return false;
     }
+
+    deleteByName(name: string): void {
+        this.blobCache.forEach((blobUrl, key) => {
+            if (key.includes(name)) {
+                // 1. Libère la mémoire pour cette URL
+                URL.revokeObjectURL(blobUrl);
+
+                // 2. Supprime l'entrée de la Map
+                this.blobCache.delete(key);
+            }
+        });
+    }
 }
 
 export const spriteCache = new SpriteCache();

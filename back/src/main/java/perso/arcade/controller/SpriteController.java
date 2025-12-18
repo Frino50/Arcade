@@ -56,9 +56,9 @@ public class SpriteController {
         return spriteService.getAllAnimationsBySpriteName(spriteName);
     }
 
-    @GetMapping("/re-build-image/{animationId}")
-    public SpriteInfos reBuildImage(@PathVariable Long animationId) throws IOException {
-        return spriteService.reBuildImage(animationId);
+    @GetMapping("/normalize-sprite-sheet/{animationId}")
+    public SpriteInfos normalizeSpriteSheet(@PathVariable Long animationId) throws IOException {
+        return spriteService.normalizeSpriteSheet(animationId);
     }
 
     @GetMapping("/flip-horizontal/{animationId}")

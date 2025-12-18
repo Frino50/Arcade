@@ -581,7 +581,7 @@ public class SpriteService {
     }
 
     @Transactional
-    public SpriteInfos reBuildImage(Long animationId) throws IOException {
+    public SpriteInfos normalizeSpriteSheet(Long animationId) throws IOException {
         log.info("🔧 Début reconstruction animation ID: {}", animationId);
 
         SpriteInfos spriteInfos = spriteRepository.getSpriteInfosByAnimationId(animationId);

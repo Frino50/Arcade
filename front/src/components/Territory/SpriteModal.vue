@@ -99,7 +99,6 @@ import Animation from "@/components/Territory/Animation.vue";
 import type SpriteInfo from "@/models/SpriteInfos.ts";
 import spriteService from "@/services/spriteService.ts";
 import SpriteSheet from "@/components/Territory/SpriteSheet.vue";
-import { spriteCache } from "@/services/SpriteCache.ts";
 
 defineProps<{
     visible: boolean;
@@ -112,9 +111,10 @@ const listSprites = defineModel<SpriteInfo[]>();
 async function reBuildImage(animationId: number, spriteUrl: string) {
     if (!listSprites.value) return;
 
-    spriteCache.delete(spriteUrl);
-    const updatedSprite: SpriteInfo =
-        await spriteService.reBuildImage(animationId);
+    const updatedSprite: SpriteInfo = await spriteService.normalizeSpriteSheet(
+        animationId,
+        spriteUrl
+    );
 
     const index = listSprites.value.findIndex(
         (s) => s.animationId === animationId
@@ -128,9 +128,10 @@ async function reBuildImage(animationId: number, spriteUrl: string) {
 async function flipHorizontal(animationId: number, spriteUrl: string) {
     if (!listSprites.value) return;
 
-    spriteCache.delete(spriteUrl);
-    const updatedSprite: SpriteInfo =
-        await spriteService.flipHorizontal(animationId);
+    const updatedSprite: SpriteInfo = await spriteService.flipHorizontal(
+        animationId,
+        spriteUrl
+    );
 
     const index = listSprites.value.findIndex(
         (s) => s.animationId === animationId

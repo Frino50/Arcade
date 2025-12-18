@@ -15,6 +15,7 @@ export default {
     },
 
     async deleteSprite(name: string) {
+        spriteCache.deleteByName(name);
         return await apiService.delete(`/sprite/delete/${name}`);
     },
 
@@ -39,14 +40,16 @@ export default {
         return response.data;
     },
 
-    async reBuildImage(animationId: number) {
+    async normalizeSpriteSheet(animationId: number, spriteUrl: string) {
+        spriteCache.delete(spriteUrl);
         const response = await apiService.get(
-            `/sprite/re-build-image/${animationId}`
+            `/sprite/normalize-sprite-sheet/${animationId}`
         );
         return response.data;
     },
 
-    async flipHorizontal(animationId: number) {
+    async flipHorizontal(animationId: number, spriteUrl: string) {
+        spriteCache.delete(spriteUrl);
         const response = await apiService.get(
             `/sprite/flip-horizontal/${animationId}`
         );
