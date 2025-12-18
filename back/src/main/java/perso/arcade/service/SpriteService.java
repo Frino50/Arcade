@@ -341,59 +341,77 @@ public class SpriteService {
         List<BufferedImage> rawFrames = splitByFrameCount(original, frameCount);
         int height = original.getHeight();
 
-        int maxContentWidth = calculateMaxContentWidth(rawFrames);
+        // 1. Calculer les bornes GLOBALES (sur toute l'animation)
+        int[] globalBounds = calculateGlobalHorizontalBounds(rawFrames);
 
-        int totalWidth = frameCount * maxContentWidth;
+        // Sécurité si l'image est vide
+        if (globalBounds == null) {
+            return original;
+        }
+
+        int globalMinX = globalBounds[0];
+        int globalMaxX = globalBounds[1];
+        int newFrameWidth = globalMaxX - globalMinX + 1;
+
+        // Calcul de la nouvelle largeur totale
+        int totalWidth = frameCount * newFrameWidth;
         BufferedImage output = new BufferedImage(totalWidth, height, BufferedImage.TYPE_INT_ARGB);
 
-        log.info("Reconstruction: {} frames × {}px = {}px (original: {}px)",
-                frameCount, maxContentWidth, totalWidth, original.getWidth());
+        log.info("Reconstruction Globale: {} frames × {}px (ogn: {}px) | Crop: x{} -> x{}",
+                frameCount, newFrameWidth, totalWidth, globalMinX, globalMaxX);
 
-        composeFrames(rawFrames, output, maxContentWidth, height);
+        // 2. Composer en utilisant le décalage global constant
+        composeFramesGlobal(rawFrames, output, globalMinX, newFrameWidth, height);
 
         return output;
     }
 
     /**
-     * Calcule la largeur maximale du contenu parmi toutes les frames
+     * Calcule les bornes horizontales minimales et maximales sur l'ensemble des frames.
+     *
+     * @return int[]{minX, maxX} ou null si vide
      */
-    private int calculateMaxContentWidth(List<BufferedImage> frames) {
-        int maxWidth = 1;
+    private int[] calculateGlobalHorizontalBounds(List<BufferedImage> frames) {
+        int globalMinX = Integer.MAX_VALUE;
+        int globalMaxX = Integer.MIN_VALUE;
+        boolean hasContent = false;
 
         for (BufferedImage frame : frames) {
-            int[] bounds = computeHorizontalBounds(frame);
+            int[] bounds = computeHorizontalBounds(frame); // Réutilise votre méthode existante
             if (bounds != null) {
-                int contentWidth = bounds[1] - bounds[0] + 1;
-                maxWidth = Math.max(maxWidth, contentWidth);
+                hasContent = true;
+                // On cherche le min le plus petit de TOUTES les frames
+                globalMinX = Math.min(globalMinX, bounds[0]);
+                // On cherche le max le plus grand de TOUTES les frames
+                globalMaxX = Math.max(globalMaxX, bounds[1]);
             }
         }
 
-        return maxWidth;
+        return hasContent ? new int[]{globalMinX, globalMaxX} : null;
     }
 
     /**
-     * Compose les frames dans l'image de sortie avec alignement à gauche
+     * Compose les frames en appliquant le MÊME décalage (globalMinX) à toutes.
      */
-    private void composeFrames(List<BufferedImage> frames, BufferedImage output,
-                               int maxContentWidth, int height) {
+    private void composeFramesGlobal(List<BufferedImage> frames, BufferedImage output,
+                                     int globalMinX, int frameWidth, int height) {
         int xCursor = 0;
 
         for (BufferedImage frame : frames) {
-            int[] bounds = computeHorizontalBounds(frame);
+            // On copie la portion définie par le globalMinX pour chaque frame
+            // Cela inclut le "vide" relatif nécessaire au mouvement
+            for (int x = 0; x < frameWidth; x++) {
+                for (int y = 0; y < height; y++) {
+                    // Coordonnée source : on décale toujours de globalMinX
+                    int sourceX = globalMinX + x;
 
-            if (bounds != null) {
-                int contentWidth = bounds[1] - bounds[0] + 1;
-
-                // Copier le contenu aligné à gauche
-                for (int x = 0; x < contentWidth; x++) {
-                    for (int y = 0; y < height; y++) {
-                        output.setRGB(xCursor + x, y, frame.getRGB(bounds[0] + x, y));
+                    // Sécurité bounds (si la frame source est plus petite que le calcul théorique)
+                    if (sourceX < frame.getWidth()) {
+                        output.setRGB(xCursor + x, y, frame.getRGB(sourceX, y));
                     }
                 }
             }
-
-            // Avancer de maxContentWidth pour garantir des frames de largeur égale
-            xCursor += maxContentWidth;
+            xCursor += frameWidth;
         }
     }
 
