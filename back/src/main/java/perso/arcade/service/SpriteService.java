@@ -331,110 +331,64 @@ public class SpriteService {
         return Math.max(1, totalFrames);
     }
 
-    // ==================== RECONSTRUCTION DE SPRITE ====================
+    // ==================== RECONSTRUCTION DE SPRITE (OPTIMISÉ X + Y) ====================
 
-    /**
-     * Reconstruit un sprite avec normalisation des frames
-     * (alignement à gauche, largeurs égales)
-     */
     private BufferedImage rebuildFinalSprite(BufferedImage original, int frameCount) {
         List<BufferedImage> rawFrames = splitByFrameCount(original, frameCount);
-        int height = original.getHeight();
 
-        // 1. Calculer les bornes GLOBALES (sur toute l'animation)
-        int[] globalBounds = calculateGlobalHorizontalBounds(rawFrames);
+        // 1. Calculer les bornes GLOBALES (X et Y)
+        int[] globalBounds = calculateGlobalBounds(rawFrames);
 
-        // Sécurité si l'image est vide
         if (globalBounds == null) {
-            return original;
+            return original; // Image vide
         }
 
         int globalMinX = globalBounds[0];
         int globalMaxX = globalBounds[1];
+        int globalMinY = globalBounds[2];
+        int globalMaxY = globalBounds[3];
+
         int newFrameWidth = globalMaxX - globalMinX + 1;
+        int newFrameHeight = globalMaxY - globalMinY + 1; // Nouvelle hauteur optimisée
 
-        // Calcul de la nouvelle largeur totale
         int totalWidth = frameCount * newFrameWidth;
-        BufferedImage output = new BufferedImage(totalWidth, height, BufferedImage.TYPE_INT_ARGB);
 
-        log.info("Reconstruction Globale: {} frames × {}px (ogn: {}px) | Crop: x{} -> x{}",
-                frameCount, newFrameWidth, totalWidth, globalMinX, globalMaxX);
+        // Création de l'image avec la NOUVELLE hauteur
+        BufferedImage output = new BufferedImage(totalWidth, newFrameHeight, BufferedImage.TYPE_INT_ARGB);
 
-        // 2. Composer en utilisant le décalage global constant
-        composeFramesGlobal(rawFrames, output, globalMinX, newFrameWidth, height);
+        log.info("Optimisation Globale: {} frames. Crop X: {}-{}, Crop Y: {}-{}",
+                frameCount, globalMinX, globalMaxX, globalMinY, globalMaxY);
+        log.info("Nouvelles dimensions par frame : {}x{}", newFrameWidth, newFrameHeight);
+
+        // 2. Composer
+        composeFramesGlobal(rawFrames, output, globalMinX, globalMinY, newFrameWidth, newFrameHeight);
 
         return output;
     }
 
     /**
-     * Calcule les bornes horizontales minimales et maximales sur l'ensemble des frames.
-     *
-     * @return int[]{minX, maxX} ou null si vide
-     */
-    private int[] calculateGlobalHorizontalBounds(List<BufferedImage> frames) {
-        int globalMinX = Integer.MAX_VALUE;
-        int globalMaxX = Integer.MIN_VALUE;
-        boolean hasContent = false;
-
-        for (BufferedImage frame : frames) {
-            int[] bounds = computeHorizontalBounds(frame); // Réutilise votre méthode existante
-            if (bounds != null) {
-                hasContent = true;
-                // On cherche le min le plus petit de TOUTES les frames
-                globalMinX = Math.min(globalMinX, bounds[0]);
-                // On cherche le max le plus grand de TOUTES les frames
-                globalMaxX = Math.max(globalMaxX, bounds[1]);
-            }
-        }
-
-        return hasContent ? new int[]{globalMinX, globalMaxX} : null;
-    }
-
-    /**
-     * Compose les frames en appliquant le MÊME décalage (globalMinX) à toutes.
+     * Compose les frames en appliquant les décalages globaux X et Y.
      */
     private void composeFramesGlobal(List<BufferedImage> frames, BufferedImage output,
-                                     int globalMinX, int frameWidth, int height) {
+                                     int globalMinX, int globalMinY,
+                                     int newFrameWidth, int newFrameHeight) {
         int xCursor = 0;
 
         for (BufferedImage frame : frames) {
-            // On copie la portion définie par le globalMinX pour chaque frame
-            // Cela inclut le "vide" relatif nécessaire au mouvement
-            for (int x = 0; x < frameWidth; x++) {
-                for (int y = 0; y < height; y++) {
-                    // Coordonnée source : on décale toujours de globalMinX
+            for (int x = 0; x < newFrameWidth; x++) {
+                for (int y = 0; y < newFrameHeight; y++) {
+                    // Coordonnées sources basées sur le coin haut-gauche global
                     int sourceX = globalMinX + x;
+                    int sourceY = globalMinY + y;
 
-                    // Sécurité bounds (si la frame source est plus petite que le calcul théorique)
-                    if (sourceX < frame.getWidth()) {
-                        output.setRGB(xCursor + x, y, frame.getRGB(sourceX, y));
+                    // Sécurité pour ne pas sortir de l'image source
+                    if (sourceX < frame.getWidth() && sourceY < frame.getHeight()) {
+                        output.setRGB(xCursor + x, y, frame.getRGB(sourceX, sourceY));
                     }
                 }
             }
-            xCursor += frameWidth;
+            xCursor += newFrameWidth;
         }
-    }
-
-    /**
-     * Calcule les bornes horizontales du contenu visible d'une image
-     */
-    private int[] computeHorizontalBounds(BufferedImage img) {
-        int width = img.getWidth();
-        int height = img.getHeight();
-        int minX = width;
-        int maxX = 0;
-
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                int alpha = (img.getRGB(x, y) >>> 24) & 0xff;
-                if (alpha > ALPHA_THRESHOLD) {
-                    minX = Math.min(minX, x);
-                    maxX = Math.max(maxX, x);
-                }
-            }
-        }
-
-        return (minX > maxX) ? null : new int[]{minX, maxX};
     }
 
     /**
@@ -452,6 +406,63 @@ public class SpriteService {
         }
 
         return frames;
+    }
+
+    /**
+     * Calcule les bornes GLOBALES (X et Y) sur l'ensemble des frames.
+     *
+     * @return int[]{globalMinX, globalMaxX, globalMinY, globalMaxY}
+     */
+    private int[] calculateGlobalBounds(List<BufferedImage> frames) {
+        int globalMinX = Integer.MAX_VALUE;
+        int globalMaxX = Integer.MIN_VALUE;
+        int globalMinY = Integer.MAX_VALUE;
+        int globalMaxY = Integer.MIN_VALUE;
+
+        boolean hasContent = false;
+
+        for (BufferedImage frame : frames) {
+            int[] bounds = computeContentBounds(frame);
+            if (bounds != null) {
+                hasContent = true;
+                // Bounds format: [minX, maxX, minY, maxY]
+                globalMinX = Math.min(globalMinX, bounds[0]);
+                globalMaxX = Math.max(globalMaxX, bounds[1]);
+                globalMinY = Math.min(globalMinY, bounds[2]);
+                globalMaxY = Math.max(globalMaxY, bounds[3]);
+            }
+        }
+
+        return hasContent ? new int[]{globalMinX, globalMaxX, globalMinY, globalMaxY} : null;
+    }
+
+    /**
+     * Calcule les bornes (X et Y) du contenu visible d'une image.
+     *
+     * @return int[]{minX, maxX, minY, maxY} ou null si vide
+     */
+    private int[] computeContentBounds(BufferedImage img) {
+        int width = img.getWidth();
+        int height = img.getHeight();
+
+        int minX = width, maxX = 0;
+        int minY = height, maxY = 0;
+        boolean hasPixels = false;
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int alpha = (img.getRGB(x, y) >>> 24) & 0xff;
+                if (alpha > ALPHA_THRESHOLD) {
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                    hasPixels = true;
+                }
+            }
+        }
+
+        return hasPixels ? new int[]{minX, maxX, minY, maxY} : null;
     }
 
     // ==================== GESTION ZIP ====================
@@ -578,6 +589,7 @@ public class SpriteService {
                             "Animation introuvable ID: " + animationId));
 
             animation.setWidth(normalizedImg.getWidth());
+            animation.setHeight(normalizedImg.getHeight());
             animationRepository.save(animation);
 
             log.info("✓ Image reconstruite: {} ({}x{}, {} frames)",
