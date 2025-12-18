@@ -21,6 +21,10 @@
                     <div class="sprites-grid">
                         <div
                             class="sprite-card"
+                            :class="{
+                                small:
+                                    spriteInfo.height * spriteInfo.scale < 80,
+                            }"
                             v-for="spriteInfo in listSprites"
                             :key="spriteInfo.animationId"
                         >
@@ -35,7 +39,7 @@
                                     <span class="label">Rendu Animation</span>
                                     <div class="animation-container">
                                         <Animation
-                                            :key="spriteInfo.width"
+                                            :key="`${spriteInfo.animationId}-${refreshTrigger}`"
                                             :sprite-src="spriteInfo.imageUrl"
                                             :width="spriteInfo.width"
                                             :height="spriteInfo.height"
@@ -49,7 +53,7 @@
                                     <span class="label">Planche Source</span>
                                     <div class="sheet-container">
                                         <SpriteSheet
-                                            :key="spriteInfo.width"
+                                            :key="`${spriteInfo.animationId}-${refreshTrigger}`"
                                             :sprite-src="spriteInfo.imageUrl"
                                             :width="spriteInfo.width"
                                             :height="spriteInfo.height"
@@ -99,6 +103,7 @@ import Animation from "@/components/Territory/Animation.vue";
 import type SpriteInfo from "@/models/SpriteInfos.ts";
 import spriteService from "@/services/spriteService.ts";
 import SpriteSheet from "@/components/Territory/SpriteSheet.vue";
+import { ref } from "vue";
 
 defineProps<{
     visible: boolean;
@@ -107,7 +112,7 @@ defineProps<{
 defineEmits(["close"]);
 
 const listSprites = defineModel<SpriteInfo[]>();
-
+const refreshTrigger = ref(Date.now());
 async function reBuildImage(animationId: number, spriteUrl: string) {
     if (!listSprites.value) return;
 
@@ -128,18 +133,8 @@ async function reBuildImage(animationId: number, spriteUrl: string) {
 async function flipHorizontal(animationId: number, spriteUrl: string) {
     if (!listSprites.value) return;
 
-    const updatedSprite: SpriteInfo = await spriteService.flipHorizontal(
-        animationId,
-        spriteUrl
-    );
-
-    const index = listSprites.value.findIndex(
-        (s) => s.animationId === animationId
-    );
-
-    if (index !== -1) {
-        listSprites.value[index] = updatedSprite;
-    }
+    await spriteService.flipHorizontal(animationId, spriteUrl);
+    refreshTrigger.value = Date.now();
 }
 </script>
 
@@ -215,10 +210,12 @@ async function flipHorizontal(animationId: number, spriteUrl: string) {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    height: 18.8rem;
     transition: transform 0.2s;
+    height: clamp(21.7rem, 35vh, 26rem);
 }
-
+.sprite-card.small {
+    height: clamp(17.7rem, 28vh, 20rem);
+}
 .sprite-card:hover {
     border-color: #475569;
 }
@@ -270,17 +267,16 @@ async function flipHorizontal(animationId: number, spriteUrl: string) {
     align-items: center;
     gap: 0.5rem;
     flex: 1;
-    height: 100%;
     overflow: hidden;
+    height: 100%;
 }
 
 .animation-container {
     display: flex;
-    align-items: end;
+    align-items: flex-end;
     justify-content: center;
     height: 100%;
     width: 100%;
-    padding-bottom: 1rem;
 }
 
 .sheet-container {
@@ -288,8 +284,8 @@ async function flipHorizontal(animationId: number, spriteUrl: string) {
     overflow-y: hidden;
     display: flex;
     align-items: end;
-    height: 100%;
     width: 100%;
+    height: 100%;
     padding-bottom: 1rem;
 }
 

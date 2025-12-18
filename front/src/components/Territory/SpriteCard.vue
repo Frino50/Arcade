@@ -2,6 +2,7 @@
     <div class="sprite-card">
         <div class="visual-stage">
             <Animation
+                :key="animationKey"
                 :sprite-src="sprite.imageUrl"
                 :width="sprite.width"
                 :height="sprite.height"
@@ -52,7 +53,10 @@
         <SpriteModal
             v-model="listSpriteInfo"
             :visible="showModal"
-            @close="showModal = false"
+            @close="
+                showModal = false;
+                animationKey++;
+            "
         />
     </div>
 </template>
@@ -71,6 +75,7 @@ const sprite = defineModel<SpriteInfo>({ required: true });
 
 const listSpriteInfo = ref<SpriteInfo[]>([]);
 const showModal = ref(false);
+const animationKey = ref(0);
 
 onMounted(() => {
     if (!sprite.value.newName) {

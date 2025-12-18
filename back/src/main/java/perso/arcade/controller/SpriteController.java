@@ -62,7 +62,8 @@ public class SpriteController {
     }
 
     @GetMapping("/flip-horizontal/{animationId}")
-    public SpriteInfos flipHorizontal(@PathVariable Long animationId) {
-        return spriteService.flipHorizontal(animationId);
+    public ResponseEntity<Void> flipHorizontal(@PathVariable Long animationId) {
+        spriteService.flipHorizontal(animationId);
+        return ResponseEntity.noContent().build();
     }
 }

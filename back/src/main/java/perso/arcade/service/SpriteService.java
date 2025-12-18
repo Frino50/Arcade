@@ -746,7 +746,7 @@ public class SpriteService {
     }
 
     @Transactional
-    public SpriteInfos flipHorizontal(Long animationId) {
+    public void flipHorizontal(Long animationId) {
         log.info("🔄 Retournement horizontal de l'animation ID: {}", animationId);
 
         SpriteInfos spriteInfos = spriteRepository.getSpriteInfosByAnimationId(animationId);
@@ -792,9 +792,6 @@ public class SpriteService {
             // Sauvegarde de l'image modifiée
             ImageIO.write(flippedImg, "png", filePath.toFile());
             log.info("✅ Animation retournée avec succès.");
-
-            return spriteRepository.getSpriteInfosByAnimationId(animationId);
-
         } catch (IOException e) {
             log.error("❌ Erreur lors du retournement de l'image: {}", e.getMessage());
             throw new RuntimeException("Erreur I/O lors du retournement du sprite", e);

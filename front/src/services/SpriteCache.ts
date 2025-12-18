@@ -64,12 +64,20 @@ class SpriteCache {
     }
 
     deleteByName(name: string): void {
-        this.blobCache.forEach((blobUrl, key) => {
-            if (key.includes(name)) {
-                // 1. Libère la mémoire pour cette URL
-                URL.revokeObjectURL(blobUrl);
+        // 1. Identifier les clés à supprimer sans modifier la Map immédiatement
+        const keysToDelete: string[] = [];
 
-                // 2. Supprime l'entrée de la Map
+        this.blobCache.forEach((_, key) => {
+            if (key.includes(name)) {
+                keysToDelete.push(key);
+            }
+        });
+
+        // 2. Procéder à la suppression réelle
+        keysToDelete.forEach((key) => {
+            const blobUrl = this.blobCache.get(key);
+            if (blobUrl) {
+                URL.revokeObjectURL(blobUrl);
                 this.blobCache.delete(key);
             }
         });
