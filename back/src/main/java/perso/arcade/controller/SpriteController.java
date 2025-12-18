@@ -60,4 +60,9 @@ public class SpriteController {
     public SpriteInfos reBuildImage(@PathVariable Long animationId) throws IOException {
         return spriteService.reBuildImage(animationId);
     }
+
+    @GetMapping("/flip-horizontal/{animationId}")
+    public SpriteInfos flipHorizontal(@PathVariable Long animationId) {
+        return spriteService.flipHorizontal(animationId);
+    }
 }

@@ -23,6 +23,7 @@ import perso.arcade.repository.AnimationRepository;
 import perso.arcade.repository.SpriteRepository;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -740,6 +742,62 @@ public class SpriteService {
         } catch (IOException e) {
             log.error("❌ Erreur renommage du dossier: '{}' → '{}'", oldPath, newPath, e);
             throw new RuntimeException("Erreur I/O lors du renommage du dossier sprite", e);
+        }
+    }
+
+    @Transactional
+    public SpriteInfos flipHorizontal(Long animationId) {
+        log.info("🔄 Retournement horizontal de l'animation ID: {}", animationId);
+
+        SpriteInfos spriteInfos = spriteRepository.getSpriteInfosByAnimationId(animationId);
+        if (spriteInfos == null) {
+            throw new IllegalArgumentException("Animation introuvable ID: " + animationId);
+        }
+
+        Path filePath = Paths.get(spriteStorage, spriteInfos.getImageUrl());
+
+        try {
+            BufferedImage originalImg = ImageIO.read(filePath.toFile());
+            if (originalImg == null) {
+                throw new IOException("Impossible de lire l'image : " + filePath);
+            }
+
+            int frameCount = spriteInfos.getFrames();
+            int frameWidth = originalImg.getWidth() / frameCount;
+            int height = originalImg.getHeight();
+
+            // Créer une image de destination de la même taille
+            BufferedImage flippedImg = new BufferedImage(originalImg.getWidth(), height, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2d = flippedImg.createGraphics();
+
+            for (int i = 0; i < frameCount; i++) {
+                int xSourceStart = i * frameWidth;
+                int xSourceEnd = xSourceStart + frameWidth;
+
+                // On dessine la frame i à la position i (ordre conservé)
+                // Mais on inverse les coordonnées X de destination pour créer le miroir
+                int xDestStart = i * frameWidth;
+                int xDestEnd = xDestStart + frameWidth;
+
+                // drawImage(img, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, observer)
+                // En inversant dx1 et dx2, on opère le miroir horizontal
+                g2d.drawImage(originalImg,
+                        xDestEnd, 0, xDestStart, height, // Destination (inversée pour le flip)
+                        xSourceStart, 0, xSourceEnd, height, // Source
+                        null);
+            }
+
+            g2d.dispose();
+
+            // Sauvegarde de l'image modifiée
+            ImageIO.write(flippedImg, "png", filePath.toFile());
+            log.info("✅ Animation retournée avec succès.");
+
+            return spriteRepository.getSpriteInfosByAnimationId(animationId);
+
+        } catch (IOException e) {
+            log.error("❌ Erreur lors du retournement de l'image: {}", e.getMessage());
+            throw new RuntimeException("Erreur I/O lors du retournement du sprite", e);
         }
     }
 

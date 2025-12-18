@@ -1,6 +1,7 @@
 import apiService from "@/services/apiService";
 import SpriteInfo from "@/models/SpriteInfos.ts";
 import ModifSpriteDto from "@/models/dtos/modifSpriteDto.ts";
+import { spriteCache } from "@/services/SpriteCache.ts";
 
 export default {
     async uploadSprite(formData: FormData) {
@@ -21,14 +22,14 @@ export default {
         return await apiService.put(`/sprite/rename`, modifSpriteDto);
     },
 
-    async getImage(spritePath: string) {
-        const response = await apiService.get(
-            `/sprite/sprite-storage/${spritePath}`,
-            {
-                responseType: "blob",
-            }
-        );
-        return URL.createObjectURL(response.data);
+    async getImage(spritePath: string): Promise<string> {
+        return spriteCache.getOrFetch(spritePath, async () => {
+            const response = await apiService.get(
+                `/sprite/sprite-storage/${spritePath}`,
+                { responseType: "blob" }
+            );
+            return response.data;
+        });
     },
 
     async getAllAnimationsBySpriteName(spriteName: string) {
@@ -41,6 +42,13 @@ export default {
     async reBuildImage(animationId: number) {
         const response = await apiService.get(
             `/sprite/re-build-image/${animationId}`
+        );
+        return response.data;
+    },
+
+    async flipHorizontal(animationId: number) {
+        const response = await apiService.get(
+            `/sprite/flip-horizontal/${animationId}`
         );
         return response.data;
     },

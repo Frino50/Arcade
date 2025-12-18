@@ -62,10 +62,24 @@
                                 <button
                                     class="action-btn"
                                     @click="
-                                        reBuildImage(spriteInfo.animationId)
+                                        reBuildImage(
+                                            spriteInfo.animationId,
+                                            spriteInfo.imageUrl
+                                        )
                                     "
                                 >
                                     <span>Améliorer le sprite</span>
+                                </button>
+                                <button
+                                    class="action-btn"
+                                    @click="
+                                        flipHorizontal(
+                                            spriteInfo.animationId,
+                                            spriteInfo.imageUrl
+                                        )
+                                    "
+                                >
+                                    <span>Tourner le sprite</span>
                                 </button>
                             </div>
                         </div>
@@ -85,6 +99,7 @@ import Animation from "@/components/Territory/Animation.vue";
 import type SpriteInfo from "@/models/SpriteInfos.ts";
 import spriteService from "@/services/spriteService.ts";
 import SpriteSheet from "@/components/Territory/SpriteSheet.vue";
+import { spriteCache } from "@/services/SpriteCache.ts";
 
 defineProps<{
     visible: boolean;
@@ -94,11 +109,28 @@ defineEmits(["close"]);
 
 const listSprites = defineModel<SpriteInfo[]>();
 
-async function reBuildImage(animationId: number) {
+async function reBuildImage(animationId: number, spriteUrl: string) {
     if (!listSprites.value) return;
 
+    spriteCache.delete(spriteUrl);
     const updatedSprite: SpriteInfo =
         await spriteService.reBuildImage(animationId);
+
+    const index = listSprites.value.findIndex(
+        (s) => s.animationId === animationId
+    );
+
+    if (index !== -1) {
+        listSprites.value[index] = updatedSprite;
+    }
+}
+
+async function flipHorizontal(animationId: number, spriteUrl: string) {
+    if (!listSprites.value) return;
+
+    spriteCache.delete(spriteUrl);
+    const updatedSprite: SpriteInfo =
+        await spriteService.flipHorizontal(animationId);
 
     const index = listSprites.value.findIndex(
         (s) => s.animationId === animationId
@@ -266,6 +298,8 @@ async function reBuildImage(animationId: number) {
     border-top: 1px solid #334155;
     display: flex;
     justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 .action-btn {
