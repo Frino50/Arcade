@@ -14,17 +14,6 @@
                     @change="onFileSelected($event)"
                     style="display: none"
                 />
-
-                <div v-if="selectedFile" class="file-status">
-                    <span class="file-name">{{ selectedFile.name }}</span>
-                    <button class="btn btn-primary" @click="sendToBackend">
-                        Envoyer
-                    </button>
-                </div>
-
-                <p v-if="serverResponse" class="server-message">
-                    {{ serverResponse }}
-                </p>
             </div>
         </div>
     </header>
@@ -32,10 +21,6 @@
 
 <script setup lang="ts">
 import spriteService from "@/services/spriteService.ts";
-import { ref } from "vue";
-
-const selectedFile = ref<File>();
-const serverResponse = ref<string>();
 
 const emit = defineEmits(["add-to-list"]);
 
@@ -43,26 +28,15 @@ function openFilePicker() {
     document.getElementById("fileInput")?.click();
 }
 
-function onFileSelected(event: Event) {
+async function onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-        selectedFile.value = input.files[0];
-        serverResponse.value = undefined;
+        const formData = new FormData();
+        formData.append("file", input.files[0]);
+
+        const newSprite = await spriteService.uploadSprite(formData);
+        emit("add-to-list", newSprite.data);
     }
-}
-
-async function sendToBackend() {
-    if (!selectedFile.value) return;
-
-    const formData = new FormData();
-    formData.append("file", selectedFile.value);
-
-    const newSprite = await spriteService.uploadSprite(formData);
-    emit("add-to-list", newSprite.data);
-
-    selectedFile.value = undefined;
-    serverResponse.value = "Upload réussi !";
-    setTimeout(() => (serverResponse.value = undefined), 3000);
 }
 </script>
 <style scoped>
@@ -109,31 +83,6 @@ h1 {
     gap: 1rem;
 }
 
-.file-status {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: #1e293b;
-    padding: 0.3rem 0.8rem;
-    border-radius: 8px;
-    border: 1px solid #475569;
-}
-
-.file-name {
-    font-size: 0.85rem;
-    color: #94a3b8;
-    max-width: 150px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-.server-message {
-    font-size: 0.8rem;
-    color: #10b981;
-    margin: 0;
-}
-
 .btn {
     padding: 0.6rem 1.2rem;
     border-radius: 8px;
@@ -145,16 +94,6 @@ h1 {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: white;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-
-.btn-primary:hover {
-    filter: brightness(1.1);
 }
 
 .btn-secondary {
