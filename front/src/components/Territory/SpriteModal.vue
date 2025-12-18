@@ -110,7 +110,7 @@ defineProps<{
 }>();
 
 defineEmits(["close"]);
-
+const sprite = defineModel<SpriteInfo>("sprite");
 const listSprites = defineModel<SpriteInfo[]>();
 const refreshTrigger = ref(Date.now());
 async function reBuildImage(animationId: number, spriteUrl: string) {
@@ -128,6 +128,11 @@ async function reBuildImage(animationId: number, spriteUrl: string) {
     if (index !== -1) {
         listSprites.value[index] = updatedSprite;
     }
+    if (updatedSprite.animationId === sprite.value?.animationId) {
+        sprite.value.height = updatedSprite.height;
+        sprite.value.width = updatedSprite.width;
+    }
+    refreshTrigger.value = Date.now();
 }
 
 async function flipHorizontal(animationId: number, spriteUrl: string) {

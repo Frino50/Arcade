@@ -52,6 +52,7 @@
 
         <SpriteModal
             v-model="listSpriteInfo"
+            v-model:sprite="sprite"
             :visible="showModal"
             @close="
                 showModal = false;
