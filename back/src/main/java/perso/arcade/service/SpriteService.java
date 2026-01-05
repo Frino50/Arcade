@@ -111,7 +111,7 @@ public class SpriteService {
             spriteRepository.save(sprite);
 
             log.info("Sprite '{}' importé avec succès", spriteName);
-            log.info(SEPARATEUR);
+            separateur();
 
             return spriteRepository.getSpritesInfosByTypeAndName(AnimationType.IDLE, sprite.getName());
 
@@ -366,114 +366,6 @@ public class SpriteService {
         return Math.max(1, (int) Math.floor(width / averageWidth));
     }
 
-    // ==================== RECONSTRUCTION DE SPRITE ====================
-
-    private BufferedImage rebuildFinalSprite(BufferedImage original, int frameCount) {
-        log.debug("Reconstruction sprite: {}x{}px, {} frames",
-                original.getWidth(), original.getHeight(), frameCount);
-
-        List<BufferedImage> rawFrames = splitByFrameCount(original, frameCount);
-        int[] globalBounds = calculateGlobalBounds(rawFrames);
-
-        if (globalBounds == null) {
-            log.debug("Image vide, conservation de l'original");
-            return original;
-        }
-
-        Bounds bounds = new Bounds(globalBounds);
-        int newFrameWidth = bounds.width();
-        int newFrameHeight = bounds.height();
-        int totalWidth = frameCount * newFrameWidth;
-
-        BufferedImage output = new BufferedImage(totalWidth, newFrameHeight, BufferedImage.TYPE_INT_ARGB);
-
-        log.debug("Optimisation: crop X[{}-{}], Y[{}-{}]",
-                bounds.minX, bounds.maxX, bounds.minY, bounds.maxY);
-        log.debug("Nouvelles dimensions: {}x{}px par frame", newFrameWidth, newFrameHeight);
-
-        composeFramesGlobal(rawFrames, output, bounds);
-
-        return output;
-    }
-
-    private List<BufferedImage> splitByFrameCount(BufferedImage img, int frameCount) {
-        int frameWidth = img.getWidth() / frameCount;
-        List<BufferedImage> frames = new ArrayList<>();
-
-        for (int i = 0; i < frameCount; i++) {
-            int x = i * frameWidth;
-            frames.add(img.getSubimage(x, 0, frameWidth, img.getHeight()));
-        }
-
-        return frames;
-    }
-
-    private int[] calculateGlobalBounds(List<BufferedImage> frames) {
-        int globalMinX = Integer.MAX_VALUE;
-        int globalMaxX = Integer.MIN_VALUE;
-        int globalMinY = Integer.MAX_VALUE;
-        int globalMaxY = Integer.MIN_VALUE;
-
-        boolean hasContent = false;
-
-        for (BufferedImage frame : frames) {
-            int[] bounds = computeContentBounds(frame);
-            if (bounds != null) {
-                hasContent = true;
-                globalMinX = Math.min(globalMinX, bounds[0]);
-                globalMaxX = Math.max(globalMaxX, bounds[1]);
-                globalMinY = Math.min(globalMinY, bounds[2]);
-                globalMaxY = Math.max(globalMaxY, bounds[3]);
-            }
-        }
-
-        return hasContent ? new int[]{globalMinX, globalMaxX, globalMinY, globalMaxY} : null;
-    }
-
-    private int[] computeContentBounds(BufferedImage img) {
-        int width = img.getWidth();
-        int height = img.getHeight();
-
-        int minX = width, maxX = 0;
-        int minY = height, maxY = 0;
-        boolean hasPixels = false;
-
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                int alpha = (img.getRGB(x, y) >>> 24) & 0xff;
-                if (alpha > ALPHA_THRESHOLD) {
-                    minX = Math.min(minX, x);
-                    maxX = Math.max(maxX, x);
-                    minY = Math.min(minY, y);
-                    maxY = Math.max(maxY, y);
-                    hasPixels = true;
-                }
-            }
-        }
-
-        return hasPixels ? new int[]{minX, maxX, minY, maxY} : null;
-    }
-
-    private void composeFramesGlobal(List<BufferedImage> frames, BufferedImage output, Bounds bounds) {
-        int xCursor = 0;
-        int newFrameWidth = bounds.width();
-        int newFrameHeight = bounds.height();
-
-        for (BufferedImage frame : frames) {
-            for (int x = 0; x < newFrameWidth; x++) {
-                for (int y = 0; y < newFrameHeight; y++) {
-                    int sourceX = bounds.minX + x;
-                    int sourceY = bounds.minY + y;
-
-                    if (sourceX < frame.getWidth() && sourceY < frame.getHeight()) {
-                        output.setRGB(xCursor + x, y, frame.getRGB(sourceX, sourceY));
-                    }
-                }
-            }
-            xCursor += newFrameWidth;
-        }
-    }
-
     // ==================== CLASSE INTERNE POUR LES BOUNDS ====================
 
     private Path unzipToTempDirectory(MultipartFile zipFile) throws IOException {
@@ -620,7 +512,7 @@ public class SpriteService {
 
             log.info("Reconstruction terminée: {}x{}px, {} frames",
                     normalizedImg.getWidth(), normalizedImg.getHeight(), spriteInfos.getFrames());
-            log.info(SEPARATEUR);
+            separateur();
 
             return spriteRepository.getSpriteInfosByAnimationId(animationId);
 
@@ -630,7 +522,112 @@ public class SpriteService {
         }
     }
 
-    // ==================== RECONSTRUCTION À LA DEMANDE ====================
+
+    private BufferedImage rebuildFinalSprite(BufferedImage original, int frameCount) {
+        log.debug("Reconstruction sprite: {}x{}px, {} frames",
+                original.getWidth(), original.getHeight(), frameCount);
+
+        List<BufferedImage> rawFrames = splitByFrameCount(original, frameCount);
+        int[] globalBounds = calculateGlobalBounds(rawFrames);
+
+        if (globalBounds == null) {
+            log.debug("Image vide, conservation de l'original");
+            return original;
+        }
+
+        Bounds bounds = new Bounds(globalBounds);
+        int newFrameWidth = bounds.width();
+        int newFrameHeight = bounds.height();
+        int totalWidth = frameCount * newFrameWidth;
+
+        BufferedImage output = new BufferedImage(totalWidth, newFrameHeight, BufferedImage.TYPE_INT_ARGB);
+
+        log.debug("Optimisation: crop X[{}-{}], Y[{}-{}]",
+                bounds.minX, bounds.maxX, bounds.minY, bounds.maxY);
+        log.debug("Nouvelles dimensions: {}x{}px par frame", newFrameWidth, newFrameHeight);
+
+        composeFramesGlobal(rawFrames, output, bounds);
+
+        return output;
+    }
+
+    private List<BufferedImage> splitByFrameCount(BufferedImage img, int frameCount) {
+        int frameWidth = img.getWidth() / frameCount;
+        List<BufferedImage> frames = new ArrayList<>();
+
+        for (int i = 0; i < frameCount; i++) {
+            int x = i * frameWidth;
+            frames.add(img.getSubimage(x, 0, frameWidth, img.getHeight()));
+        }
+
+        return frames;
+    }
+
+    private int[] calculateGlobalBounds(List<BufferedImage> frames) {
+        int globalMinX = Integer.MAX_VALUE;
+        int globalMaxX = Integer.MIN_VALUE;
+        int globalMinY = Integer.MAX_VALUE;
+        int globalMaxY = Integer.MIN_VALUE;
+
+        boolean hasContent = false;
+
+        for (BufferedImage frame : frames) {
+            int[] bounds = computeContentBounds(frame);
+            if (bounds != null) {
+                hasContent = true;
+                globalMinX = Math.min(globalMinX, bounds[0]);
+                globalMaxX = Math.max(globalMaxX, bounds[1]);
+                globalMinY = Math.min(globalMinY, bounds[2]);
+                globalMaxY = Math.max(globalMaxY, bounds[3]);
+            }
+        }
+
+        return hasContent ? new int[]{globalMinX, globalMaxX, globalMinY, globalMaxY} : null;
+    }
+
+    private int[] computeContentBounds(BufferedImage img) {
+        int width = img.getWidth();
+        int height = img.getHeight();
+
+        int minX = width, maxX = 0;
+        int minY = height, maxY = 0;
+        boolean hasPixels = false;
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int alpha = (img.getRGB(x, y) >>> 24) & 0xff;
+                if (alpha > ALPHA_THRESHOLD) {
+                    minX = Math.min(minX, x);
+                    maxX = Math.max(maxX, x);
+                    minY = Math.min(minY, y);
+                    maxY = Math.max(maxY, y);
+                    hasPixels = true;
+                }
+            }
+        }
+
+        return hasPixels ? new int[]{minX, maxX, minY, maxY} : null;
+    }
+
+    private void composeFramesGlobal(List<BufferedImage> frames, BufferedImage output, Bounds bounds) {
+        int xCursor = 0;
+        int newFrameWidth = bounds.width();
+        int newFrameHeight = bounds.height();
+
+        for (BufferedImage frame : frames) {
+            for (int x = 0; x < newFrameWidth; x++) {
+                for (int y = 0; y < newFrameHeight; y++) {
+                    int sourceX = bounds.minX + x;
+                    int sourceY = bounds.minY + y;
+
+                    if (sourceX < frame.getWidth() && sourceY < frame.getHeight()) {
+                        output.setRGB(xCursor + x, y, frame.getRGB(sourceX, sourceY));
+                    }
+                }
+            }
+            xCursor += newFrameWidth;
+        }
+    }
 
     public ResponseEntity<Resource> getSprite(HttpServletRequest request) throws IOException {
         String relativePath = request.getRequestURI().replace("/api/sprite/sprite-storage/", "");
@@ -685,7 +682,7 @@ public class SpriteService {
             log.error("Erreur suppression du dossier: {}", folderPath, e);
         }
 
-        log.info(SEPARATEUR);
+        separateur();
     }
 
     @Transactional
@@ -718,7 +715,7 @@ public class SpriteService {
             log.info("Aucune modification à appliquer");
         }
 
-        log.info(SEPARATEUR);
+        separateur();
 
         return spriteRepository.getSpritesInfosByTypeAndName(AnimationType.IDLE, sprite.getName());
     }
@@ -796,6 +793,10 @@ public class SpriteService {
             log.error("Erreur lors du retournement de l'image: {}", e.getMessage());
             throw new RuntimeException("Erreur I/O lors du retournement du sprite", e);
         }
+    }
+
+    private void separateur() {
+        log.info(SEPARATEUR);
     }
 
     private record Bounds(int minX, int maxX, int minY, int maxY) {
