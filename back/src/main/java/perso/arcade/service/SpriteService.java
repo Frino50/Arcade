@@ -82,7 +82,7 @@ public class SpriteService {
                 log.debug("📁 Répertoire de stockage existant: {}", staticStorageRoot);
             }
         } catch (IOException e) {
-            log.error("❌ Impossible d'initialiser le stockage des sprites", e);
+            log.error("Impossible d'initialiser le stockage des sprites", e);
             throw new RuntimeException("Impossible d'initialiser le stockage des sprites", e);
         }
     }
@@ -110,16 +110,16 @@ public class SpriteService {
 
             spriteRepository.save(sprite);
 
-            log.info("✅ Sprite '{}' importé avec succès", spriteName);
+            log.info("Sprite '{}' importé avec succès", spriteName);
             log.info(SEPARATEUR);
 
             return spriteRepository.getSpritesInfosByTypeAndName(AnimationType.IDLE, sprite.getName());
 
         } catch (SpriteNameAlreadyExist e) {
-            log.warn("⚠️  Sprite déjà existant: {}", e.getMessage());
+            log.warn("Sprite déjà existant: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("❌ Erreur lors du traitement du ZIP: {}", e.getMessage(), e);
+            log.error("Erreur lors du traitement du ZIP: {}", e.getMessage(), e);
             throw new RuntimeException("Erreur import sprite: " + e.getMessage(), e);
         } finally {
             cleanupTempDirectory(tempDir);
@@ -136,25 +136,25 @@ public class SpriteService {
 
     private void validateZipFile(MultipartFile zipFile) {
         if (zipFile == null || zipFile.isEmpty()) {
-            log.error("❌ Fichier ZIP vide ou null");
+            log.error("Fichier ZIP vide ou null");
             throw new IllegalArgumentException("Le fichier ZIP est vide");
         }
-        log.debug("✓ Validation ZIP OK: {} ({} bytes)",
+        log.debug("Validation ZIP OK: {} ({} bytes)",
                 zipFile.getOriginalFilename(), zipFile.getSize());
     }
 
     private void validateSpriteNotExists(String spriteName) {
         if (spriteRepository.findByName(spriteName).isPresent()) {
-            log.warn("⚠️  Sprite '{}' existe déjà en base", spriteName);
+            log.warn("Sprite '{}' existe déjà en base", spriteName);
             throw new SpriteNameAlreadyExist("Un sprite avec le nom '" + spriteName + "' existe déjà");
         }
-        log.debug("✓ Nom de sprite disponible: '{}'", spriteName);
+        log.debug("Nom de sprite disponible: '{}'", spriteName);
     }
 
     // ==================== ANALYSE DES ANIMATIONS ====================
 
     private void processAnimationsMetaData(File spriteRoot, Sprite sprite) {
-        log.info("🔍 Analyse des animations du sprite...");
+        log.info("Analyse des animations du sprite...");
 
         int totalAnimations = 0;
         for (AnimationType type : ANIMATION_TYPES) {
@@ -170,13 +170,13 @@ public class SpriteService {
                 continue;
             }
 
-            log.info("  📂 Traitement {} ({} images)", type, images.length);
+            log.info("Traitement {} ({} images)", type, images.length);
             Map<File, Integer> frameCountByImage = analyzeAnimationFrames(images);
             createAnimations(images, frameCountByImage, type, sprite);
             totalAnimations += images.length;
         }
 
-        log.info("✓ {} animations créées au total", totalAnimations);
+        log.info("{} animations créées au total", totalAnimations);
     }
 
     private File[] getImageFiles(File directory) {
@@ -198,7 +198,7 @@ public class SpriteService {
             try {
                 BufferedImage img = ImageIO.read(file);
                 if (img == null) {
-                    log.warn("    ⚠️  Image illisible: {} (1 frame par défaut)", file.getName());
+                    log.warn("Image illisible: {} (1 frame par défaut)", file.getName());
                     frameCountByImage.put(file, 1);
                     continue;
                 }
@@ -207,7 +207,7 @@ public class SpriteService {
                 frameCountByImage.put(file, frameCount);
 
             } catch (IOException e) {
-                log.error("    ❌ Erreur lecture image {}: {}", file.getName(), e.getMessage());
+                log.error("Erreur lecture image {}: {}", file.getName(), e.getMessage());
                 frameCountByImage.put(file, 1);
             }
         }
@@ -236,7 +236,7 @@ public class SpriteService {
                             type, indice, img.getWidth(), img.getHeight(), frameCount);
                 }
             } catch (IOException e) {
-                log.error("    ❌ Erreur création animation {}.{}: {}",
+                log.error("Erreur création animation {}.{}: {}",
                         type, indice, e.getMessage());
             }
         }
@@ -245,24 +245,24 @@ public class SpriteService {
     // ==================== DÉTECTION DE FRAMES ====================
 
     private int detectFrames(BufferedImage img, String filename) {
-        log.debug("    🔎 Analyse frames: {} ({}x{})", filename, img.getWidth(), img.getHeight());
+        log.debug("Analyse frames: {} ({}x{})", filename, img.getWidth(), img.getHeight());
 
         boolean[] columnHasPixels = scanColumns(img);
         List<Integer> frameWidths = extractFrameWidths(columnHasPixels);
 
         if (frameWidths.isEmpty()) {
-            log.debug("       → Aucun pixel détecté, 1 frame par défaut");
+            log.debug("Aucun pixel détecté, 1 frame par défaut");
             return 1;
         }
 
         double averageWidth = calculateRobustAverageWidth(frameWidths);
         if (averageWidth == 0) {
-            log.debug("       → Largeur moyenne nulle, 1 frame par défaut");
+            log.debug("Largeur moyenne nulle, 1 frame par défaut");
             return 1;
         }
 
         int totalFrames = countFrames(frameWidths, averageWidth);
-        log.debug("       → {} frames détectées (largeur moy: {}px)", totalFrames, averageWidth);
+        log.debug("{} frames détectées (largeur moy: {}px)", totalFrames, averageWidth);
 
         return totalFrames;
     }
@@ -337,17 +337,17 @@ public class SpriteService {
 
         for (int w : frameWidths) {
             if (isResidualBlock(w, averageWidth)) {
-                log.trace("          • Bloc ignoré (résidu): {}px", w);
+                log.trace("Bloc ignoré (résidu): {}px", w);
                 continue;
             }
 
             if (isLargeBlock(w, averageWidth)) {
                 int estimatedFrames = estimateFramesInLargeBlock(w, averageWidth);
                 totalFrames += estimatedFrames;
-                log.trace("          • Bloc large divisé: {}px → {} frames", w, estimatedFrames);
+                log.trace("Bloc large divisé: {}px → {} frames", w, estimatedFrames);
             } else {
                 totalFrames++;
-                log.trace("          • Bloc standard: {}px → 1 frame", w);
+                log.trace("Bloc standard: {}px → 1 frame", w);
             }
         }
 
@@ -369,14 +369,14 @@ public class SpriteService {
     // ==================== RECONSTRUCTION DE SPRITE ====================
 
     private BufferedImage rebuildFinalSprite(BufferedImage original, int frameCount) {
-        log.debug("🔧 Reconstruction sprite: {}x{}px, {} frames",
+        log.debug("Reconstruction sprite: {}x{}px, {} frames",
                 original.getWidth(), original.getHeight(), frameCount);
 
         List<BufferedImage> rawFrames = splitByFrameCount(original, frameCount);
         int[] globalBounds = calculateGlobalBounds(rawFrames);
 
         if (globalBounds == null) {
-            log.debug("   → Image vide, conservation de l'original");
+            log.debug("Image vide, conservation de l'original");
             return original;
         }
 
@@ -387,9 +387,9 @@ public class SpriteService {
 
         BufferedImage output = new BufferedImage(totalWidth, newFrameHeight, BufferedImage.TYPE_INT_ARGB);
 
-        log.debug("   → Optimisation: crop X[{}-{}], Y[{}-{}]",
+        log.debug("Optimisation: crop X[{}-{}], Y[{}-{}]",
                 bounds.minX, bounds.maxX, bounds.minY, bounds.maxY);
-        log.debug("   → Nouvelles dimensions: {}x{}px par frame", newFrameWidth, newFrameHeight);
+        log.debug("Nouvelles dimensions: {}x{}px par frame", newFrameWidth, newFrameHeight);
 
         composeFramesGlobal(rawFrames, output, bounds);
 
@@ -478,7 +478,7 @@ public class SpriteService {
 
     private Path unzipToTempDirectory(MultipartFile zipFile) throws IOException {
         Path destDir = Files.createTempDirectory("sprite_upload_");
-        log.debug("📂 Extraction ZIP vers: {}", destDir);
+        log.debug("Extraction ZIP vers: {}", destDir);
 
         try (ZipInputStream zis = new ZipInputStream(zipFile.getInputStream())) {
             ZipEntry entry;
@@ -515,12 +515,12 @@ public class SpriteService {
                 .toList();
 
         if (validFolders.size() != 1) {
-            log.error("❌ Structure ZIP incorrecte: {} dossiers trouvés (1 attendu)", validFolders.size());
+            log.error("Structure ZIP incorrecte: {} dossiers trouvés (1 attendu)", validFolders.size());
             throw new RuntimeException("La structure du ZIP est incorrecte. Il doit contenir un seul dossier racine");
         }
 
         File root = validFolders.getFirst();
-        log.debug("✓ Dossier racine identifié: {}", root.getName());
+        log.debug("Dossier racine identifié: {}", root.getName());
         return root;
     }
 
@@ -528,9 +528,9 @@ public class SpriteService {
         if (tempDir != null) {
             try {
                 FileSystemUtils.deleteRecursively(tempDir);
-                log.debug("🗑️  Dossier temporaire supprimé: {}", tempDir);
+                log.debug("Dossier temporaire supprimé: {}", tempDir);
             } catch (IOException e) {
-                log.warn("⚠️  Impossible de supprimer le dossier temporaire: {}", tempDir);
+                log.warn("Impossible de supprimer le dossier temporaire: {}", tempDir);
             }
         }
     }
@@ -539,19 +539,19 @@ public class SpriteService {
         Path targetSpriteDir = staticStorageRoot.resolve(spriteName);
 
         if (Files.exists(targetSpriteDir)) {
-            log.debug("🗑️  Suppression du dossier existant: {}", targetSpriteDir);
+            log.debug("Suppression du dossier existant: {}", targetSpriteDir);
             FileSystemUtils.deleteRecursively(targetSpriteDir);
         }
 
         Files.createDirectories(targetSpriteDir);
-        log.debug("📁 Création du dossier cible: {}", targetSpriteDir);
+        log.debug("Création du dossier cible: {}", targetSpriteDir);
 
         int totalFilesCopied = 0;
         for (AnimationType type : ANIMATION_TYPES) {
             totalFilesCopied += copyAnimationFiles(tempSpriteRoot, targetSpriteDir, type);
         }
 
-        log.info("✓ {} fichiers copiés vers le stockage permanent", totalFilesCopied);
+        log.info("{} fichiers copiés vers le stockage permanent", totalFilesCopied);
     }
 
     // ==================== STOCKAGE FICHIERS ====================
@@ -576,24 +576,24 @@ public class SpriteService {
             Files.copy(img.toPath(), targetAnimDir.resolve(cleanName), StandardCopyOption.REPLACE_EXISTING);
         }
 
-        log.debug("  ✓ {} fichiers copiés pour {}", images.length, type);
+        log.debug("{} fichiers copiés pour {}", images.length, type);
         return images.length;
     }
 
     @Transactional
     public SpriteInfos normalizeSpriteSheet(Long animationId) throws IOException {
-        log.info("🔧 Début reconstruction animation ID: {}", animationId);
+        log.info("Début reconstruction animation ID: {}", animationId);
 
         SpriteInfos spriteInfos = spriteRepository.getSpriteInfosByAnimationId(animationId);
         if (spriteInfos == null) {
-            log.error("❌ Animation introuvable ID: {}", animationId);
+            log.error("Animation introuvable ID: {}", animationId);
             throw new IllegalArgumentException("Animation introuvable ID: " + animationId);
         }
 
         Path filePath = Paths.get(spriteStorage, spriteInfos.getImageUrl());
 
         if (!Files.exists(filePath) || Files.isDirectory(filePath)) {
-            log.error("❌ Fichier sprite introuvable: {}", filePath);
+            log.error("Fichier sprite introuvable: {}", filePath);
             throw new IOException("Fichier sprite introuvable: " + filePath);
         }
 
@@ -609,7 +609,7 @@ public class SpriteService {
             BufferedImage normalizedImg = rebuildFinalSprite(originalImg, spriteInfos.getFrames());
 
             ImageIO.write(normalizedImg, "png", filePath.toFile());
-            log.debug("💾 Image sauvegardée: {}", filePath.getFileName());
+            log.debug("Image sauvegardée: {}", filePath.getFileName());
 
             Animation animation = animationRepository.findById(animationId)
                     .orElseThrow(() -> new IllegalArgumentException("Animation introuvable ID: " + animationId));
@@ -618,14 +618,14 @@ public class SpriteService {
             animation.setHeight(normalizedImg.getHeight());
             animationRepository.save(animation);
 
-            log.info("✅ Reconstruction terminée: {}x{}px, {} frames",
+            log.info("Reconstruction terminée: {}x{}px, {} frames",
                     normalizedImg.getWidth(), normalizedImg.getHeight(), spriteInfos.getFrames());
             log.info(SEPARATEUR);
 
             return spriteRepository.getSpriteInfosByAnimationId(animationId);
 
         } catch (IOException e) {
-            log.error("❌ Erreur reconstruction image: {}", e.getMessage(), e);
+            log.error("Erreur reconstruction image: {}", e.getMessage(), e);
             throw new RuntimeException("Erreur lors de la reconstruction de l'image: " + e.getMessage(), e);
         }
     }
@@ -636,7 +636,7 @@ public class SpriteService {
         String relativePath = request.getRequestURI().replace("/api/sprite/sprite-storage/", "");
         Path filePath = Paths.get(spriteStorage, relativePath);
 
-        log.debug("🔍 Requête sprite: {}", relativePath);
+        log.debug("Requête sprite: {}", relativePath);
 
         if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
             Resource resource = new UrlResource(filePath.toUri());
@@ -646,7 +646,7 @@ public class SpriteService {
                 contentType = "application/octet-stream";
             }
 
-            log.debug("✓ Sprite trouvé: {} ({})", filePath.getFileName(), contentType);
+            log.debug("Sprite trouvé: {} ({})", filePath.getFileName(), contentType);
 
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
@@ -654,7 +654,7 @@ public class SpriteService {
                     .body(resource);
         }
 
-        log.warn("⚠️  Sprite introuvable: {}", relativePath);
+        log.warn("Sprite introuvable: {}", relativePath);
         return ResponseEntity.notFound().build();
     }
 
@@ -668,21 +668,21 @@ public class SpriteService {
 
     @Transactional
     public void deleteSpriteByName(String spriteName) {
-        log.info("🗑️  Suppression du sprite: '{}'", spriteName);
+        log.info("Suppression du sprite: '{}'", spriteName);
 
         spriteRepository.deleteByName(spriteName);
-        log.debug("✓ Sprite supprimé de la base de données");
+        log.debug("Sprite supprimé de la base de données");
 
         Path folderPath = staticStorageRoot.resolve(spriteName);
         try {
             if (Files.exists(folderPath)) {
                 FileSystemUtils.deleteRecursively(folderPath);
-                log.info("✓ Dossier physique supprimé: {}", folderPath);
+                log.info("Dossier physique supprimé: {}", folderPath);
             } else {
-                log.warn("⚠️  Dossier physique introuvable: {}", folderPath);
+                log.warn("Dossier physique introuvable: {}", folderPath);
             }
         } catch (IOException e) {
-            log.error("❌ Erreur suppression du dossier: {}", folderPath, e);
+            log.error("Erreur suppression du dossier: {}", folderPath, e);
         }
 
         log.info(SEPARATEUR);
@@ -694,7 +694,7 @@ public class SpriteService {
 
         Sprite sprite = spriteRepository.findByName(modifSpriteDto.getOldName())
                 .orElseThrow(() -> {
-                    log.error("❌ Sprite introuvable: '{}'", modifSpriteDto.getOldName());
+                    log.error("Sprite introuvable: '{}'", modifSpriteDto.getOldName());
                     return new IllegalArgumentException("Sprite introuvable NOM: " + modifSpriteDto.getOldName());
                 });
 
@@ -702,20 +702,20 @@ public class SpriteService {
         boolean scaleChanged = !Objects.equals(sprite.getScale(), modifSpriteDto.getScale());
 
         if (scaleChanged) {
-            log.info("   → Modification de l'échelle: {} → {}", sprite.getScale(), modifSpriteDto.getScale());
+            log.info("Modification de l'échelle: {} → {}", sprite.getScale(), modifSpriteDto.getScale());
             sprite.setScale(modifSpriteDto.getScale());
         }
 
         if (nameChanged) {
-            log.info("   → Renommage: '{}' → '{}'", sprite.getName(), modifSpriteDto.getNewName());
+            log.info("Renommage: '{}' → '{}'", sprite.getName(), modifSpriteDto.getNewName());
             renameSpriteFolderAndEntity(sprite, modifSpriteDto.getNewName());
         }
 
         if (nameChanged || scaleChanged) {
             sprite = spriteRepository.save(sprite);
-            log.info("✓ Sprite mis à jour en base de données");
+            log.info("Sprite mis à jour en base de données");
         } else {
-            log.info("ℹ️  Aucune modification à appliquer");
+            log.info("Aucune modification à appliquer");
         }
 
         log.info(SEPARATEUR);
@@ -735,19 +735,19 @@ public class SpriteService {
                 Files.move(oldPath, newPath,
                         StandardCopyOption.REPLACE_EXISTING,
                         StandardCopyOption.ATOMIC_MOVE);
-                log.info("✓ Dossier renommé: '{}' → '{}'", oldName, newName);
+                log.info("Dossier renommé: '{}' → '{}'", oldName, newName);
             } else {
-                log.warn("⚠️  Dossier source inexistant: {}", oldPath);
+                log.warn("Dossier source inexistant: {}", oldPath);
             }
         } catch (IOException e) {
-            log.error("❌ Erreur renommage du dossier: '{}' → '{}'", oldPath, newPath, e);
+            log.error("Erreur renommage du dossier: '{}' → '{}'", oldPath, newPath, e);
             throw new RuntimeException("Erreur I/O lors du renommage du dossier sprite", e);
         }
     }
 
     @Transactional
     public void flipHorizontal(Long animationId) {
-        log.info("🔄 Retournement horizontal de l'animation ID: {}", animationId);
+        log.info("Retournement horizontal de l'animation ID: {}", animationId);
 
         SpriteInfos spriteInfos = spriteRepository.getSpriteInfosByAnimationId(animationId);
         if (spriteInfos == null) {
@@ -791,9 +791,9 @@ public class SpriteService {
 
             // Sauvegarde de l'image modifiée
             ImageIO.write(flippedImg, "png", filePath.toFile());
-            log.info("✅ Animation retournée avec succès.");
+            log.info("Animation retournée avec succès.");
         } catch (IOException e) {
-            log.error("❌ Erreur lors du retournement de l'image: {}", e.getMessage());
+            log.error("Erreur lors du retournement de l'image: {}", e.getMessage());
             throw new RuntimeException("Erreur I/O lors du retournement du sprite", e);
         }
     }
