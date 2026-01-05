@@ -763,7 +763,6 @@ public class SpriteService {
             int frameWidth = originalImg.getWidth() / frameCount;
             int height = originalImg.getHeight();
 
-            // Créer une image de destination de la même taille
             BufferedImage flippedImg = new BufferedImage(originalImg.getWidth(), height, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2d = flippedImg.createGraphics();
 
@@ -771,22 +770,17 @@ public class SpriteService {
                 int xSourceStart = i * frameWidth;
                 int xSourceEnd = xSourceStart + frameWidth;
 
-                // On dessine la frame i à la position i (ordre conservé)
-                // Mais on inverse les coordonnées X de destination pour créer le miroir
                 int xDestStart = i * frameWidth;
                 int xDestEnd = xDestStart + frameWidth;
 
-                // drawImage(img, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, observer)
-                // En inversant dx1 et dx2, on opère le miroir horizontal
                 g2d.drawImage(originalImg,
-                        xDestEnd, 0, xDestStart, height, // Destination (inversée pour le flip)
-                        xSourceStart, 0, xSourceEnd, height, // Source
+                        xDestEnd, 0, xDestStart, height,
+                        xSourceStart, 0, xSourceEnd, height,
                         null);
             }
 
             g2d.dispose();
 
-            // Sauvegarde de l'image modifiée
             ImageIO.write(flippedImg, "png", filePath.toFile());
             log.info("Animation retournée avec succès.");
         } catch (IOException e) {
