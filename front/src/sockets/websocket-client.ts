@@ -1,12 +1,11 @@
 import { Client, IMessage } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import { useLocalStore } from "@/store/local";
+import { localStore } from "@/store/local.ts";
 
 let stompClient: Client | null = null;
 
 function createClient(): Client {
-    const localstore = useLocalStore();
-    // Attention : Assure-toi que l'URL est correcte (http vs ws)
+    // Pas de hook, juste le state réactif
     const socket = new SockJS(
         "http://202.15.200.35:" + import.meta.env.VITE_BACK_URL + "/ws"
     );
@@ -14,8 +13,8 @@ function createClient(): Client {
     return new Client({
         webSocketFactory: () => socket,
         reconnectDelay: 5000,
-        connectHeaders: localstore.token
-            ? { Authorization: `Bearer ${localstore.token}` }
+        connectHeaders: localStore.token
+            ? { Authorization: `Bearer ${localStore.token}` }
             : {},
     });
 }
@@ -29,7 +28,6 @@ export function getStompClient(): Client {
 
 export function connexionChat(onMessageReceived: (msg: any) => void): Client {
     const client = getStompClient();
-    const localstore = useLocalStore();
 
     const subscribeToTopic = () => {
         client.subscribe(
@@ -39,7 +37,7 @@ export function connexionChat(onMessageReceived: (msg: any) => void): Client {
                 onMessageReceived(newMsg);
             },
             {
-                Authorization: `Bearer ${localstore.token}`,
+                Authorization: `Bearer ${localStore.token}`,
             }
         );
     };

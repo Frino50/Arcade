@@ -9,12 +9,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useLocalStore } from "@/store/local";
+import { localStore } from "@/store/local";
 import Dropdown from "@/components/Dropdown.vue";
 
-const store = useLocalStore();
 const themes: string[] = ["cyan", "yellow", "purple"];
-const currentTheme = ref<string>(store.theme);
+const currentTheme = ref<string>(localStore.theme);
 
 onMounted(() => {
     applyTheme(currentTheme.value);
@@ -24,7 +23,7 @@ function handleThemeChange() {
     const newTheme = currentTheme.value;
 
     if (newTheme) {
-        store.theme = newTheme;
+        localStore.theme = newTheme;
 
         applyTheme(newTheme);
     }

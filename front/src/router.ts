@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
-import { useLocalStore } from "./store/local.ts";
+import { localStore } from "./store/local.ts";
 
 import Accueil from "@/views/Accueil.vue";
 import Demineur from "@/views/Demineur.vue";
@@ -70,8 +70,6 @@ const router = createRouter({
 });
 
 router.beforeEach((to, _from, next) => {
-    const localStore = useLocalStore();
-
     if (to.meta.requiresAuth && !localStore.pseudo) {
         next("/login");
     } else if (

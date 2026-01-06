@@ -40,8 +40,7 @@ import ConnexionDto from "@/models/dtos/connexionDto.ts";
 import auth from "@/services/authService.ts";
 import LoginResponseDto from "@/models/dtos/loginResponseDto.ts";
 import router from "@/router.ts";
-import { useLocalStore } from "@/store/local.ts";
-const localstore = useLocalStore();
+import { localStore } from "@/store/local.ts";
 
 const props = defineProps({
     title: String,
@@ -79,8 +78,8 @@ async function handleSubmit() {
 async function login() {
     const res = await auth.login(connexionDto());
     const loginResponseDto: LoginResponseDto = res.data;
-    localstore.pseudo = loginResponseDto.pseudo;
-    localstore.token = loginResponseDto.token;
+    localStore.pseudo = loginResponseDto.pseudo;
+    localStore.token = loginResponseDto.token;
     await router.push("/");
 }
 

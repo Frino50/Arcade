@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useLocalStore } from "@/store/local.ts";
+import { localStore, LocalState } from "@/store/local.ts";
 import router from "@/router";
 import { useToast } from "@/services/toast.ts";
 
@@ -16,8 +16,7 @@ let isTokenExpiredToastShown = false;
 
 apiService.interceptors.request.use(
     (config) => {
-        const localstore = useLocalStore();
-        const token = localstore.token;
+        const token = localStore.token;
 
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -30,8 +29,6 @@ apiService.interceptors.request.use(
 apiService.interceptors.response.use(
     (response) => response,
     (error) => {
-        const localstore = useLocalStore();
-
         if (!axios.isAxiosError(error)) {
             showError("Erreur inconnue");
             return Promise.reject(error);
@@ -47,7 +44,7 @@ apiService.interceptors.response.use(
             const message = data?.message || "Erreur inconnue";
 
             if (status === 401 && data?.error === "INVALID_OR_EXPIRED_TOKEN") {
-                handleInvalidToken(localstore);
+                handleInvalidToken(localStore);
                 return Promise.reject(error);
             }
 
@@ -71,7 +68,7 @@ function showError(message: string) {
     toast.show(message, "error");
 }
 
-function handleInvalidToken(localstore: ReturnType<typeof useLocalStore>) {
+function handleInvalidToken(localstore: LocalState) {
     if (isTokenExpiredToastShown) return;
 
     isTokenExpiredToastShown = true;

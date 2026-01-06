@@ -1,20 +1,23 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
+import { reactive } from "vue";
 
-export const useLocalStore = defineStore(
-    "local",
-    () => {
-        const pseudo = ref("");
-        const token = ref("");
-        const theme = ref("cyan");
+export interface LocalState {
+    pseudo: string;
+    token: string;
+    theme: string;
+}
 
-        return {
-            pseudo,
-            token,
-            theme,
-        };
+const storedState = JSON.parse(localStorage.getItem("localState") || "{}");
+
+const state = reactive<LocalState>({
+    pseudo: storedState.pseudo || "",
+    token: storedState.token || "",
+    theme: storedState.theme || "cyan",
+});
+
+export const localStore = new Proxy(state, {
+    set(target, prop: keyof LocalState, value) {
+        target[prop] = value;
+        localStorage.setItem("localState", JSON.stringify(target));
+        return true;
     },
-    {
-        persist: true,
-    }
-);
+}) as LocalState;
