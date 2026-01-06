@@ -421,7 +421,11 @@ public class SpriteService {
         }
 
         BufferedImage normalized = rebuildFinalSprite(original, info.getFrames());
-        ImageIO.write(normalized, "png", filePath.toFile());
+
+        File targetFile = filePath.toFile();
+        ImageIO.write(normalized, "png", targetFile);
+
+        optimizeWithPngQuant(targetFile);
 
         Animation anim = animationRepository.findById(animationId).orElseThrow();
         anim.setWidth(normalized.getWidth());
@@ -429,7 +433,7 @@ public class SpriteService {
         animationRepository.save(anim);
 
         log.info(
-                "Reconstruction terminée: {}x{}px, {} frames",
+                "Reconstruction et compression terminées: {}x{}px, {} frames",
                 normalized.getWidth(),
                 normalized.getHeight(),
                 info.getFrames()
@@ -437,6 +441,33 @@ public class SpriteService {
 
         logSeparator();
         return spriteRepository.getSpriteInfosByAnimationId(animationId);
+    }
+
+    private void optimizeWithPngQuant(File file) {
+        try {
+            String[] command = {
+                    "pngquant",
+                    "--force",
+                    "--ext", ".png",
+                    "--quality=60-80",
+                    "--strip",
+                    file.getAbsolutePath()
+            };
+
+            log.debug("Exécution pngquant sur: {}", file.getName());
+
+            Process process = Runtime.getRuntime().exec(command);
+
+            int exitCode = process.waitFor();
+
+            if (exitCode == 0) {
+                log.info("Compression pngquant réussie pour: {}", file.getName());
+            } else {
+                log.warn("Pngquant a terminé avec le code erreur: {}", exitCode);
+            }
+        } catch (Exception e) {
+            log.error("Échec de l'optimisation pngquant (l'image reste non compressée): {}", e.getMessage());
+        }
     }
 
     private BufferedImage rebuildFinalSprite(BufferedImage original, int frameCount) {
