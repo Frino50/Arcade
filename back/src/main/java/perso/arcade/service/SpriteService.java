@@ -40,9 +40,8 @@ import java.util.zip.ZipInputStream;
 @Service
 public class SpriteService {
 
-    public static final String SEPARATEUR = "═══════════════════════════════════════════════════════════";
-
     private static final Logger log = LoggerFactory.getLogger(SpriteService.class);
+    private static final String SEPARATOR = "═══════════════════════════════════════════════════════════";
     private static final int ALPHA_THRESHOLD = 10;
     private static final int MIN_ABSOLUTE_WIDTH = 5;
     private static final double RESIDUAL_THRESHOLD = 0.3;
@@ -54,136 +53,122 @@ public class SpriteService {
             AnimationType.ATTACK
     );
 
-    private final Path staticStorageRoot;
+    private final Path storageRoot;
     private final SpriteRepository spriteRepository;
     private final AnimationRepository animationRepository;
 
     @Value("${sprite.storage.root}")
     private String spriteStorage;
 
-    public SpriteService(
-            SpriteRepository spriteRepository,
-            AnimationRepository animationRepository,
-            @Value("${sprite.storage.root}") String storageRoot) {
+    public SpriteService(SpriteRepository spriteRepository,
+                         AnimationRepository animationRepository,
+                         @Value("${sprite.storage.root}") String storageRoot) {
         this.spriteRepository = spriteRepository;
         this.animationRepository = animationRepository;
-        this.staticStorageRoot = Path.of(storageRoot).toAbsolutePath().normalize();
+        this.storageRoot = Paths.get(storageRoot).toAbsolutePath().normalize();
         initStorage();
     }
 
-    // ==================== INITIALISATION ====================
-
     private void initStorage() {
         try {
-            if (!Files.exists(staticStorageRoot)) {
-                Files.createDirectories(staticStorageRoot);
-                log.info("📁 Répertoire de stockage créé: {}", staticStorageRoot);
+            if (Files.notExists(storageRoot)) {
+                Files.createDirectories(storageRoot);
+                log.info("Stockage créé: {}", storageRoot);
             } else {
-                log.debug("📁 Répertoire de stockage existant: {}", staticStorageRoot);
+                log.debug("Stockage existant: {}", storageRoot);
             }
         } catch (IOException e) {
             log.error("Impossible d'initialiser le stockage des sprites", e);
-            throw new RuntimeException("Impossible d'initialiser le stockage des sprites", e);
+            throw new RuntimeException(e);
         }
     }
 
-    // ==================== IMPORT SPRITE ====================
-
     @Transactional
     public SpriteInfos processSpriteZip(MultipartFile zipFile) {
-        log.info("🚀 Début du traitement du fichier ZIP: {}", zipFile.getOriginalFilename());
-
+        log.info("Début traitement ZIP: {}", zipFile.getOriginalFilename());
         validateZipFile(zipFile);
 
         Path tempDir = null;
         try {
             tempDir = unzipToTempDirectory(zipFile);
-            File tempSpriteRoot = findSpriteRoot(tempDir);
-            String spriteName = tempSpriteRoot.getName();
+            File spriteRoot = findSpriteRoot(tempDir);
+            String spriteName = spriteRoot.getName();
+            log.info("Sprite détecté: '{}'", spriteName);
 
-            log.info("📦 Sprite détecté: '{}'", spriteName);
             validateSpriteNotExists(spriteName);
 
-            Sprite sprite = createSpriteEntity(spriteName);
-            processAnimationsMetaData(tempSpriteRoot, sprite);
-            storeSpriteFilesCleanly(tempSpriteRoot, spriteName);
+            Sprite sprite = new Sprite(spriteName);
+            sprite.setScale(1);
 
+            processAnimationsMetaData(spriteRoot, sprite);
+            storeSpriteFiles(spriteRoot, spriteName);
             spriteRepository.save(sprite);
 
             log.info("Sprite '{}' importé avec succès", spriteName);
-            separateur();
+            logSeparator();
 
-            return spriteRepository.getSpritesInfosByTypeAndName(AnimationType.IDLE, sprite.getName());
+            return spriteRepository.getSpritesInfosByTypeAndName(AnimationType.IDLE, spriteName);
 
         } catch (SpriteNameAlreadyExist e) {
             log.warn("Sprite déjà existant: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("Erreur lors du traitement du ZIP: {}", e.getMessage(), e);
+            log.error("Erreur ZIP: {}", e.getMessage(), e);
             throw new RuntimeException("Erreur import sprite: " + e.getMessage(), e);
         } finally {
             cleanupTempDirectory(tempDir);
         }
     }
 
-    private Sprite createSpriteEntity(String spriteName) {
-        Sprite sprite = new Sprite(spriteName);
-        sprite.setScale(1);
-        return sprite;
-    }
-
-    // ==================== VALIDATION ====================
-
     private void validateZipFile(MultipartFile zipFile) {
         if (zipFile == null || zipFile.isEmpty()) {
-            log.error("Fichier ZIP vide ou null");
-            throw new IllegalArgumentException("Le fichier ZIP est vide");
+            throw new IllegalArgumentException("ZIP vide");
         }
-        log.debug("Validation ZIP OK: {} ({} bytes)",
-                zipFile.getOriginalFilename(), zipFile.getSize());
+        log.debug(
+                "Validation ZIP OK: {} ({} bytes)",
+                zipFile.getOriginalFilename(),
+                zipFile.getSize()
+        );
     }
 
     private void validateSpriteNotExists(String spriteName) {
         if (spriteRepository.findByName(spriteName).isPresent()) {
-            log.warn("Sprite '{}' existe déjà en base", spriteName);
-            throw new SpriteNameAlreadyExist("Un sprite avec le nom '" + spriteName + "' existe déjà");
+            throw new SpriteNameAlreadyExist(
+                    "Sprite déjà existant: '" + spriteName + "'"
+            );
         }
-        log.debug("Nom de sprite disponible: '{}'", spriteName);
+        log.debug("Nom disponible: '{}'", spriteName);
     }
 
-    // ==================== ANALYSE DES ANIMATIONS ====================
-
     private void processAnimationsMetaData(File spriteRoot, Sprite sprite) {
-        log.info("Analyse des animations du sprite...");
+        log.info("Analyse des animations...");
+        int total = 0;
 
-        int totalAnimations = 0;
         for (AnimationType type : ANIMATION_TYPES) {
             File typeDir = new File(spriteRoot, type.name());
             if (!typeDir.exists()) {
-                log.debug("  ⊘ Type {} non présent", type);
                 continue;
             }
 
             File[] images = getImageFiles(typeDir);
             if (images.length == 0) {
-                log.debug("  ⊘ Type {} vide", type);
                 continue;
             }
 
-            log.info("Traitement {} ({} images)", type, images.length);
-            Map<File, Integer> frameCountByImage = analyzeAnimationFrames(images);
-            createAnimations(images, frameCountByImage, type, sprite);
-            totalAnimations += images.length;
+            Map<File, Integer> frameCount = analyzeAnimationFrames(images);
+            createAnimations(images, frameCount, type, sprite);
+            total += images.length;
         }
 
-        log.info("{} animations créées au total", totalAnimations);
+        log.info("{} animations créées", total);
     }
 
-    private File[] getImageFiles(File directory) {
-        File[] images = directory.listFiles(f ->
-                f.isFile() && f.getName().toLowerCase().endsWith(".png"));
+    private File[] getImageFiles(File dir) {
+        File[] images = dir.listFiles(f ->
+                f.isFile() && f.getName().toLowerCase().endsWith(".png")
+        );
 
-        if (images == null || images.length == 0) {
+        if (images == null) {
             return new File[0];
         }
 
@@ -192,195 +177,158 @@ public class SpriteService {
     }
 
     private Map<File, Integer> analyzeAnimationFrames(File[] images) {
-        Map<File, Integer> frameCountByImage = new HashMap<>();
+        Map<File, Integer> frameCount = new HashMap<>();
 
-        for (File file : images) {
+        for (File f : images) {
             try {
-                BufferedImage img = ImageIO.read(file);
-                if (img == null) {
-                    log.warn("Image illisible: {} (1 frame par défaut)", file.getName());
-                    frameCountByImage.put(file, 1);
-                    continue;
-                }
-
-                int frameCount = detectFrames(img, file.getName());
-                frameCountByImage.put(file, frameCount);
-
+                BufferedImage img = ImageIO.read(f);
+                frameCount.put(f, img != null ? detectFrames(img) : 1);
             } catch (IOException e) {
-                log.error("Erreur lecture image {}: {}", file.getName(), e.getMessage());
-                frameCountByImage.put(file, 1);
+                log.warn("Image illisible {}: 1 frame par défaut", f.getName());
+                frameCount.put(f, 1);
             }
         }
 
-        return frameCountByImage;
+        return frameCount;
     }
 
-    private void createAnimations(File[] images, Map<File, Integer> frameCountByImage,
-                                  AnimationType type, Sprite sprite) {
+    private void createAnimations(
+            File[] images,
+            Map<File, Integer> frameCountByImage,
+            AnimationType type,
+            Sprite sprite
+    ) {
         for (int i = 0; i < images.length; i++) {
             File imgFile = images[i];
-            int indice = i + 1;
-            int frameCount = frameCountByImage.getOrDefault(imgFile, 1);
-
             try {
                 BufferedImage img = ImageIO.read(imgFile);
                 if (img != null) {
-                    sprite.addAnimation(new Animation(
-                            frameCount,
-                            img.getWidth(),
-                            img.getHeight(),
-                            type,
-                            indice
-                    ));
-                    log.debug("    ✓ Animation {}.{}: {}x{}px, {} frames",
-                            type, indice, img.getWidth(), img.getHeight(), frameCount);
+                    sprite.addAnimation(
+                            new Animation(
+                                    frameCountByImage.get(imgFile),
+                                    img.getWidth(),
+                                    img.getHeight(),
+                                    type,
+                                    i + 1
+                            )
+                    );
                 }
             } catch (IOException e) {
-                log.error("Erreur création animation {}.{}: {}",
-                        type, indice, e.getMessage());
+                log.error(
+                        "Erreur création animation {}.{}: {}",
+                        type,
+                        i + 1,
+                        e.getMessage()
+                );
             }
         }
     }
 
-    // ==================== DÉTECTION DE FRAMES ====================
+    private int detectFrames(BufferedImage img) {
+        boolean[] columns = scanColumns(img);
+        List<Integer> widths = extractFrameWidths(columns);
 
-    private int detectFrames(BufferedImage img, String filename) {
-        log.debug("Analyse frames: {} ({}x{})", filename, img.getWidth(), img.getHeight());
-
-        boolean[] columnHasPixels = scanColumns(img);
-        List<Integer> frameWidths = extractFrameWidths(columnHasPixels);
-
-        if (frameWidths.isEmpty()) {
-            log.debug("Aucun pixel détecté, 1 frame par défaut");
+        if (widths.isEmpty()) {
             return 1;
         }
 
-        double averageWidth = calculateRobustAverageWidth(frameWidths);
-        if (averageWidth == 0) {
-            log.debug("Largeur moyenne nulle, 1 frame par défaut");
-            return 1;
-        }
-
-        int totalFrames = countFrames(frameWidths, averageWidth);
-        log.debug("{} frames détectées (largeur moy: {}px)", totalFrames, averageWidth);
-
-        return totalFrames;
+        double avgWidth = calculateRobustAverageWidth(widths);
+        return Math.max(1, countFrames(widths, avgWidth));
     }
 
     private boolean[] scanColumns(BufferedImage img) {
-        int width = img.getWidth();
-        int height = img.getHeight();
-        boolean[] columnHasPixels = new boolean[width];
+        boolean[] cols = new boolean[img.getWidth()];
 
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+        for (int x = 0; x < img.getWidth(); x++) {
+            for (int y = 0; y < img.getHeight(); y++) {
                 int alpha = (img.getRGB(x, y) >>> 24) & 0xff;
                 if (alpha > ALPHA_THRESHOLD) {
-                    columnHasPixels[x] = true;
+                    cols[x] = true;
                     break;
                 }
             }
         }
 
-        return columnHasPixels;
+        return cols;
     }
 
-    private List<Integer> extractFrameWidths(boolean[] columnHasPixels) {
-        List<Integer> frameWidths = new ArrayList<>();
-        int currentWidth = 0;
-        boolean insideFrame = false;
+    private List<Integer> extractFrameWidths(boolean[] columns) {
+        List<Integer> widths = new ArrayList<>();
+        int current = 0;
 
-        for (boolean hasPixel : columnHasPixels) {
+        for (boolean hasPixel : columns) {
             if (hasPixel) {
-                currentWidth++;
-                insideFrame = true;
-            } else if (insideFrame) {
-                frameWidths.add(currentWidth);
-                currentWidth = 0;
-                insideFrame = false;
+                current++;
+            } else if (current > 0) {
+                widths.add(current);
+                current = 0;
             }
         }
 
-        if (insideFrame) {
-            frameWidths.add(currentWidth);
+        if (current > 0) {
+            widths.add(current);
         }
 
-        return frameWidths;
+        return widths;
     }
 
-    private double calculateRobustAverageWidth(List<Integer> frameWidths) {
-        List<Integer> filteredWidths = frameWidths.stream()
+    private double calculateRobustAverageWidth(List<Integer> widths) {
+        List<Integer> filtered = widths.stream()
                 .filter(w -> w >= MIN_ABSOLUTE_WIDTH)
                 .toList();
 
-        if (filteredWidths.isEmpty()) return 0;
+        if (filtered.isEmpty()) {
+            return 0;
+        }
 
-        double mean = filteredWidths.stream()
-                .mapToInt(Integer::intValue)
+        double mean = filtered.stream()
+                .mapToInt(i -> i)
                 .average()
                 .orElse(0);
 
-        double stdDev = Math.sqrt(filteredWidths.stream()
-                .mapToDouble(w -> (w - mean) * (w - mean))
-                .average()
-                .orElse(0));
+        double stdDev = Math.sqrt(
+                filtered.stream()
+                        .mapToDouble(i -> (i - mean) * (i - mean))
+                        .average()
+                        .orElse(0)
+        );
 
-        return filteredWidths.stream()
+        return filtered.stream()
                 .filter(w -> Math.abs(w - mean) <= STDDEV_MULTIPLIER * stdDev)
-                .mapToInt(Integer::intValue)
+                .mapToInt(i -> i)
                 .average()
                 .orElse(mean);
     }
 
-    private int countFrames(List<Integer> frameWidths, double averageWidth) {
-        int totalFrames = 0;
+    private int countFrames(List<Integer> widths, double avgWidth) {
+        int total = 0;
 
-        for (int w : frameWidths) {
-            if (isResidualBlock(w, averageWidth)) {
-                log.trace("Bloc ignoré (résidu): {}px", w);
+        for (int w : widths) {
+            if (w < MIN_ABSOLUTE_WIDTH || w < avgWidth * RESIDUAL_THRESHOLD) {
                 continue;
             }
 
-            if (isLargeBlock(w, averageWidth)) {
-                int estimatedFrames = estimateFramesInLargeBlock(w, averageWidth);
-                totalFrames += estimatedFrames;
-                log.trace("Bloc large divisé: {}px → {} frames", w, estimatedFrames);
+            if (w > avgWidth * LARGE_BLOCK_FACTOR) {
+                total += Math.max(1, (int) Math.floor(w / avgWidth));
             } else {
-                totalFrames++;
-                log.trace("Bloc standard: {}px → 1 frame", w);
+                total += 1;
             }
         }
 
-        return Math.max(1, totalFrames);
+        return total;
     }
-
-    private boolean isResidualBlock(int width, double averageWidth) {
-        return width < MIN_ABSOLUTE_WIDTH || width < averageWidth * RESIDUAL_THRESHOLD;
-    }
-
-    private boolean isLargeBlock(int width, double averageWidth) {
-        return width > averageWidth * LARGE_BLOCK_FACTOR;
-    }
-
-    private int estimateFramesInLargeBlock(int width, double averageWidth) {
-        return Math.max(1, (int) Math.floor(width / averageWidth));
-    }
-
-    // ==================== CLASSE INTERNE POUR LES BOUNDS ====================
 
     private Path unzipToTempDirectory(MultipartFile zipFile) throws IOException {
-        Path destDir = Files.createTempDirectory("sprite_upload_");
-        log.debug("Extraction ZIP vers: {}", destDir);
+        Path dest = Files.createTempDirectory("sprite_upload_");
 
         try (ZipInputStream zis = new ZipInputStream(zipFile.getInputStream())) {
             ZipEntry entry;
-            int fileCount = 0;
 
             while ((entry = zis.getNextEntry()) != null) {
-                Path newPath = destDir.resolve(entry.getName()).normalize();
+                Path newPath = dest.resolve(entry.getName()).normalize();
 
-                if (!newPath.startsWith(destDir)) {
-                    throw new IOException("Entrée ZIP invalide (path traversal): " + entry.getName());
+                if (!newPath.startsWith(dest)) {
+                    throw new IOException("ZIP invalide: " + entry.getName());
                 }
 
                 if (entry.isDirectory()) {
@@ -388,213 +336,185 @@ public class SpriteService {
                 } else {
                     Files.createDirectories(newPath.getParent());
                     Files.copy(zis, newPath, StandardCopyOption.REPLACE_EXISTING);
-                    fileCount++;
                 }
             }
-
-            log.debug("✓ {} fichiers extraits", fileCount);
         }
 
-        return destDir;
+        return dest;
     }
-
-    // ==================== GESTION ZIP ====================
 
     private File findSpriteRoot(Path tempDir) {
         File[] folders = tempDir.toFile().listFiles(File::isDirectory);
-        List<File> validFolders = Arrays.stream(folders != null ? folders : new File[0])
+
+        List<File> valid = Arrays.stream(folders != null ? folders : new File[0])
                 .filter(f -> !f.getName().startsWith("__"))
                 .toList();
 
-        if (validFolders.size() != 1) {
-            log.error("Structure ZIP incorrecte: {} dossiers trouvés (1 attendu)", validFolders.size());
-            throw new RuntimeException("La structure du ZIP est incorrecte. Il doit contenir un seul dossier racine");
+        if (valid.size() != 1) {
+            throw new RuntimeException("ZIP doit contenir un seul dossier racine");
         }
 
-        File root = validFolders.getFirst();
-        log.debug("Dossier racine identifié: {}", root.getName());
-        return root;
+        return valid.getFirst();
     }
 
     private void cleanupTempDirectory(Path tempDir) {
         if (tempDir != null) {
             try {
                 FileSystemUtils.deleteRecursively(tempDir);
-                log.debug("Dossier temporaire supprimé: {}", tempDir);
-            } catch (IOException e) {
-                log.warn("Impossible de supprimer le dossier temporaire: {}", tempDir);
+            } catch (IOException ignored) {
             }
         }
     }
 
-    private void storeSpriteFilesCleanly(File tempSpriteRoot, String spriteName) throws IOException {
-        Path targetSpriteDir = staticStorageRoot.resolve(spriteName);
+    private void storeSpriteFiles(File sourceRoot, String spriteName) throws IOException {
+        Path targetRoot = storageRoot.resolve(spriteName);
 
-        if (Files.exists(targetSpriteDir)) {
-            log.debug("Suppression du dossier existant: {}", targetSpriteDir);
-            FileSystemUtils.deleteRecursively(targetSpriteDir);
+        if (Files.exists(targetRoot)) {
+            FileSystemUtils.deleteRecursively(targetRoot);
         }
 
-        Files.createDirectories(targetSpriteDir);
-        log.debug("Création du dossier cible: {}", targetSpriteDir);
+        Files.createDirectories(targetRoot);
 
-        int totalFilesCopied = 0;
+        int totalFiles = 0;
+
         for (AnimationType type : ANIMATION_TYPES) {
-            totalFilesCopied += copyAnimationFiles(tempSpriteRoot, targetSpriteDir, type);
+            totalFiles += copyAnimationFiles(sourceRoot, targetRoot, type);
         }
 
-        log.info("{} fichiers copiés vers le stockage permanent", totalFilesCopied);
+        log.info("{} fichiers copiés vers le stockage", totalFiles);
     }
 
-    // ==================== STOCKAGE FICHIERS ====================
+    private int copyAnimationFiles(File srcRoot, Path targetRoot, AnimationType type) throws IOException {
+        File srcDir = new File(srcRoot, type.name());
 
-    private int copyAnimationFiles(File sourceRoot, Path targetRoot, AnimationType type) throws IOException {
-        File sourceAnimDir = new File(sourceRoot, type.name());
-        if (!sourceAnimDir.exists() || !sourceAnimDir.isDirectory()) {
+        if (!srcDir.exists()) {
             return 0;
         }
 
-        Path targetAnimDir = targetRoot.resolve(type.name());
-        Files.createDirectories(targetAnimDir);
+        Path targetDir = targetRoot.resolve(type.name());
+        Files.createDirectories(targetDir);
 
-        File[] images = getImageFiles(sourceAnimDir);
-        if (images.length == 0) {
-            return 0;
-        }
-
+        File[] images = getImageFiles(srcDir);
         AtomicInteger counter = new AtomicInteger(1);
+
         for (File img : images) {
-            String cleanName = counter.getAndIncrement() + ".png";
-            Files.copy(img.toPath(), targetAnimDir.resolve(cleanName), StandardCopyOption.REPLACE_EXISTING);
+            Path targetPath = targetDir.resolve(counter.getAndIncrement() + ".png");
+            Files.copy(img.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
         }
 
-        log.debug("{} fichiers copiés pour {}", images.length, type);
         return images.length;
     }
 
     @Transactional
     public SpriteInfos normalizeSpriteSheet(Long animationId) throws IOException {
-        log.info("Début reconstruction animation ID: {}", animationId);
+        SpriteInfos info = spriteRepository.getSpriteInfosByAnimationId(animationId);
 
-        SpriteInfos spriteInfos = spriteRepository.getSpriteInfosByAnimationId(animationId);
-        if (spriteInfos == null) {
-            log.error("Animation introuvable ID: {}", animationId);
+        if (info == null) {
             throw new IllegalArgumentException("Animation introuvable ID: " + animationId);
         }
 
-        Path filePath = Paths.get(spriteStorage, spriteInfos.getImageUrl());
+        Path filePath = Paths.get(spriteStorage, info.getImageUrl());
+        BufferedImage original = ImageIO.read(filePath.toFile());
 
-        if (!Files.exists(filePath) || Files.isDirectory(filePath)) {
-            log.error("Fichier sprite introuvable: {}", filePath);
-            throw new IOException("Fichier sprite introuvable: " + filePath);
+        if (original == null) {
+            throw new IOException("Impossible de lire l'image");
         }
 
-        try {
-            BufferedImage originalImg = ImageIO.read(filePath.toFile());
-            if (originalImg == null) {
-                throw new IOException("Impossible de lire l'image: " + filePath);
-            }
+        BufferedImage normalized = rebuildFinalSprite(original, info.getFrames());
+        ImageIO.write(normalized, "png", filePath.toFile());
 
-            log.info("   Original: {}x{}px, {} frames",
-                    originalImg.getWidth(), originalImg.getHeight(), spriteInfos.getFrames());
+        Animation anim = animationRepository.findById(animationId).orElseThrow();
+        anim.setWidth(normalized.getWidth());
+        anim.setHeight(normalized.getHeight());
+        animationRepository.save(anim);
 
-            BufferedImage normalizedImg = rebuildFinalSprite(originalImg, spriteInfos.getFrames());
+        log.info(
+                "Reconstruction terminée: {}x{}px, {} frames",
+                normalized.getWidth(),
+                normalized.getHeight(),
+                info.getFrames()
+        );
 
-            ImageIO.write(normalizedImg, "png", filePath.toFile());
-            log.debug("Image sauvegardée: {}", filePath.getFileName());
-
-            Animation animation = animationRepository.findById(animationId)
-                    .orElseThrow(() -> new IllegalArgumentException("Animation introuvable ID: " + animationId));
-
-            animation.setWidth(normalizedImg.getWidth());
-            animation.setHeight(normalizedImg.getHeight());
-            animationRepository.save(animation);
-
-            log.info("Reconstruction terminée: {}x{}px, {} frames",
-                    normalizedImg.getWidth(), normalizedImg.getHeight(), spriteInfos.getFrames());
-            separateur();
-
-            return spriteRepository.getSpriteInfosByAnimationId(animationId);
-
-        } catch (IOException e) {
-            log.error("Erreur reconstruction image: {}", e.getMessage(), e);
-            throw new RuntimeException("Erreur lors de la reconstruction de l'image: " + e.getMessage(), e);
-        }
+        logSeparator();
+        return spriteRepository.getSpriteInfosByAnimationId(animationId);
     }
 
-
     private BufferedImage rebuildFinalSprite(BufferedImage original, int frameCount) {
-        log.debug("Reconstruction sprite: {}x{}px, {} frames",
-                original.getWidth(), original.getHeight(), frameCount);
+        List<BufferedImage> frames = splitByFrameCount(original, frameCount);
+        int[] boundsArr = calculateGlobalBounds(frames);
 
-        List<BufferedImage> rawFrames = splitByFrameCount(original, frameCount);
-        int[] globalBounds = calculateGlobalBounds(rawFrames);
-
-        if (globalBounds == null) {
-            log.debug("Image vide, conservation de l'original");
+        if (boundsArr == null) {
             return original;
         }
 
-        Bounds bounds = new Bounds(globalBounds);
-        int newFrameWidth = bounds.width();
-        int newFrameHeight = bounds.height();
-        int totalWidth = frameCount * newFrameWidth;
+        Bounds bounds = new Bounds(boundsArr);
+        int newWidth = bounds.width();
+        int newHeight = bounds.height();
+        BufferedImage output = new BufferedImage(frameCount * newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
 
-        BufferedImage output = new BufferedImage(totalWidth, newFrameHeight, BufferedImage.TYPE_INT_ARGB);
+        int xCursor = 0;
+        for (BufferedImage frame : frames) {
+            for (int x = 0; x < newWidth; x++) {
+                for (int y = 0; y < newHeight; y++) {
+                    int sx = bounds.minX + x;
+                    int sy = bounds.minY + y;
 
-        log.debug("Optimisation: crop X[{}-{}], Y[{}-{}]",
-                bounds.minX, bounds.maxX, bounds.minY, bounds.maxY);
-        log.debug("Nouvelles dimensions: {}x{}px par frame", newFrameWidth, newFrameHeight);
-
-        composeFramesGlobal(rawFrames, output, bounds);
+                    if (sx < frame.getWidth() && sy < frame.getHeight()) {
+                        output.setRGB(xCursor + x, y, frame.getRGB(sx, sy));
+                    }
+                }
+            }
+            xCursor += newWidth;
+        }
 
         return output;
     }
 
     private List<BufferedImage> splitByFrameCount(BufferedImage img, int frameCount) {
-        int frameWidth = img.getWidth() / frameCount;
+        int fw = img.getWidth() / frameCount;
         List<BufferedImage> frames = new ArrayList<>();
 
         for (int i = 0; i < frameCount; i++) {
-            int x = i * frameWidth;
-            frames.add(img.getSubimage(x, 0, frameWidth, img.getHeight()));
+            BufferedImage frame = img.getSubimage(i * fw, 0, fw, img.getHeight());
+            frames.add(frame);
         }
 
         return frames;
     }
 
     private int[] calculateGlobalBounds(List<BufferedImage> frames) {
-        int globalMinX = Integer.MAX_VALUE;
-        int globalMaxX = Integer.MIN_VALUE;
-        int globalMinY = Integer.MAX_VALUE;
-        int globalMaxY = Integer.MIN_VALUE;
-
+        int minX = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int minY = Integer.MAX_VALUE;
+        int maxY = Integer.MIN_VALUE;
         boolean hasContent = false;
 
         for (BufferedImage frame : frames) {
-            int[] bounds = computeContentBounds(frame);
-            if (bounds != null) {
+            int[] b = computeContentBounds(frame);
+            if (b != null) {
                 hasContent = true;
-                globalMinX = Math.min(globalMinX, bounds[0]);
-                globalMaxX = Math.max(globalMaxX, bounds[1]);
-                globalMinY = Math.min(globalMinY, bounds[2]);
-                globalMaxY = Math.max(globalMaxY, bounds[3]);
+                minX = Math.min(minX, b[0]);
+                maxX = Math.max(maxX, b[1]);
+                minY = Math.min(minY, b[2]);
+                maxY = Math.max(maxY, b[3]);
             }
         }
 
-        return hasContent ? new int[]{globalMinX, globalMaxX, globalMinY, globalMaxY} : null;
+        return hasContent ? new int[]{minX, maxX, minY, maxY} : null;
     }
 
     private int[] computeContentBounds(BufferedImage img) {
-        int width = img.getWidth();
-        int height = img.getHeight();
+        int w = img.getWidth();
+        int h = img.getHeight();
 
-        int minX = width, maxX = 0;
-        int minY = height, maxY = 0;
+        int minX = w;
+        int maxX = 0;
+        int minY = h;
+        int maxY = 0;
         boolean hasPixels = false;
 
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
                 int alpha = (img.getRGB(x, y) >>> 24) & 0xff;
                 if (alpha > ALPHA_THRESHOLD) {
                     minX = Math.min(minX, x);
@@ -609,49 +529,20 @@ public class SpriteService {
         return hasPixels ? new int[]{minX, maxX, minY, maxY} : null;
     }
 
-    private void composeFramesGlobal(List<BufferedImage> frames, BufferedImage output, Bounds bounds) {
-        int xCursor = 0;
-        int newFrameWidth = bounds.width();
-        int newFrameHeight = bounds.height();
-
-        for (BufferedImage frame : frames) {
-            for (int x = 0; x < newFrameWidth; x++) {
-                for (int y = 0; y < newFrameHeight; y++) {
-                    int sourceX = bounds.minX + x;
-                    int sourceY = bounds.minY + y;
-
-                    if (sourceX < frame.getWidth() && sourceY < frame.getHeight()) {
-                        output.setRGB(xCursor + x, y, frame.getRGB(sourceX, sourceY));
-                    }
-                }
-            }
-            xCursor += newFrameWidth;
-        }
-    }
-
     public ResponseEntity<Resource> getSprite(HttpServletRequest request) throws IOException {
-        String relativePath = request.getRequestURI().replace("/api/sprite/sprite-storage/", "");
-        Path filePath = Paths.get(spriteStorage, relativePath);
-
-        log.debug("Requête sprite: {}", relativePath);
+        String relative = request.getRequestURI().replace("/api/sprite/sprite-storage/", "");
+        Path filePath = Paths.get(spriteStorage, relative);
 
         if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
             Resource resource = new UrlResource(filePath.toUri());
-
-            String contentType = Files.probeContentType(filePath);
-            if (contentType == null) {
-                contentType = "application/octet-stream";
-            }
-
-            log.debug("Sprite trouvé: {} ({})", filePath.getFileName(), contentType);
+            String type = Files.probeContentType(filePath);
 
             return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
+                    .contentType(MediaType.parseMediaType(type != null ? type : "application/octet-stream"))
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filePath.getFileName() + "\"")
                     .body(resource);
         }
 
-        log.warn("Sprite introuvable: {}", relativePath);
         return ResponseEntity.notFound().build();
     }
 
@@ -659,143 +550,103 @@ public class SpriteService {
         return spriteRepository.getAllSpritesInfos(AnimationType.IDLE);
     }
 
-    public List<SpriteInfos> getAllAnimationsBySpriteName(String spriteName) {
-        return spriteRepository.getAllAnimationsBySpriteName(spriteName);
+    public List<SpriteInfos> getAllAnimationsBySpriteName(String name) {
+        return spriteRepository.getAllAnimationsBySpriteName(name);
     }
 
     @Transactional
-    public void deleteSpriteByName(String spriteName) {
-        log.info("Suppression du sprite: '{}'", spriteName);
+    public void deleteSpriteByName(String name) {
+        log.info("Suppression du sprite '{}'", name);
+        spriteRepository.deleteByName(name);
 
-        spriteRepository.deleteByName(spriteName);
-        log.debug("Sprite supprimé de la base de données");
-
-        Path folderPath = staticStorageRoot.resolve(spriteName);
         try {
-            if (Files.exists(folderPath)) {
-                FileSystemUtils.deleteRecursively(folderPath);
-                log.info("Dossier physique supprimé: {}", folderPath);
-            } else {
-                log.warn("Dossier physique introuvable: {}", folderPath);
-            }
-        } catch (IOException e) {
-            log.error("Erreur suppression du dossier: {}", folderPath, e);
+            FileSystemUtils.deleteRecursively(storageRoot.resolve(name));
+        } catch (IOException ignored) {
         }
 
-        separateur();
+        logSeparator();
     }
 
     @Transactional
-    public SpriteInfos renameSprite(ModifSpriteDto modifSpriteDto) {
-        log.info("✏️  Modification du sprite: '{}'", modifSpriteDto.getOldName());
+    public SpriteInfos renameSprite(ModifSpriteDto dto) {
+        Sprite sprite = spriteRepository.findByName(dto.getOldName()).orElseThrow();
 
-        Sprite sprite = spriteRepository.findByName(modifSpriteDto.getOldName())
-                .orElseThrow(() -> {
-                    log.error("Sprite introuvable: '{}'", modifSpriteDto.getOldName());
-                    return new IllegalArgumentException("Sprite introuvable NOM: " + modifSpriteDto.getOldName());
-                });
-
-        boolean nameChanged = !sprite.getName().equals(modifSpriteDto.getNewName());
-        boolean scaleChanged = !Objects.equals(sprite.getScale(), modifSpriteDto.getScale());
-
-        if (scaleChanged) {
-            log.info("Modification de l'échelle: {} → {}", sprite.getScale(), modifSpriteDto.getScale());
-            sprite.setScale(modifSpriteDto.getScale());
+        if (!sprite.getName().equals(dto.getNewName())) {
+            renameSpriteFolder(sprite, dto.getNewName());
         }
 
-        if (nameChanged) {
-            log.info("Renommage: '{}' → '{}'", sprite.getName(), modifSpriteDto.getNewName());
-            renameSpriteFolderAndEntity(sprite, modifSpriteDto.getNewName());
+        if (!Objects.equals(sprite.getScale(), dto.getScale())) {
+            sprite.setScale(dto.getScale());
         }
 
-        if (nameChanged || scaleChanged) {
-            sprite = spriteRepository.save(sprite);
-            log.info("Sprite mis à jour en base de données");
-        } else {
-            log.info("Aucune modification à appliquer");
-        }
-
-        separateur();
-
+        spriteRepository.save(sprite);
         return spriteRepository.getSpritesInfosByTypeAndName(AnimationType.IDLE, sprite.getName());
     }
 
-    private void renameSpriteFolderAndEntity(Sprite sprite, String newName) {
-        String oldName = sprite.getName();
+    private void renameSpriteFolder(Sprite sprite, String newName) {
+        Path oldPath = storageRoot.resolve(sprite.getName());
+        Path newPath = storageRoot.resolve(newName);
         sprite.setName(newName);
-
-        Path oldPath = staticStorageRoot.resolve(oldName);
-        Path newPath = staticStorageRoot.resolve(newName);
 
         try {
             if (Files.exists(oldPath)) {
-                Files.move(oldPath, newPath,
+                Files.move(
+                        oldPath,
+                        newPath,
                         StandardCopyOption.REPLACE_EXISTING,
-                        StandardCopyOption.ATOMIC_MOVE);
-                log.info("Dossier renommé: '{}' → '{}'", oldName, newName);
-            } else {
-                log.warn("Dossier source inexistant: {}", oldPath);
+                        StandardCopyOption.ATOMIC_MOVE
+                );
             }
         } catch (IOException e) {
-            log.error("Erreur renommage du dossier: '{}' → '{}'", oldPath, newPath, e);
-            throw new RuntimeException("Erreur I/O lors du renommage du dossier sprite", e);
+            throw new RuntimeException("Erreur renommage sprite", e);
         }
     }
 
     @Transactional
     public void flipHorizontal(Long animationId) {
-        log.info("Retournement horizontal de l'animation ID: {}", animationId);
-
-        SpriteInfos spriteInfos = spriteRepository.getSpriteInfosByAnimationId(animationId);
-        if (spriteInfos == null) {
-            throw new IllegalArgumentException("Animation introuvable ID: " + animationId);
-        }
-
-        Path filePath = Paths.get(spriteStorage, spriteInfos.getImageUrl());
+        SpriteInfos info = spriteRepository.getSpriteInfosByAnimationId(animationId);
+        Path filePath = Paths.get(spriteStorage, info.getImageUrl());
 
         try {
-            BufferedImage originalImg = ImageIO.read(filePath.toFile());
-            if (originalImg == null) {
-                throw new IOException("Impossible de lire l'image : " + filePath);
-            }
+            BufferedImage original = ImageIO.read(filePath.toFile());
+            BufferedImage flipped = new BufferedImage(
+                    original.getWidth(),
+                    original.getHeight(),
+                    BufferedImage.TYPE_INT_ARGB
+            );
 
-            int frameCount = spriteInfos.getFrames();
-            int frameWidth = originalImg.getWidth() / frameCount;
-            int height = originalImg.getHeight();
+            Graphics2D g2d = flipped.createGraphics();
+            int fw = original.getWidth() / info.getFrames();
 
-            BufferedImage flippedImg = new BufferedImage(originalImg.getWidth(), height, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2d = flippedImg.createGraphics();
-
-            for (int i = 0; i < frameCount; i++) {
-                int xSourceStart = i * frameWidth;
-                int xSourceEnd = xSourceStart + frameWidth;
-
-                int xDestStart = i * frameWidth;
-                int xDestEnd = xDestStart + frameWidth;
-
-                g2d.drawImage(originalImg,
-                        xDestEnd, 0, xDestStart, height,
-                        xSourceStart, 0, xSourceEnd, height,
-                        null);
+            for (int i = 0; i < info.getFrames(); i++) {
+                g2d.drawImage(
+                        original,
+                        (i + 1) * fw,
+                        0,
+                        i * fw,
+                        original.getHeight(),
+                        i * fw,
+                        0,
+                        (i + 1) * fw,
+                        original.getHeight(),
+                        null
+                );
             }
 
             g2d.dispose();
-
-            ImageIO.write(flippedImg, "png", filePath.toFile());
-            log.info("Animation retournée avec succès.");
+            ImageIO.write(flipped, "png", filePath.toFile());
         } catch (IOException e) {
-            log.error("Erreur lors du retournement de l'image: {}", e.getMessage());
-            throw new RuntimeException("Erreur I/O lors du retournement du sprite", e);
+            throw new RuntimeException("Erreur flip sprite", e);
         }
     }
 
-    private void separateur() {
-        log.info(SEPARATEUR);
+    private void logSeparator() {
+        log.info(SEPARATOR);
     }
 
     private record Bounds(int minX, int maxX, int minY, int maxY) {
-        Bounds(int[] bounds) {
-            this(bounds[0], bounds[1], bounds[2], bounds[3]);
+        Bounds(int[] arr) {
+            this(arr[0], arr[1], arr[2], arr[3]);
         }
 
         int width() {
