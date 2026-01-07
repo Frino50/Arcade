@@ -3,7 +3,6 @@
         <div class="hitbox-editor">
             <header class="editor-header">
                 <div class="header-title">
-                    <span class="icon">🎯</span>
                     <h3>Éditeur de Hitbox</h3>
                 </div>
                 <div class="header-actions">
@@ -19,7 +18,7 @@
             </header>
 
             <div class="editor-layout">
-                <div class="canvas-wrapper" @wheel.prevent="handleWheel">
+                <div class="canvas-wrapper" @wheel="handleWheel">
                     <div class="canvas-scroller">
                         <canvas
                             ref="canvasRef"
@@ -234,17 +233,10 @@ function draw() {
         props.sprite.height * zoom.value
     );
 
-    // 2. Dessiner les limites de l'image (Bordure Cyan + Masque extérieur)
+    // 2. Dessiner les limites de l'image (Bordure Cyan en pointillés)
     ctx.save();
 
-    // Masque sombre autour de l'image pour focus
-    drawOutsideMask(
-        ctx,
-        frameWidth.value * zoom.value,
-        props.sprite.height * zoom.value
-    );
-
-    // Bordure Cyan en pointillés
+    // Bordure Cyan en pointillés (repère de la frame)
     ctx.strokeStyle = "#06b6d4"; // Cyan-500
     ctx.lineWidth = 2;
     ctx.setLineDash([6, 4]); // Pointillés
@@ -273,19 +265,6 @@ function draw() {
     // 4. Poignées
     drawHandles(ctx, hx, hy, hw, hh);
 }
-
-function drawOutsideMask(ctx: CanvasRenderingContext2D, w: number, h: number) {
-    const p = VIEW_PADDING * zoom.value;
-    // On dessine 4 rectangles noirs semi-transparents autour de l'image
-    ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; // Assombrit le padding
-
-    // Haut, Bas, Gauche, Droite
-    ctx.fillRect(-p, -p, w + p * 2, p); // Top
-    ctx.fillRect(-p, h, w + p * 2, p); // Bottom
-    ctx.fillRect(-p, 0, p, h); // Left
-    ctx.fillRect(w, 0, p, h); // Right
-}
-
 function drawHandles(
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -460,6 +439,7 @@ function updateCursor(x: number, y: number) {
 
 function handleWheel(e: WheelEvent) {
     if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
         if (e.deltaY < 0) zoomIn();
         else zoomOut();
     }
@@ -558,17 +538,13 @@ function resetHitbox() {
 /* HEADER */
 .editor-header {
     background: #1e293b;
-    padding: 1rem 1.5rem;
+    padding: 0 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #334155;
 }
 .header-title {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-weight: 600;
     font-size: 1.25rem;
 }
 .header-actions {
@@ -585,12 +561,13 @@ function resetHitbox() {
 }
 .close-btn {
     background: transparent;
-    border: none;
     color: #94a3b8;
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: 0.2s;
+    font-size: 2rem;
     line-height: 1;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 0;
+    box-shadow: none;
 }
 .close-btn:hover {
     color: #fff;

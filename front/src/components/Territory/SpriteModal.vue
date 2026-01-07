@@ -256,7 +256,7 @@ function onHitboxSaved(hitbox: Hitbox | null) {
 .modal-content {
     background: #0f172a;
     width: 90%;
-    max-width: 1000px;
+    max-width: 1200px;
     height: 85%;
     border-radius: 16px;
     display: flex;
@@ -283,7 +283,6 @@ function onHitboxSaved(hitbox: Hitbox | null) {
 
 .close-btn {
     background: transparent;
-    border: none;
     color: #94a3b8;
     font-size: 2rem;
     line-height: 1;
