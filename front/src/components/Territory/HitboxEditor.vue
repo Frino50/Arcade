@@ -10,7 +10,7 @@
                 <canvas
                     ref="canvasRef"
                     @mousedown="startDrag"
-                    @mousemove="onDrag"
+                    @mousemove="onMouseMove"
                     @mouseup="endDrag"
                     @mouseleave="endDrag"
                     class="hitbox-canvas"
@@ -88,6 +88,10 @@ const props = defineProps<{
 const emit = defineEmits(["close", "saved"]);
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
+// Canvas render scale factor and logical padding (in sprite pixels)
+const CANVAS_SCALE = 2;
+const VIEW_PADDING = 100; // extra space around the sprite to allow out-of-bounds hitboxes
+
 const hitbox = ref<Hitbox>({
     x: props.sprite.hitboxX ?? 0,
     y: props.sprite.hitboxY ?? 0,
@@ -97,7 +101,8 @@ const hitbox = ref<Hitbox>({
 
 const isDragging = ref(false);
 const dragMode = ref<"move" | "resize" | null>(null);
-const dragCorner = ref<"tl" | "tr" | "bl" | "br" | null>(null);
+// active resize handle: corners tl,tr,bl,br or edges l,r,t,b
+const dragCorner = ref<string | null>(null);
 const dragStart = ref({ x: 0, y: 0 });
 const initialHitbox = ref<Hitbox>({ ...hitbox.value });
 
@@ -119,8 +124,10 @@ async function loadSprite() {
 
 onMounted(() => {
     if (canvasRef.value) {
-        canvasRef.value.width = frameWidth.value * 2;
-        canvasRef.value.height = props.sprite.height * 2;
+        const logicalWidth = frameWidth.value + VIEW_PADDING * 2;
+        const logicalHeight = props.sprite.height + VIEW_PADDING * 2;
+        canvasRef.value.width = logicalWidth * CANVAS_SCALE;
+        canvasRef.value.height = logicalHeight * CANVAS_SCALE;
     }
 });
 
@@ -130,10 +137,19 @@ function redraw() {
     const ctx = canvasRef.value.getContext("2d");
     if (!ctx) return;
 
-    const scale = 2;
+    const scale = CANVAS_SCALE;
     ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
 
+    // Optional: subtle checkerboard outside the image area for orientation
+    ctx.fillStyle = "#0b1220";
+    ctx.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height);
+
     ctx.imageSmoothingEnabled = false;
+    ctx.save();
+    // Translate so logical (0,0) of the sprite frame is at padding
+    ctx.translate(VIEW_PADDING * scale, VIEW_PADDING * scale);
+
+    // Draw current frame of the sprite sheet (first frame assumed)
     ctx.drawImage(
         spriteImage,
         0,
@@ -146,6 +162,12 @@ function redraw() {
         props.sprite.height * scale
     );
 
+    // Optional: draw the image frame border
+    ctx.strokeStyle = "rgba(59,130,246,0.4)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0, 0, frameWidth.value * scale, props.sprite.height * scale);
+
+    // Draw hitbox
     ctx.strokeStyle = "#ff0000";
     ctx.lineWidth = 2;
     ctx.strokeRect(
@@ -179,6 +201,8 @@ function redraw() {
         (hitbox.value.x + hitbox.value.width) * scale,
         (hitbox.value.y + hitbox.value.height) * scale
     );
+
+    ctx.restore();
 }
 
 function drawHandle(ctx: CanvasRenderingContext2D, x: number, y: number) {
@@ -191,14 +215,10 @@ function drawHandle(ctx: CanvasRenderingContext2D, x: number, y: number) {
     ctx.stroke();
 }
 
-function startDrag(e: MouseEvent) {
-    if (!canvasRef.value) return;
-
-    const rect = canvasRef.value.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / 2;
-    const y = (e.clientY - rect.top) / 2;
-
+function getHandleAt(x: number, y: number): string | null {
     const handleSize = 5;
+
+    // Check corners first
     const corners = [
         { x: hitbox.value.x, y: hitbox.value.y, corner: "tl" },
         {
@@ -217,24 +237,115 @@ function startDrag(e: MouseEvent) {
             corner: "br",
         },
     ];
-
-    for (const corner of corners) {
+    for (const c of corners) {
         if (
-            Math.abs(x - corner.x) <= handleSize &&
-            Math.abs(y - corner.y) <= handleSize
+            Math.abs(x - c.x) <= handleSize &&
+            Math.abs(y - c.y) <= handleSize
         ) {
-            isDragging.value = true;
-            dragMode.value = "resize";
-            dragCorner.value = corner.corner as typeof dragCorner.value;
-            dragStart.value = { x, y };
-            initialHitbox.value = { ...hitbox.value };
-            if (corner.corner === "tl" || corner.corner === "br") {
-                canvasRef.value.style.cursor = "nwse-resize";
-            } else {
-                canvasRef.value.style.cursor = "nesw-resize";
-            }
-            return;
+            return c.corner;
         }
+    }
+
+    // Check edges
+    const withinY =
+        y >= hitbox.value.y &&
+        y <= hitbox.value.y + hitbox.value.height;
+    const withinX =
+        x >= hitbox.value.x &&
+        x <= hitbox.value.x + hitbox.value.width;
+
+    if (withinY && Math.abs(x - hitbox.value.x) <= handleSize) {
+        return "l";
+    }
+    if (
+        withinY &&
+        Math.abs(x - (hitbox.value.x + hitbox.value.width)) <= handleSize
+    ) {
+        return "r";
+    }
+    if (withinX && Math.abs(y - hitbox.value.y) <= handleSize) {
+        return "t";
+    }
+    if (
+        withinX &&
+        Math.abs(y - (hitbox.value.y + hitbox.value.height)) <= handleSize
+    ) {
+        return "b";
+    }
+
+    return null;
+}
+
+function setCursorForHandle(handle: string | null) {
+    if (!canvasRef.value) return;
+    switch (handle) {
+        case "tl":
+        case "br":
+            canvasRef.value.style.cursor = "nwse-resize";
+            break;
+        case "tr":
+        case "bl":
+            canvasRef.value.style.cursor = "nesw-resize";
+            break;
+        case "l":
+        case "r":
+            canvasRef.value.style.cursor = "ew-resize";
+            break;
+        case "t":
+        case "b":
+            canvasRef.value.style.cursor = "ns-resize";
+            break;
+        default:
+            canvasRef.value.style.cursor = "default";
+    }
+}
+
+function onMouseMove(e: MouseEvent) {
+    if (!canvasRef.value) return;
+    const rect = canvasRef.value.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / CANVAS_SCALE - VIEW_PADDING;
+    const y = (e.clientY - rect.top) / CANVAS_SCALE - VIEW_PADDING;
+
+    if (isDragging.value) {
+        onDrag(e);
+        return;
+    }
+
+    const handle = getHandleAt(x, y);
+    if (handle) {
+        setCursorForHandle(handle);
+        return;
+    }
+
+    // Inside box => move
+    if (
+        x >= hitbox.value.x &&
+        x <= hitbox.value.x + hitbox.value.width &&
+        y >= hitbox.value.y &&
+        y <= hitbox.value.y + hitbox.value.height
+    ) {
+        canvasRef.value.style.cursor = "move";
+    } else {
+        canvasRef.value.style.cursor = "default";
+    }
+}
+
+function startDrag(e: MouseEvent) {
+    if (!canvasRef.value) return;
+
+    const rect = canvasRef.value.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / CANVAS_SCALE - VIEW_PADDING;
+    const y = (e.clientY - rect.top) / CANVAS_SCALE - VIEW_PADDING;
+
+    const handle = getHandleAt(x, y);
+    if (handle) {
+        isDragging.value = true;
+        dragMode.value = "resize";
+        dragCorner.value = handle;
+        dragStart.value = { x, y };
+        initialHitbox.value = { ...hitbox.value };
+        setCursorForHandle(handle);
+        return;
     }
 
     if (
@@ -255,27 +366,15 @@ function onDrag(e: MouseEvent) {
     if (!isDragging.value || !canvasRef.value) return;
 
     const rect = canvasRef.value.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / 2;
-    const y = (e.clientY - rect.top) / 2;
+    const x = (e.clientX - rect.left) / CANVAS_SCALE - VIEW_PADDING;
+    const y = (e.clientY - rect.top) / CANVAS_SCALE - VIEW_PADDING;
 
     if (dragMode.value === "move") {
         const dx = x - dragStart.value.x;
         const dy = y - dragStart.value.y;
 
-        hitbox.value.x = Math.max(
-            0,
-            Math.min(
-                frameWidth.value - hitbox.value.width,
-                initialHitbox.value.x + dx
-            )
-        );
-        hitbox.value.y = Math.max(
-            0,
-            Math.min(
-                props.sprite.height - hitbox.value.height,
-                initialHitbox.value.y + dy
-            )
-        );
+        hitbox.value.x = initialHitbox.value.x + dx;
+        hitbox.value.y = initialHitbox.value.y + dy;
     } else if (dragMode.value === "resize") {
         const dx = x - dragStart.value.x;
         const dy = y - dragStart.value.y;
@@ -288,6 +387,7 @@ function onDrag(e: MouseEvent) {
         let newH = initialHitbox.value.height;
 
         switch (dragCorner.value) {
+            // corners
             case "br":
                 newW = initialHitbox.value.width + dx;
                 newH = initialHitbox.value.height + dy;
@@ -308,58 +408,46 @@ function onDrag(e: MouseEvent) {
                 newW = initialHitbox.value.width - dx;
                 newH = initialHitbox.value.height + dy;
                 break;
+            // edges
+            case "l":
+                newX = initialHitbox.value.x + dx;
+                newW = initialHitbox.value.width - dx;
+                break;
+            case "r":
+                newW = initialHitbox.value.width + dx;
+                break;
+            case "t":
+                newY = initialHitbox.value.y + dy;
+                newH = initialHitbox.value.height - dy;
+                break;
+            case "b":
+                newH = initialHitbox.value.height + dy;
+                break;
         }
 
-        // Constrain minimum sizes
+        // Constrain minimum sizes only (no clamping to sprite frame bounds)
         if (newW < minSize) {
-            if (dragCorner.value === "tl" || dragCorner.value === "bl") {
+            if (
+                dragCorner.value === "tl" ||
+                dragCorner.value === "bl" ||
+                dragCorner.value === "l"
+            ) {
                 newX -= minSize - newW;
             }
             newW = minSize;
         }
         if (newH < minSize) {
-            if (dragCorner.value === "tl" || dragCorner.value === "tr") {
+            if (
+                dragCorner.value === "tl" ||
+                dragCorner.value === "tr" ||
+                dragCorner.value === "t"
+            ) {
                 newY -= minSize - newH;
             }
             newH = minSize;
         }
 
-        if (newX < 0) {
-            if (dragCorner.value === "tl" || dragCorner.value === "bl") {
-                newW -= 0 - newX;
-            }
-            newX = 0;
-        }
-        if (newY < 0) {
-            if (dragCorner.value === "tl" || dragCorner.value === "tr") {
-                newH -= 0 - newY;
-            }
-            newY = 0;
-        }
-        const maxRight = frameWidth.value;
-        const right = newX + newW;
-        if (right > maxRight) {
-            if (dragCorner.value === "tr" || dragCorner.value === "br") {
-                newW -= right - maxRight;
-            } else {
-                const overflow = right - maxRight;
-                newX -= overflow;
-            }
-        }
-        const maxBottom = props.sprite.height;
-        const bottom = newY + newH;
-        if (bottom > maxBottom) {
-            if (dragCorner.value === "bl" || dragCorner.value === "br") {
-                newH -= bottom - maxBottom;
-            } else {
-                const overflow = bottom - maxBottom;
-                newY -= overflow;
-            }
-        }
-
-        newW = Math.max(minSize, Math.min(newW, maxRight - newX));
-        newH = Math.max(minSize, Math.min(newH, maxBottom - newY));
-
+        // Apply new values (can extend beyond image bounds)
         hitbox.value.x = newX;
         hitbox.value.y = newY;
         hitbox.value.width = newW;
