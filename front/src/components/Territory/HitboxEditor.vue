@@ -588,19 +588,13 @@ function resetHitbox() {
     display: flex;
     flex-direction: column;
 
-    /* Fond Damier CSS Infini */
+    /* Fond Damier CSS Infini (sans artefacts) */
     background-color: #0f172a;
-    background-image:
-        linear-gradient(45deg, #1e293b 25%, transparent 25%),
-        linear-gradient(-45deg, #1e293b 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #1e293b 75%),
-        linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+    background-image: repeating-conic-gradient(
+        #1e293b 0 25%,
+        transparent 0 50%
+    );
     background-size: 20px 20px;
-    background-position:
-        0 0,
-        0 10px,
-        10px -10px,
-        -10px 0;
 }
 
 .canvas-scroller {

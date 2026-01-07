@@ -30,14 +30,13 @@ onMounted(async () => {
 
 <style scoped>
 .checkerboard {
-    background-color: #bdbdbd;
-    background-image:
-        linear-gradient(45deg, #999 25%, transparent 25%),
-        linear-gradient(-45deg, #999 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #999 75%),
-        linear-gradient(-45deg, transparent 75%, #999 75%);
-
-    background-size: 16px 16px;
+    /* Fond Damier CSS Infini (sans artefacts) */
+    background-color: #0f172a;
+    background-image: repeating-conic-gradient(
+        #1e293b 0 25%,
+        transparent 0 50%
+    );
+    background-size: 20px 20px;
     image-rendering: pixelated;
 }
 </style>
