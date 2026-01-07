@@ -7,4 +7,5 @@ export default interface SpriteInfo {
     height: number;
     frames: number;
     scale: number;
+    frameRate: number;
 }

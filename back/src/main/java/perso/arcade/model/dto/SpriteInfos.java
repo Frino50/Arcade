@@ -8,8 +8,9 @@ public class SpriteInfos {
     private int height;
     private int frames;
     private float scale;
+    private int frameRate;
 
-    public SpriteInfos(Long animationId, String name, String imageUrl, int width, int height, int frames, float scale) {
+    public SpriteInfos(Long animationId, String name, String imageUrl, int width, int height, int frames, float scale, int frameRate) {
         this.animationId = animationId;
         this.name = name;
         this.imageUrl = imageUrl;
@@ -17,6 +18,7 @@ public class SpriteInfos {
         this.height = height;
         this.frames = frames;
         this.scale = scale;
+        this.frameRate = frameRate;
     }
 
     public Long getAnimationId() {
@@ -69,5 +71,13 @@ public class SpriteInfos {
 
     public void setScale(float scale) {
         this.scale = scale;
+    }
+
+    public int getFrameRate() {
+        return frameRate;
+    }
+
+    public void setFrameRate(int frameRate) {
+        this.frameRate = frameRate;
     }
 }

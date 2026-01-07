@@ -40,6 +40,11 @@ export default {
         return response.data;
     },
 
+    async getSpritePlay(spriteName: string) {
+        const response = await apiService.get(`/sprite/play/${spriteName}`);
+        return response.data;
+    },
+
     async normalizeSpriteSheet(animationId: number, spriteUrl: string) {
         spriteCache.delete(spriteUrl);
         const response = await apiService.get(
@@ -52,6 +57,13 @@ export default {
         spriteCache.delete(spriteUrl);
         const response = await apiService.get(
             `/sprite/flip-horizontal/${animationId}`
+        );
+        return response.data;
+    },
+
+    async saveFrameRate(animationId: number, frameRate: number) {
+        const response = await apiService.put(
+            `/sprite/save-frame-rate/${animationId}/${frameRate}`
         );
         return response.data;
     },

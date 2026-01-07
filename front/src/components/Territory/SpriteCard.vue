@@ -8,6 +8,7 @@
                 :height="sprite.height"
                 :frames="sprite.frames"
                 :scale="Number(sprite.scale)"
+                :frame-rate="Number(sprite.frameRate)"
             />
         </div>
 
@@ -30,6 +31,7 @@
                 <button class="btn-icon btn-view" @click="searchAllSprites">
                     Voir tous les sprites
                 </button>
+                <button class="btn-icon btn-view" @click="jouer">Jouer</button>
             </div>
         </div>
 
@@ -54,11 +56,13 @@
             v-model="listSpriteInfo"
             v-model:sprite="sprite"
             :visible="showModal"
+            @frame-rate="(value) => (sprite.frameRate = value)"
             @close="
                 showModal = false;
                 animationKey++;
             "
         />
+        <Test v-if="showModal2" :sprite-play="spritePlay!" />
     </div>
 </template>
 
@@ -69,6 +73,8 @@ import ModifSpriteDto from "@/models/dtos/modifSpriteDto.ts";
 import spriteService from "@/services/spriteService.ts";
 import { ref, computed, onMounted } from "vue";
 import SpriteModal from "@/components/Territory/SpriteModal.vue";
+import SpritePlay from "@/models/SpritePlay.ts";
+import Test from "@/components/Territory/Test.vue";
 
 defineEmits(["delete"]);
 
@@ -77,7 +83,13 @@ const sprite = defineModel<SpriteInfo>({ required: true });
 const listSpriteInfo = ref<SpriteInfo[]>([]);
 const showModal = ref(false);
 const animationKey = ref(0);
+const showModal2 = ref(false);
+const spritePlay = ref<SpritePlay>();
 
+async function jouer() {
+    spritePlay.value = await spriteService.getSpritePlay(sprite.value.name);
+    showModal2.value = true;
+}
 onMounted(() => {
     if (!sprite.value.newName) {
         sprite.value.newName = sprite.value.name;
@@ -129,7 +141,6 @@ async function renameSprite() {
 }
 
 .sprite-card:hover {
-    transform: translateY(-5px);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     border-color: #3b82f6;
 }

@@ -20,7 +20,8 @@ public class SpriteRepositoryImpl implements SpriteRepositoryCustom {
                     a.width,
                     a.height,
                     a.frames,
-                    s.scale
+                    s.scale,
+                    a.frameRate
             )
             FROM Sprite s
             JOIN s.animations a
@@ -44,8 +45,9 @@ public class SpriteRepositoryImpl implements SpriteRepositoryCustom {
 
     @Override
     public List<SpriteInfos> getAllAnimationsBySpriteName(String spriteName) {
-        return getList("WHERE s.name = :spriteName", "spriteName", spriteName);
+        return getList("WHERE s.name = :spriteName ORDER BY a.id", "spriteName", spriteName);
     }
+
 
     @Override
     public SpriteInfos getSpriteInfosByAnimationId(Long animationId) {
@@ -63,6 +65,4 @@ public class SpriteRepositoryImpl implements SpriteRepositoryCustom {
         query.setParameter(paramName, paramValue);
         return query.getSingleResult();
     }
-
-
 }

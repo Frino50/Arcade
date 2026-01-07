@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import perso.arcade.exception.SpriteNameAlreadyExist;
 import perso.arcade.model.dto.ModifSpriteDto;
 import perso.arcade.model.dto.SpriteInfos;
+import perso.arcade.model.dto.SpritePlay;
 import perso.arcade.model.entities.Animation;
 import perso.arcade.model.entities.Sprite;
 import perso.arcade.model.enumeration.AnimationType;
@@ -209,7 +210,8 @@ public class SpriteService {
                                     img.getWidth(),
                                     img.getHeight(),
                                     type,
-                                    i + 1
+                                    i + 1,
+                                    8
                             )
                     );
                 }
@@ -673,6 +675,29 @@ public class SpriteService {
 
     private void logSeparator() {
         log.info(SEPARATOR);
+    }
+
+    public SpritePlay getSpritePlay(String spriteName) {
+        List<SpriteInfos> listSpritesInfos = spriteRepository.getAllAnimationsBySpriteName(spriteName);
+        SpritePlay spritePlay = new SpritePlay();
+
+        spritePlay.setIdle(findFirstByType(listSpritesInfos, "/IDLE/"));
+        spritePlay.setWalk(findFirstByType(listSpritesInfos, "/WALK/"));
+        spritePlay.setAttack(findFirstByType(listSpritesInfos, "/ATTACK/"));
+        return spritePlay;
+    }
+
+    private SpriteInfos findFirstByType(List<SpriteInfos> infos, String typeFolder) {
+        return infos.stream()
+                .filter(i -> i.getImageUrl().contains(typeFolder))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public Animation saveFrameRate(Long animationId, int frameRate) {
+        Animation anim = animationRepository.findById(animationId).orElseThrow();
+        anim.setFrameRate(frameRate);
+        return animationRepository.save(anim);
     }
 
     private record Bounds(int minX, int maxX, int minY, int maxY) {

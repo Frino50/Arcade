@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import perso.arcade.model.dto.ModifSpriteDto;
 import perso.arcade.model.dto.SpriteInfos;
+import perso.arcade.model.dto.SpritePlay;
+import perso.arcade.model.entities.Animation;
 import perso.arcade.service.SpriteService;
 
 import java.io.IOException;
@@ -65,5 +67,15 @@ public class SpriteController {
     public ResponseEntity<Void> flipHorizontal(@PathVariable Long animationId) {
         spriteService.flipHorizontal(animationId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/play/{spriteName}")
+    public SpritePlay getSpritePlay(@PathVariable String spriteName) {
+        return spriteService.getSpritePlay(spriteName);
+    }
+
+    @PutMapping("/save-frame-rate/{animationId}/{frameRate}")
+    public Animation saveFrameRate(@PathVariable Long animationId, @PathVariable int frameRate) {
+        return spriteService.saveFrameRate(animationId, frameRate);
     }
 }

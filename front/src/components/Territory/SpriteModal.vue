@@ -45,6 +45,9 @@
                                             :height="spriteInfo.height"
                                             :frames="spriteInfo.frames"
                                             :scale="Number(spriteInfo.scale)"
+                                            :frame-rate="
+                                                Number(spriteInfo.frameRate)
+                                            "
                                         />
                                     </div>
                                 </div>
@@ -85,6 +88,26 @@
                                 >
                                     <span>Tourner le sprite</span>
                                 </button>
+                                <div class="input-row">
+                                    <label>Frame Rate:</label>
+                                    <input
+                                        type="text"
+                                        v-model="spriteInfo.frameRate"
+                                        class="dark-input"
+                                    />
+                                    <button
+                                        class="btn-icon btn-save"
+                                        @click="
+                                            saveFrameRate(
+                                                spriteInfo.animationId,
+                                                spriteInfo.frameRate
+                                            )
+                                        "
+                                        :disabled="!spriteInfo.frameRate"
+                                    >
+                                        💾
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -109,10 +132,11 @@ defineProps<{
     visible: boolean;
 }>();
 
-defineEmits(["close"]);
+const emit = defineEmits(["close", "frameRate"]);
 const sprite = defineModel<SpriteInfo>("sprite");
 const listSprites = defineModel<SpriteInfo[]>();
 const refreshTrigger = ref(Date.now());
+
 async function reBuildImage(animationId: number, spriteUrl: string) {
     if (!listSprites.value) return;
 
@@ -140,6 +164,11 @@ async function flipHorizontal(animationId: number, spriteUrl: string) {
 
     await spriteService.flipHorizontal(animationId, spriteUrl);
     refreshTrigger.value = Date.now();
+}
+
+async function saveFrameRate(animationId: number, frameRate: number) {
+    await spriteService.saveFrameRate(animationId, frameRate);
+    emit("frameRate", frameRate);
 }
 </script>
 
@@ -216,10 +245,10 @@ async function flipHorizontal(animationId: number, spriteUrl: string) {
     flex-direction: column;
     overflow: hidden;
     transition: transform 0.2s;
-    height: clamp(21.7rem, 35vh, 26rem);
+    height: clamp(27rem, 35vh, 26rem);
 }
 .sprite-card.small {
-    height: clamp(17.7rem, 28vh, 20rem);
+    height: clamp(22.2rem, 28vh, 20rem);
 }
 .sprite-card:hover {
     border-color: #475569;
@@ -352,5 +381,42 @@ async function flipHorizontal(animationId: number, spriteUrl: string) {
     100% {
         transform: rotate(360deg);
     }
+}
+
+.dark-input {
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: white;
+    padding: 0.6rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    flex: 1;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.dark-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.btn-icon {
+    flex: 1;
+    padding: 0.6rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: 1.2rem;
+}
+
+.btn-save {
+    background: #059669;
+    color: white;
+}
+
+.input-row label {
+    color: #94a3b8;
+    text-align: right;
 }
 </style>

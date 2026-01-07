@@ -24,6 +24,8 @@ public class Animation {
     @Column(name = "indice", nullable = false)
     private int indice;
 
+    @Column(name = "frame_rate", nullable = false)
+    private int frameRate;
 
     @Enumerated(EnumType.STRING)
     private AnimationType type;
@@ -35,12 +37,13 @@ public class Animation {
     public Animation() {
     }
 
-    public Animation(int frames, int width, int height, AnimationType type, int indice) {
+    public Animation(int frames, int width, int height, AnimationType type, int indice, int frameRate) {
         this.frames = frames;
         this.width = width;
         this.height = height;
         this.type = type;
         this.indice = indice;
+        this.frameRate = frameRate;
     }
 
     public Long getId() {
@@ -95,15 +98,23 @@ public class Animation {
         this.indice = indice;
     }
 
+    public int getFrameRate() {
+        return frameRate;
+    }
+
+    public void setFrameRate(int frameRate) {
+        this.frameRate = frameRate;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Animation animation = (Animation) o;
-        return frames == animation.frames && width == animation.width && height == animation.height && indice == animation.indice && Objects.equals(id, animation.id) && type == animation.type && Objects.equals(sprite, animation.sprite);
+        return frames == animation.frames && width == animation.width && height == animation.height && indice == animation.indice && frameRate == animation.frameRate && Objects.equals(id, animation.id) && type == animation.type && Objects.equals(sprite, animation.sprite);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, frames, width, height, indice, type, sprite);
+        return Objects.hash(id, frames, width, height, indice, frameRate, type, sprite);
     }
 }
