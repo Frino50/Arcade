@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import perso.arcade.model.dto.HitboxDto;
 import perso.arcade.model.dto.ModifSpriteDto;
 import perso.arcade.model.dto.SpriteInfos;
 import perso.arcade.model.dto.SpritePlay;
@@ -77,5 +78,19 @@ public class SpriteController {
     @PutMapping("/save-frame-rate/{animationId}/{frameRate}")
     public Animation saveFrameRate(@PathVariable Long animationId, @PathVariable int frameRate) {
         return spriteService.saveFrameRate(animationId, frameRate);
+    }
+
+    @PutMapping("/hitbox/{animationId}")
+    public ResponseEntity<Void> saveHitbox(
+            @PathVariable Long animationId,
+            @RequestBody HitboxDto hitboxDto) {
+        spriteService.saveHitbox(animationId, hitboxDto);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/hitbox/{animationId}")
+    public ResponseEntity<Void> deleteHitbox(@PathVariable Long animationId) {
+        spriteService.deleteHitbox(animationId);
+        return ResponseEntity.noContent().build();
     }
 }

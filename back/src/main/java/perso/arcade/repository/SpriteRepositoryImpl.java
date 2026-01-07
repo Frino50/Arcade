@@ -21,11 +21,16 @@ public class SpriteRepositoryImpl implements SpriteRepositoryCustom {
                     a.height,
                     a.frames,
                     s.scale,
-                    a.frameRate
+                    a.frameRate,
+                    a.hitboxX,
+                    a.hitboxY,
+                    a.hitboxWidth,
+                    a.hitboxHeight
             )
             FROM Sprite s
             JOIN s.animations a
             """;
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -47,7 +52,6 @@ public class SpriteRepositoryImpl implements SpriteRepositoryCustom {
     public List<SpriteInfos> getAllAnimationsBySpriteName(String spriteName) {
         return getList("WHERE s.name = :spriteName ORDER BY a.id", "spriteName", spriteName);
     }
-
 
     @Override
     public SpriteInfos getSpriteInfosByAnimationId(Long animationId) {

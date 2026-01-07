@@ -1,5 +1,5 @@
 import apiService from "@/services/apiService";
-import SpriteInfo from "@/models/SpriteInfos.ts";
+import SpriteInfo, { Hitbox } from "@/models/SpriteInfos.ts";
 import ModifSpriteDto from "@/models/dtos/modifSpriteDto.ts";
 import { spriteCache } from "@/services/SpriteCache.ts";
 
@@ -64,6 +64,21 @@ export default {
     async saveFrameRate(animationId: number, frameRate: number) {
         const response = await apiService.put(
             `/sprite/save-frame-rate/${animationId}/${frameRate}`
+        );
+        return response.data;
+    },
+
+    async saveHitbox(animationId: number, hitbox: Hitbox) {
+        const response = await apiService.put(
+            `/sprite/hitbox/${animationId}`,
+            hitbox
+        );
+        return response.data;
+    },
+
+    async deleteHitbox(animationId: number) {
+        const response = await apiService.delete(
+            `/sprite/hitbox/${animationId}`
         );
         return response.data;
     },

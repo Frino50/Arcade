@@ -32,6 +32,14 @@
                                 <span class="badge"
                                     >ID: {{ spriteInfo.animationId }}</span
                                 >
+                                <span
+                                    v-if="
+                                        spriteInfo.hitboxX !== undefined &&
+                                        spriteInfo.hitboxX !== null
+                                    "
+                                    class="badge badge-hitbox"
+                                    >Hitbox définie</span
+                                >
                             </div>
 
                             <div class="card-body">
@@ -66,6 +74,12 @@
                             </div>
 
                             <div class="card-footer">
+                                <button
+                                    class="action-btn btn-hitbox"
+                                    @click="openHitboxEditor(spriteInfo)"
+                                >
+                                    <span>Éditer Hitbox</span>
+                                </button>
                                 <button
                                     class="action-btn"
                                     @click="
@@ -118,6 +132,20 @@
                 </div>
             </div>
         </transition>
+
+        <transition name="fade">
+            <div
+                v-if="showHitboxEditor"
+                class="modal-overlay"
+                @click.self="closeHitboxEditor"
+            >
+                <HitboxEditor
+                    :sprite="currentSpriteForHitbox!"
+                    @close="closeHitboxEditor"
+                    @saved="onHitboxSaved"
+                />
+            </div>
+        </transition>
     </teleport>
 </template>
 
@@ -127,6 +155,8 @@ import type SpriteInfo from "@/models/SpriteInfos.ts";
 import spriteService from "@/services/spriteService.ts";
 import SpriteSheet from "@/components/Territory/SpriteSheet.vue";
 import { ref } from "vue";
+import type { Hitbox } from "@/models/SpriteInfos.ts";
+import HitboxEditor from "@/components/Territory/HitboxEditor.vue";
 
 defineProps<{
     visible: boolean;
@@ -136,6 +166,8 @@ const emit = defineEmits(["close", "frameRate"]);
 const sprite = defineModel<SpriteInfo>("sprite");
 const listSprites = defineModel<SpriteInfo[]>();
 const refreshTrigger = ref(Date.now());
+const showHitboxEditor = ref(false);
+const currentSpriteForHitbox = ref<SpriteInfo | null>(null);
 
 async function reBuildImage(animationId: number, spriteUrl: string) {
     if (!listSprites.value) return;
@@ -169,6 +201,40 @@ async function flipHorizontal(animationId: number, spriteUrl: string) {
 async function saveFrameRate(animationId: number, frameRate: number) {
     await spriteService.saveFrameRate(animationId, frameRate);
     emit("frameRate", frameRate);
+}
+
+function openHitboxEditor(spriteInfo: SpriteInfo) {
+    currentSpriteForHitbox.value = spriteInfo;
+    showHitboxEditor.value = true;
+}
+
+function closeHitboxEditor() {
+    showHitboxEditor.value = false;
+    currentSpriteForHitbox.value = null;
+}
+
+function onHitboxSaved(hitbox: Hitbox | null) {
+    if (!listSprites.value || !currentSpriteForHitbox.value) return;
+
+    const index = listSprites.value.findIndex(
+        (s) => s.animationId === currentSpriteForHitbox.value!.animationId
+    );
+
+    if (index !== -1) {
+        if (hitbox) {
+            listSprites.value[index].hitboxX = hitbox.x;
+            listSprites.value[index].hitboxY = hitbox.y;
+            listSprites.value[index].hitboxWidth = hitbox.width;
+            listSprites.value[index].hitboxHeight = hitbox.height;
+        } else {
+            listSprites.value[index].hitboxX = undefined;
+            listSprites.value[index].hitboxY = undefined;
+            listSprites.value[index].hitboxWidth = undefined;
+            listSprites.value[index].hitboxHeight = undefined;
+        }
+    }
+
+    refreshTrigger.value = Date.now();
 }
 </script>
 
@@ -245,10 +311,10 @@ async function saveFrameRate(animationId: number, frameRate: number) {
     flex-direction: column;
     overflow: hidden;
     transition: transform 0.2s;
-    height: clamp(27rem, 35vh, 26rem);
+    height: clamp(30rem, 40vh, 32rem);
 }
 .sprite-card.small {
-    height: clamp(22.2rem, 28vh, 20rem);
+    height: clamp(25rem, 32vh, 26rem);
 }
 .sprite-card:hover {
     border-color: #475569;
@@ -258,6 +324,8 @@ async function saveFrameRate(animationId: number, frameRate: number) {
     padding: 0.75rem 1rem;
     background: #253146;
     border-bottom: 1px solid #334155;
+    display: flex;
+    gap: 0.5rem;
 }
 
 .badge {
@@ -268,6 +336,11 @@ async function saveFrameRate(animationId: number, frameRate: number) {
     font-size: 0.75rem;
     font-weight: bold;
     font-family: monospace;
+}
+
+.badge-hitbox {
+    background: #059669;
+    color: white;
 }
 
 .card-body {
@@ -353,6 +426,14 @@ async function saveFrameRate(animationId: number, frameRate: number) {
     transform: translateY(-1px);
 }
 
+.btn-hitbox {
+    background: #8b5cf6;
+}
+
+.btn-hitbox:hover:not(:disabled) {
+    background: #7c3aed;
+}
+
 .action-btn:disabled {
     background: #475569;
     cursor: not-allowed;
@@ -372,15 +453,6 @@ async function saveFrameRate(animationId: number, frameRate: number) {
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;
-}
-
-@keyframes rotation {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
 }
 
 .dark-input {
@@ -413,6 +485,12 @@ async function saveFrameRate(animationId: number, frameRate: number) {
 .btn-save {
     background: #059669;
     color: white;
+}
+
+.input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .input-row label {

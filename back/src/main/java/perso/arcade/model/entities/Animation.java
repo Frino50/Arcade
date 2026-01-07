@@ -27,6 +27,18 @@ public class Animation {
     @Column(name = "frame_rate", nullable = false)
     private int frameRate;
 
+    @Column(name = "hitbox_x")
+    private Integer hitboxX;
+
+    @Column(name = "hitbox_y")
+    private Integer hitboxY;
+
+    @Column(name = "hitbox_width")
+    private Integer hitboxWidth;
+
+    @Column(name = "hitbox_height")
+    private Integer hitboxHeight;
+
     @Enumerated(EnumType.STRING)
     private AnimationType type;
 
@@ -46,6 +58,7 @@ public class Animation {
         this.frameRate = frameRate;
     }
 
+    // Getters & Setters
     public Long getId() {
         return id;
     }
@@ -106,15 +119,59 @@ public class Animation {
         this.frameRate = frameRate;
     }
 
+    public Integer getHitboxX() {
+        return hitboxX;
+    }
+
+    public void setHitboxX(Integer hitboxX) {
+        this.hitboxX = hitboxX;
+    }
+
+    public Integer getHitboxY() {
+        return hitboxY;
+    }
+
+    public void setHitboxY(Integer hitboxY) {
+        this.hitboxY = hitboxY;
+    }
+
+    public Integer getHitboxWidth() {
+        return hitboxWidth;
+    }
+
+    public void setHitboxWidth(Integer hitboxWidth) {
+        this.hitboxWidth = hitboxWidth;
+    }
+
+    public Integer getHitboxHeight() {
+        return hitboxHeight;
+    }
+
+    public void setHitboxHeight(Integer hitboxHeight) {
+        this.hitboxHeight = hitboxHeight;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Animation animation = (Animation) o;
-        return frames == animation.frames && width == animation.width && height == animation.height && indice == animation.indice && frameRate == animation.frameRate && Objects.equals(id, animation.id) && type == animation.type && Objects.equals(sprite, animation.sprite);
+        return frames == animation.frames &&
+                width == animation.width &&
+                height == animation.height &&
+                indice == animation.indice &&
+                frameRate == animation.frameRate &&
+                Objects.equals(id, animation.id) &&
+                type == animation.type &&
+                Objects.equals(sprite, animation.sprite) &&
+                Objects.equals(hitboxX, animation.hitboxX) &&
+                Objects.equals(hitboxY, animation.hitboxY) &&
+                Objects.equals(hitboxWidth, animation.hitboxWidth) &&
+                Objects.equals(hitboxHeight, animation.hitboxHeight);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, frames, width, height, indice, frameRate, type, sprite);
+        return Objects.hash(id, frames, width, height, indice, frameRate, type, sprite,
+                hitboxX, hitboxY, hitboxWidth, hitboxHeight);
     }
 }

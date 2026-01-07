@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
 import perso.arcade.exception.SpriteNameAlreadyExist;
+import perso.arcade.model.dto.HitboxDto;
 import perso.arcade.model.dto.ModifSpriteDto;
 import perso.arcade.model.dto.SpriteInfos;
 import perso.arcade.model.dto.SpritePlay;
@@ -698,6 +699,36 @@ public class SpriteService {
         Animation anim = animationRepository.findById(animationId).orElseThrow();
         anim.setFrameRate(frameRate);
         return animationRepository.save(anim);
+    }
+
+    @Transactional
+    public void saveHitbox(Long animationId, HitboxDto hitboxDto) {
+        Animation animation = animationRepository.findById(animationId)
+                .orElseThrow(() -> new IllegalArgumentException("Animation not found: " + animationId));
+
+        animation.setHitboxX(hitboxDto.getX());
+        animation.setHitboxY(hitboxDto.getY());
+        animation.setHitboxWidth(hitboxDto.getWidth());
+        animation.setHitboxHeight(hitboxDto.getHeight());
+
+        animationRepository.save(animation);
+        log.info("Hitbox saved for animation {}: {}x{} at ({}, {})",
+                animationId, hitboxDto.getWidth(), hitboxDto.getHeight(),
+                hitboxDto.getX(), hitboxDto.getY());
+    }
+
+    @Transactional
+    public void deleteHitbox(Long animationId) {
+        Animation animation = animationRepository.findById(animationId)
+                .orElseThrow(() -> new IllegalArgumentException("Animation not found: " + animationId));
+
+        animation.setHitboxX(null);
+        animation.setHitboxY(null);
+        animation.setHitboxWidth(null);
+        animation.setHitboxHeight(null);
+
+        animationRepository.save(animation);
+        log.info("Hitbox deleted for animation {}", animationId);
     }
 
     private record Bounds(int minX, int maxX, int minY, int maxY) {
