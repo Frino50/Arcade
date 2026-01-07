@@ -131,8 +131,8 @@ const emit = defineEmits(["close", "saved"]);
 
 // --- Refs & State ---
 const canvasRef = ref<HTMLCanvasElement | null>(null);
-const zoom = ref(2); // Zoom par défaut
-const VIEW_PADDING = 60; // Espace autour du sprite
+const zoom = ref(2);
+const VIEW_PADDING = 100; // Espace confortable autour du sprite
 
 const hitbox = ref<Hitbox>({
     x: props.sprite.hitboxX ?? 0,
@@ -145,8 +145,8 @@ const hitbox = ref<Hitbox>({
 const isDragging = ref(false);
 const dragMode = ref<"move" | "resize" | null>(null);
 const dragCorner = ref<string | null>(null);
-const dragStart = ref({ x: 0, y: 0 }); // Mouse pos at start
-const initialHitbox = ref<Hitbox>({ ...hitbox.value }); // Hitbox state at start
+const dragStart = ref({ x: 0, y: 0 });
+const initialHitbox = ref<Hitbox>({ ...hitbox.value });
 
 // Asset Loading
 let spriteImage: HTMLImageElement | null = null;
@@ -159,7 +159,6 @@ const hasHitbox = computed(
 
 watch(() => props.sprite, loadSprite, { immediate: true });
 
-// Écouteur clavier pour les flèches
 onMounted(() => {
     window.addEventListener("keydown", handleKeyDown);
     updateCanvasSize();
@@ -169,7 +168,6 @@ onUnmounted(() => {
     window.removeEventListener("keydown", handleKeyDown);
 });
 
-// Quand le zoom change, on redimensionne et on redessine
 watch(zoom, () => {
     updateCanvasSize();
     requestDraw();
@@ -193,15 +191,11 @@ async function loadSprite() {
 
 function updateCanvasSize() {
     if (canvasRef.value) {
-        // La taille logique du canvas inclut le padding + la frame
         const logicalWidth = frameWidth.value + VIEW_PADDING * 2;
         const logicalHeight = props.sprite.height + VIEW_PADDING * 2;
 
-        // La taille d'affichage dépend du zoom
         canvasRef.value.width = logicalWidth * zoom.value;
         canvasRef.value.height = logicalHeight * zoom.value;
-
-        // CSS Style pour la netteté
         canvasRef.value.style.width = `${logicalWidth * zoom.value}px`;
         canvasRef.value.style.height = `${logicalHeight * zoom.value}px`;
     }
@@ -216,36 +210,44 @@ function draw() {
     const ctx = canvasRef.value.getContext("2d");
     if (!ctx) return;
 
-    // Reset transform & clear
+    // Reset & Clear
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
 
-    // Paramètres graphiques
     ctx.imageSmoothingEnabled = false;
 
-    // --- 1. Dessiner le fond (Checkerboard) ---
-    drawCheckerboard(ctx);
+    // Note: Le damier est géré par CSS sur le conteneur parent.
 
-    // --- 2. Transformation de vue ---
-    // On déplace l'origine pour centrer le sprite dans le padding, avec le zoom
+    // Transformation de vue
     ctx.translate(VIEW_PADDING * zoom.value, VIEW_PADDING * zoom.value);
 
-    // --- 3. Dessiner le Sprite (Frame 1) ---
+    // 1. Dessiner le Sprite
     ctx.drawImage(
         spriteImage,
         0,
         0,
         frameWidth.value,
-        props.sprite.height, // Source
+        props.sprite.height,
         0,
         0,
         frameWidth.value * zoom.value,
-        props.sprite.height * zoom.value // Destination
+        props.sprite.height * zoom.value
     );
 
-    // Bordure du sprite (repère visuel)
-    ctx.strokeStyle = "rgba(148, 163, 184, 0.5)"; // Slate-400
-    ctx.lineWidth = 1;
+    // 2. Dessiner les limites de l'image (Bordure Cyan + Masque extérieur)
+    ctx.save();
+
+    // Masque sombre autour de l'image pour focus
+    drawOutsideMask(
+        ctx,
+        frameWidth.value * zoom.value,
+        props.sprite.height * zoom.value
+    );
+
+    // Bordure Cyan en pointillés
+    ctx.strokeStyle = "#06b6d4"; // Cyan-500
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]); // Pointillés
     ctx.strokeRect(
         0,
         0,
@@ -253,41 +255,35 @@ function draw() {
         props.sprite.height * zoom.value
     );
 
-    // --- 4. Dessiner la Hitbox ---
+    ctx.restore();
+
+    // 3. Dessiner la Hitbox
     const hx = hitbox.value.x * zoom.value;
     const hy = hitbox.value.y * zoom.value;
     const hw = hitbox.value.width * zoom.value;
     const hh = hitbox.value.height * zoom.value;
 
-    // Remplissage semi-transparent
-    ctx.fillStyle = "rgba(239, 68, 68, 0.25)"; // Red-500
+    ctx.fillStyle = "rgba(239, 68, 68, 0.3)"; // Rouge transparent
     ctx.fillRect(hx, hy, hw, hh);
 
-    // Contour
-    ctx.strokeStyle = "#ef4444"; // Red-500
+    ctx.strokeStyle = "#ff0000"; // Rouge pur
     ctx.lineWidth = 2;
     ctx.strokeRect(hx, hy, hw, hh);
 
-    // --- 5. Dessiner les Poignées (Handles) ---
+    // 4. Poignées
     drawHandles(ctx, hx, hy, hw, hh);
 }
 
-function drawCheckerboard(ctx: CanvasRenderingContext2D) {
-    const s = 10 * zoom.value; // Taille carreau
-    const w = canvasRef.value!.width;
-    const h = canvasRef.value!.height;
+function drawOutsideMask(ctx: CanvasRenderingContext2D, w: number, h: number) {
+    const p = VIEW_PADDING * zoom.value;
+    // On dessine 4 rectangles noirs semi-transparents autour de l'image
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; // Assombrit le padding
 
-    ctx.fillStyle = "#1e293b"; // Dark Slate (background)
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.fillStyle = "#334155"; // Lighter Slate (checker)
-    for (let x = 0; x < w; x += s) {
-        for (let y = 0; y < h; y += s) {
-            if ((Math.floor(x / s) + Math.floor(y / s)) % 2 === 0) {
-                ctx.fillRect(x, y, s, s);
-            }
-        }
-    }
+    // Haut, Bas, Gauche, Droite
+    ctx.fillRect(-p, -p, w + p * 2, p); // Top
+    ctx.fillRect(-p, h, w + p * 2, p); // Bottom
+    ctx.fillRect(-p, 0, p, h); // Left
+    ctx.fillRect(w, 0, p, h); // Right
 }
 
 function drawHandles(
@@ -297,16 +293,16 @@ function drawHandles(
     w: number,
     h: number
 ) {
-    const handleRadius = 4;
+    const handleRadius = 5; // Un peu plus gros
     ctx.fillStyle = "#ffffff";
-    ctx.strokeStyle = "#ef4444";
+    ctx.strokeStyle = "#ff0000";
     ctx.lineWidth = 2;
 
     const coords = [
-        { x: x, y: y }, // TL
-        { x: x + w, y: y }, // TR
-        { x: x, y: y + h }, // BL
-        { x: x + w, y: y + h }, // BR
+        { x: x, y: y },
+        { x: x + w, y: y },
+        { x: x, y: y + h },
+        { x: x + w, y: y + h },
     ];
 
     coords.forEach((p) => {
@@ -319,16 +315,13 @@ function drawHandles(
 
 // --- Interaction Logic ---
 
-// Convertit Event Mouse (Screen) -> Sprite Coords (Logique)
 function getMousePos(e: MouseEvent) {
     if (!canvasRef.value) return { x: 0, y: 0 };
     const rect = canvasRef.value.getBoundingClientRect();
-    // Position relative au canvas (0,0 en haut a gauche du canvas HTML)
     const clientX = e.clientX - rect.left;
     const clientY = e.clientY - rect.top;
 
-    // Conversion en coordonnées Sprite
-    // On divise par le zoom et on retire le padding
+    // Conversion : (Ecran -> CanvasScale -> Zoom -> Padding)
     const spriteX = clientX / zoom.value - VIEW_PADDING;
     const spriteY = clientY / zoom.value - VIEW_PADDING;
 
@@ -336,17 +329,14 @@ function getMousePos(e: MouseEvent) {
 }
 
 function getHandleAt(mx: number, my: number): string | null {
-    // Tolérance de détection ajustée au zoom (plus facile à cliquer dézoomé)
-    const tolerance = 6 / Math.min(1, zoom.value);
+    const tolerance = 8 / Math.min(1, zoom.value); // Plus facile à cliquer
     const { x, y, width: w, height: h } = hitbox.value;
 
-    // Check corners
     if (dist(mx, my, x, y) <= tolerance) return "tl";
     if (dist(mx, my, x + w, y) <= tolerance) return "tr";
     if (dist(mx, my, x, y + h) <= tolerance) return "bl";
     if (dist(mx, my, x + w, y + h) <= tolerance) return "br";
 
-    // Check edges
     const inX = mx >= x && mx <= x + w;
     const inY = my >= y && my <= y + h;
 
@@ -364,12 +354,8 @@ function dist(x1: number, y1: number, x2: number, y2: number) {
 
 function onMouseMove(e: MouseEvent) {
     const { x, y } = getMousePos(e);
-
-    if (isDragging.value) {
-        handleDrag(x, y);
-    } else {
-        updateCursor(x, y);
-    }
+    if (isDragging.value) handleDrag(x, y);
+    else updateCursor(x, y);
 }
 
 function startDrag(e: MouseEvent) {
@@ -402,7 +388,6 @@ function handleDrag(currX: number, currY: number) {
         hitbox.value.x = initialHitbox.value.x + dx;
         hitbox.value.y = initialHitbox.value.y + dy;
     } else if (dragMode.value === "resize") {
-        // Logique de redimensionnement identique, mais simplifiée
         let { x, y, width: w, height: h } = initialHitbox.value;
         const c = dragCorner.value;
 
@@ -417,7 +402,6 @@ function handleDrag(currX: number, currY: number) {
             h -= dy;
         }
 
-        // Minimum Constraints
         if (w < 1) {
             w = 1;
             if (c?.includes("l"))
@@ -438,7 +422,6 @@ function endDrag() {
     isDragging.value = false;
     dragMode.value = null;
     dragCorner.value = null;
-    // On force l'arrondi entier à la fin du drag
     hitbox.value.x = Math.round(hitbox.value.x);
     hitbox.value.y = Math.round(hitbox.value.y);
     hitbox.value.width = Math.round(hitbox.value.width);
@@ -473,7 +456,7 @@ function updateCursor(x: number, y: number) {
     }
 }
 
-// --- Zoom & Keyboard Controls ---
+// --- Zoom & Keyboard ---
 
 function handleWheel(e: WheelEvent) {
     if (e.ctrlKey || e.metaKey) {
@@ -507,8 +490,6 @@ function handleKeyDown(e: KeyboardEvent) {
         case "ArrowRight":
             hitbox.value.x += step;
             break;
-        default:
-            return;
     }
     requestDraw();
 }
@@ -522,7 +503,7 @@ async function saveHitbox() {
 }
 
 async function deleteHitbox() {
-    if (!confirm("Voulez-vous vraiment supprimer la hitbox ?")) return;
+    if (!confirm("Supprimer la hitbox ?")) return;
     await spriteService.deleteHitbox(props.sprite.animationId);
     emit("saved", null);
     emit("close");
@@ -540,7 +521,6 @@ function resetHitbox() {
 </script>
 
 <style scoped>
-/* Reset box-sizing */
 *,
 *::before,
 *::after {
@@ -553,7 +533,7 @@ function resetHitbox() {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(4px);
     display: flex;
     justify-content: center;
@@ -562,12 +542,12 @@ function resetHitbox() {
 }
 
 .hitbox-editor {
-    background: #0f172a; /* Slate 900 */
+    background: #0f172a;
     border: 1px solid #334155;
     border-radius: 16px;
     width: 90vw;
-    max-width: 1100px;
-    height: 85vh;
+    max-width: 1200px;
+    height: 90vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -584,41 +564,32 @@ function resetHitbox() {
     align-items: center;
     border-bottom: 1px solid #334155;
 }
-
 .header-title {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-}
-
-.header-title h3 {
-    margin: 0;
-    font-size: 1.25rem;
     font-weight: 600;
+    font-size: 1.25rem;
 }
-
 .header-actions {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
-
 .zoom-info {
     font-family: monospace;
     background: #0f172a;
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
     color: #94a3b8;
-    font-size: 0.875rem;
 }
-
 .close-btn {
     background: transparent;
     border: none;
     color: #94a3b8;
     font-size: 1.5rem;
     cursor: pointer;
-    transition: color 0.2s;
+    transition: 0.2s;
     line-height: 1;
 }
 .close-btn:hover {
@@ -636,10 +607,23 @@ function resetHitbox() {
 /* CANVAS AREA */
 .canvas-wrapper {
     position: relative;
-    background: #020617; /* Très sombre */
     overflow: hidden;
     display: flex;
     flex-direction: column;
+
+    /* Fond Damier CSS Infini */
+    background-color: #0f172a;
+    background-image:
+        linear-gradient(45deg, #1e293b 25%, transparent 25%),
+        linear-gradient(-45deg, #1e293b 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #1e293b 75%),
+        linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+    background-size: 20px 20px;
+    background-position:
+        0 0,
+        0 10px,
+        10px -10px,
+        -10px 0;
 }
 
 .canvas-scroller {
@@ -648,15 +632,14 @@ function resetHitbox() {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 2rem;
-    /* Custom Scrollbar */
+    padding: 0;
     scrollbar-width: thin;
     scrollbar-color: #475569 #0f172a;
 }
 
 .hitbox-canvas {
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    border: 1px solid #334155;
+    background: transparent;
+    display: block;
 }
 
 .canvas-toolbar {
@@ -672,7 +655,6 @@ function resetHitbox() {
     gap: 0.25rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
-
 .canvas-toolbar button {
     background: transparent;
     border: none;
@@ -683,7 +665,6 @@ function resetHitbox() {
     border-radius: 999px;
     transition: background 0.2s;
 }
-
 .canvas-toolbar button:hover {
     background: #334155;
 }
@@ -697,8 +678,8 @@ function resetHitbox() {
     flex-direction: column;
     gap: 2rem;
     overflow-y: auto;
+    z-index: 10;
 }
-
 .form-section h4 {
     color: #94a3b8;
     text-transform: uppercase;
@@ -707,24 +688,20 @@ function resetHitbox() {
     margin: 0 0 1rem 0;
     font-weight: 700;
 }
-
 .input-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
 }
-
 .input-group {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
-
 .input-group label {
     font-size: 0.875rem;
     color: #cbd5e1;
 }
-
 .input-group input {
     background: #0f172a;
     border: 1px solid #334155;
@@ -733,13 +710,10 @@ function resetHitbox() {
     border-radius: 6px;
     font-size: 1rem;
     font-family: monospace;
-    transition: border-color 0.2s;
 }
-
 .input-group input:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #06b6d4;
 }
 
 .info-box {
@@ -748,7 +722,6 @@ function resetHitbox() {
     border-radius: 8px;
     color: #cbd5e1;
     font-size: 0.875rem;
-    line-height: 1.5;
 }
 
 .sidebar-footer {
@@ -757,31 +730,27 @@ function resetHitbox() {
     flex-direction: column;
     gap: 1rem;
 }
-
 .btn-row {
     display: flex;
     gap: 0.75rem;
 }
-
 .btn {
     padding: 0.75rem 1rem;
     border: none;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: 0.2s;
     font-size: 0.95rem;
 }
-
 .btn-primary {
-    background: #3b82f6;
+    background: #06b6d4;
     color: white;
     width: 100%;
-}
+} /* Cyan-500 */
 .btn-primary:hover {
-    background: #2563eb;
+    background: #0891b2;
 }
-
 .btn-secondary {
     background: #475569;
     color: white;
@@ -790,7 +759,6 @@ function resetHitbox() {
 .btn-secondary:hover {
     background: #64748b;
 }
-
 .btn-danger {
     background: rgba(239, 68, 68, 0.2);
     color: #ef4444;
