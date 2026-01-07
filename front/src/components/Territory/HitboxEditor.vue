@@ -2,7 +2,7 @@
     <div class="hitbox-editor">
         <div class="editor-header">
             <h3>Édition de la Hitbox</h3>
-            <button class="btn-close" @click="$emit('close')">✕</button>
+            <button class="close-btn" @click="$emit('close')">x</button>
         </div>
 
         <div class="editor-body">
@@ -57,17 +57,17 @@
 
                 <div class="action-buttons">
                     <button class="btn-save" @click="saveHitbox">
-                        💾 Sauvegarder
+                        Sauvegarder
                     </button>
                     <button
                         class="btn-delete"
                         @click="deleteHitbox"
                         v-if="hasHitbox"
                     >
-                        🗑️ Supprimer
+                        Supprimer
                     </button>
                     <button class="btn-reset" @click="resetHitbox">
-                        🔄 Réinitialiser
+                        Réinitialiser
                     </button>
                 </div>
             </div>
@@ -426,17 +426,18 @@ function resetHitbox() {
     color: #e2e8f0;
 }
 
-.btn-close {
+.close-btn {
     background: transparent;
     border: none;
     color: #94a3b8;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0;
+    font-size: 2rem;
     line-height: 1;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 0;
+    box-shadow: none;
 }
-
-.btn-close:hover {
+.close-btn:hover {
     color: #fff;
 }
 

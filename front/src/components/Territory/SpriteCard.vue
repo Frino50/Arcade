@@ -146,7 +146,7 @@ async function renameSprite() {
 }
 
 .card-body {
-    padding: 1.5rem 1rem 0.5rem 1rem;
+    padding: 0 1rem 0.5rem 1rem;
     flex: 1;
 }
 
@@ -233,7 +233,7 @@ async function renameSprite() {
     display: flex;
     align-items: end;
     justify-content: center;
-    margin: 0 1rem;
+    margin: 1rem 1rem 1rem 1rem;
     border-radius: 8px;
     border: 1px dashed #334155;
     position: relative;
