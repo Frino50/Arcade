@@ -24,22 +24,22 @@
                     class="board-cell empty"
                 ></div>
 
-                <div
-                    v-for="tile in tiles"
-                    :key="tile.id"
-                    class="tile"
-                    :class="{ merged: tile.merged, new: tile.isNew }"
-                    :style="{
-                        top: tile.row * (cellSize + gap) + 'px',
-                        left: tile.col * (cellSize + gap) + 'px',
-                        width: cellSize + 'px',
-                        height: cellSize + 'px',
-                        fontSize: cellSize / 3 + 'px',
-                        background: getTileGradient(tile.value),
-                        transition: `all ${animationSpeed}ms ease`,
-                    }"
-                >
-                    {{ tile.value }}
+                <div v-for="tile in tiles" :key="tile.id">
+                    <div
+                        class="tile"
+                        :class="{ merged: tile.merged, new: tile.isNew }"
+                        :style="{
+                            top: tile.row * (cellSize + gap) + 'px',
+                            left: tile.col * (cellSize + gap) + 'px',
+                            width: cellSize + 'px',
+                            height: cellSize + 'px',
+                            fontSize: cellSize / 3 + 'px',
+                            background: getTileGradient(tile.value),
+                            transition: `all ${animationSpeed}ms ease`,
+                        }"
+                    >
+                        {{ tile.value }}
+                    </div>
                 </div>
             </div>
             <div>

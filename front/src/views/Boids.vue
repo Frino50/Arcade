@@ -11,21 +11,21 @@
             />
         </svg>
     </div>
-    <div
-        v-for="(boid, index) in boids"
-        :key="index"
-        :class="[
-            'boid',
-            `boid-${index % 3}`,
-            { 'selected-boid': index === boidSelect?.id },
-        ]"
-        @click="boidSelect = boid"
-        :style="{
-            left: boid.x + 'px',
-            top: boid.y + 'px',
-            transform: `rotate(${getRotation(boid)}rad)`,
-        }"
-    ></div>
+    <div v-for="(boid, index) in boids" :key="index">
+        <div
+            :class="[
+                'boid',
+                `boid-${index % 3}`,
+                { 'selected-boid': index === boidSelect?.id },
+            ]"
+            @click="boidSelect = boid"
+            :style="{
+                left: boid.x + 'px',
+                top: boid.y + 'px',
+                transform: `rotate(${getRotation(boid)}rad)`,
+            }"
+        ></div>
+    </div>
 
     <div v-if="boidSelect" class="caracteristique">
         <div>Id: {{ boidSelect.id }}</div>
