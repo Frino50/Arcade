@@ -30,7 +30,6 @@ onMounted(async () => {
 
 <style scoped>
 .checkerboard {
-    /* Fond Damier CSS Infini (sans artefacts) */
     background-color: #0f172a;
     background-image: repeating-conic-gradient(
         #1e293b 0 25%,

@@ -118,7 +118,7 @@ function resolveCollision(b1: Bubble, b2: Bubble) {
 }
 
 function createSprite(radius: number, color: string, colorLight: string) {
-    const shadow = radius / 2; // comme avant
+    const shadow = radius / 2;
 
     const size = radius * 2 + shadow * 2;
 

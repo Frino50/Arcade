@@ -5,7 +5,6 @@ import { localStore } from "@/store/local.ts";
 let stompClient: Client | null = null;
 
 function createClient(): Client {
-    // Pas de hook, juste le state réactif
     const socket = new SockJS(
         "http://202.15.200.35:" + import.meta.env.VITE_BACK_URL + "/ws"
     );

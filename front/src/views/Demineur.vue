@@ -130,9 +130,8 @@ async function verifierToutesBombesTrouvees() {
         nombreCasesCocherBombe.value === nombreDeBombes.value;
 
     if (gagne) {
-        clearInterval(intervalId.value as number); // stop timer
+        clearInterval(intervalId.value as number);
 
-        // sauvegarder le temps en ms comme score
         const score = tempsEcoule.value * 1000;
         if (score > 0) {
             const recordData = new SaveRecordDto(GAME_NAME, score);

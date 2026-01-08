@@ -128,10 +128,9 @@ const props = defineProps<{
 
 const emit = defineEmits(["close", "saved"]);
 
-// --- Refs & State ---
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const zoom = ref(2);
-const VIEW_PADDING = 100; // Espace confortable autour du sprite
+const VIEW_PADDING = 100;
 
 const hitbox = ref<Hitbox>({
     x: props.sprite.hitboxX ?? 0,
@@ -140,21 +139,17 @@ const hitbox = ref<Hitbox>({
     height: props.sprite.hitboxHeight ?? 32,
 });
 
-// Dragging Logic
 const isDragging = ref(false);
 const dragMode = ref<"move" | "resize" | null>(null);
 const dragCorner = ref<string | null>(null);
 const dragStart = ref({ x: 0, y: 0 });
 const initialHitbox = ref<Hitbox>({ ...hitbox.value });
 
-// Asset Loading
 let spriteImage: HTMLImageElement | null = null;
 const frameWidth = computed(() => props.sprite.width / props.sprite.frames);
 const hasHitbox = computed(
     () => props.sprite.hitboxX !== undefined && props.sprite.hitboxX !== null
 );
-
-// --- Lifecycle & Watchers ---
 
 watch(() => props.sprite, loadSprite, { immediate: true });
 
@@ -186,8 +181,6 @@ async function loadSprite() {
     }
 }
 
-// --- Drawing Logic ---
-
 function updateCanvasSize() {
     if (canvasRef.value) {
         const logicalWidth = frameWidth.value + VIEW_PADDING * 2;
@@ -209,18 +202,13 @@ function draw() {
     const ctx = canvasRef.value.getContext("2d");
     if (!ctx) return;
 
-    // Reset & Clear
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
 
     ctx.imageSmoothingEnabled = false;
 
-    // Note: Le damier est géré par CSS sur le conteneur parent.
-
-    // Transformation de vue
     ctx.translate(VIEW_PADDING * zoom.value, VIEW_PADDING * zoom.value);
 
-    // 1. Dessiner le Sprite
     ctx.drawImage(
         spriteImage,
         0,
@@ -233,13 +221,11 @@ function draw() {
         props.sprite.height * zoom.value
     );
 
-    // 2. Dessiner les limites de l'image (Bordure Cyan en pointillés)
     ctx.save();
 
-    // Bordure Cyan en pointillés (repère de la frame)
-    ctx.strokeStyle = "#06b6d4"; // Cyan-500
+    ctx.strokeStyle = "#06b6d4";
     ctx.lineWidth = 2;
-    ctx.setLineDash([6, 4]); // Pointillés
+    ctx.setLineDash([6, 4]);
     ctx.strokeRect(
         0,
         0,
@@ -249,20 +235,18 @@ function draw() {
 
     ctx.restore();
 
-    // 3. Dessiner la Hitbox
     const hx = hitbox.value.x * zoom.value;
     const hy = hitbox.value.y * zoom.value;
     const hw = hitbox.value.width * zoom.value;
     const hh = hitbox.value.height * zoom.value;
 
-    ctx.fillStyle = "rgba(239, 68, 68, 0.3)"; // Rouge transparent
+    ctx.fillStyle = "rgba(239, 68, 68, 0.3)";
     ctx.fillRect(hx, hy, hw, hh);
 
-    ctx.strokeStyle = "#ff0000"; // Rouge pur
+    ctx.strokeStyle = "#ff0000";
     ctx.lineWidth = 2;
     ctx.strokeRect(hx, hy, hw, hh);
 
-    // 4. Poignées
     drawHandles(ctx, hx, hy, hw, hh);
 }
 function drawHandles(
@@ -272,7 +256,7 @@ function drawHandles(
     w: number,
     h: number
 ) {
-    const handleRadius = 5; // Un peu plus gros
+    const handleRadius = 5;
     ctx.fillStyle = "#ffffff";
     ctx.strokeStyle = "#ff0000";
     ctx.lineWidth = 2;
@@ -292,15 +276,12 @@ function drawHandles(
     });
 }
 
-// --- Interaction Logic ---
-
 function getMousePos(e: MouseEvent) {
     if (!canvasRef.value) return { x: 0, y: 0 };
     const rect = canvasRef.value.getBoundingClientRect();
     const clientX = e.clientX - rect.left;
     const clientY = e.clientY - rect.top;
 
-    // Conversion : (Ecran -> CanvasScale -> Zoom -> Padding)
     const spriteX = clientX / zoom.value - VIEW_PADDING;
     const spriteY = clientY / zoom.value - VIEW_PADDING;
 
@@ -308,7 +289,7 @@ function getMousePos(e: MouseEvent) {
 }
 
 function getHandleAt(mx: number, my: number): string | null {
-    const tolerance = 8 / Math.min(1, zoom.value); // Plus facile à cliquer
+    const tolerance = 8 / Math.min(1, zoom.value);
     const { x, y, width: w, height: h } = hitbox.value;
 
     if (dist(mx, my, x, y) <= tolerance) return "tl";
@@ -435,8 +416,6 @@ function updateCursor(x: number, y: number) {
     }
 }
 
-// --- Zoom & Keyboard ---
-
 function handleWheel(e: WheelEvent) {
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
@@ -473,8 +452,6 @@ function handleKeyDown(e: KeyboardEvent) {
     }
     requestDraw();
 }
-
-// --- Actions ---
 
 async function saveHitbox() {
     await spriteService.saveHitbox(props.sprite.animationId, hitbox.value);
@@ -535,7 +512,6 @@ function resetHitbox() {
     color: #f8fafc;
 }
 
-/* HEADER */
 .editor-header {
     background: #1e293b;
     padding: 0 1.5rem;
@@ -573,7 +549,6 @@ function resetHitbox() {
     color: #fff;
 }
 
-/* LAYOUT */
 .editor-layout {
     display: grid;
     grid-template-columns: 1fr 320px;
@@ -581,14 +556,12 @@ function resetHitbox() {
     overflow: hidden;
 }
 
-/* CANVAS AREA */
 .canvas-wrapper {
     position: relative;
     overflow: hidden;
     display: flex;
     flex-direction: column;
 
-    /* Fond Damier CSS Infini (sans artefacts) */
     background-color: #0f172a;
     background-image: repeating-conic-gradient(
         #1e293b 0 25%,
@@ -640,7 +613,6 @@ function resetHitbox() {
     background: #334155;
 }
 
-/* SIDEBAR */
 .sidebar {
     background: #1e293b;
     border-left: 1px solid #334155;
@@ -718,7 +690,7 @@ function resetHitbox() {
     background: #06b6d4;
     color: white;
     width: 100%;
-} /* Cyan-500 */
+}
 .btn-primary:hover {
     background: #0891b2;
 }
