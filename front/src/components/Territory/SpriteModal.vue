@@ -14,7 +14,7 @@
                             @click="$emit('close')"
                             aria-label="Fermer"
                         >
-                            <span>x</span>
+                            ✕
                         </button>
                     </header>
 
@@ -257,7 +257,7 @@ function onHitboxSaved(hitbox: Hitbox | null) {
     background: #0f172a;
     width: 90%;
     max-width: 1200px;
-    height: 85%;
+    height: 90%;
     border-radius: 16px;
     display: flex;
     flex-direction: column;

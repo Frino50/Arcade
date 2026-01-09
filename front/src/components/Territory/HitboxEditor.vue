@@ -3,7 +3,7 @@
         <div class="hitbox-editor">
             <header class="editor-header">
                 <div class="header-title">
-                    <h3>Éditeur de Hitbox</h3>
+                    <h2>Éditeur de Hitbox</h2>
                 </div>
                 <div class="header-actions">
                     <span class="zoom-info">{{ Math.round(zoom * 100) }}%</span>
@@ -11,6 +11,7 @@
                         class="close-btn"
                         @click="$emit('close')"
                         title="Fermer"
+                        aria-label="Fermer"
                     >
                         ✕
                     </button>
@@ -488,8 +489,8 @@ function resetHitbox() {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(4px);
     display: flex;
@@ -502,9 +503,9 @@ function resetHitbox() {
     background: #0f172a;
     border: 1px solid #334155;
     border-radius: 16px;
-    width: 90vw;
+    width: 90%;
     max-width: 1200px;
-    height: 90vh;
+    height: 90%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -514,14 +515,16 @@ function resetHitbox() {
 
 .editor-header {
     background: #1e293b;
-    padding: 0 1.5rem;
+    padding: 1.5rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #334155;
 }
-.header-title {
-    font-size: 1.25rem;
+.header-title h2 {
+    margin: 0;
+    color: #e2e8f0;
+    font-size: 1.5rem;
 }
 .header-actions {
     display: flex;
